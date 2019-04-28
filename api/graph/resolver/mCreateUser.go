@@ -2,9 +2,9 @@ package resolver
 
 import (
 	"context"
-	"demo/store/dbmod"
 
 	"github.com/pkg/errors"
+	"github.com/romshark/dgraph_graphql_go/store/dbmod"
 )
 
 // CreateUser resolves Mutation.createUser

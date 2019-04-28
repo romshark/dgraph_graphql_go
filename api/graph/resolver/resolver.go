@@ -2,7 +2,8 @@ package resolver
 
 import (
 	"context"
-	"demo/store"
+
+	"github.com/romshark/dgraph_graphql_go/store"
 )
 
 // Resolver represents the root Graph resolver

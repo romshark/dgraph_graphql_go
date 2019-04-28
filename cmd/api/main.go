@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"demo/apisrv"
-	"demo/store"
-	"demo/store/dbmod"
+	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/dbmod"
 )
 
 var host = flag.String("host", "localhost:16000", "API server host address")
@@ -22,17 +22,17 @@ func main() {
 		log.Fatalf("store prepare: %s", err)
 	}
 
-	apiSrv := apisrv.NewAPIServer(apisrv.APIServerOptions{
+	api := api.NewServer(api.ServerOptions{
 		Host: *host,
 	}, str)
 
-	if err := apiSrv.Launch(); err != nil {
+	if err := api.Launch(); err != nil {
 		log.Fatalf("API server launch: %s", err)
 	}
 
 	// Setup termination signal listener
 	onTerminate(func() {
-		if err := apiSrv.Shutdown(context.Background()); err != nil {
+		if err := api.Shutdown(context.Background()); err != nil {
 			log.Fatalf("API server shutdown: %s", err)
 		}
 	})
@@ -60,5 +60,5 @@ func main() {
 		}, &aliceRes)
 	})
 
-	apiSrv.AwaitShutdown()
+	api.AwaitShutdown()
 }

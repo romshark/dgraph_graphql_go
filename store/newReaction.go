@@ -2,11 +2,11 @@ package store
 
 import (
 	"context"
-	"demo/store/enum/emotion"
 	"encoding/json"
 	"time"
 
 	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
 )
 
 func newReaction(

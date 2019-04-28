@@ -1,8 +1,9 @@
 package dbmod
 
 import (
-	"demo/store"
 	"time"
+
+	"github.com/romshark/dgraph_graphql_go/store"
 )
 
 // User defines the User type query object

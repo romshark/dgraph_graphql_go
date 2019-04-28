@@ -1,9 +1,10 @@
 package gqlmod
 
 import (
-	"demo/store"
-	"demo/store/enum/emotion"
 	"time"
+
+	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
 )
 
 // Reaction defines the Reaction type query object

@@ -2,13 +2,12 @@ package graph
 
 import (
 	"context"
-	"demo/store"
 	"encoding/json"
-
-	rsv "demo/api/graph/resolver"
 
 	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
+	rsv "github.com/romshark/dgraph_graphql_go/api/graph/resolver"
+	"github.com/romshark/dgraph_graphql_go/store"
 )
 
 // Graph represents the graph resolution engine

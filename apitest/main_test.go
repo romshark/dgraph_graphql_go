@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"demo/apitest/setup"
+	"github.com/romshark/dgraph_graphql_go/apitest/setup"
 )
 
 // stats represents the global statistics recorder the setups must use

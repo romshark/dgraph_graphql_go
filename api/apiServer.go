@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"demo/api/graph"
-	"demo/store"
 	"log"
 	"net"
 	"net/http"
@@ -12,6 +10,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/romshark/dgraph_graphql_go/api/graph"
+	"github.com/romshark/dgraph_graphql_go/store"
 )
 
 // ServerOptions defines the API server options

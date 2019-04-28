@@ -2,11 +2,11 @@ package resolver
 
 import (
 	"context"
-	"demo/store"
-	"demo/store/dbmod"
 	"time"
 
 	"github.com/graph-gophers/graphql-go"
+	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/dbmod"
 )
 
 // Post represents the resolver of the identically named type

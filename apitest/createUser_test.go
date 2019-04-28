@@ -1,11 +1,11 @@
 package apitest
 
 import (
-	"demo/api/graph/gqlmod"
-	"demo/apitest/setup"
 	"testing"
 	"time"
 
+	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
+	"github.com/romshark/dgraph_graphql_go/apitest/setup"
 	"github.com/stretchr/testify/require"
 )
 

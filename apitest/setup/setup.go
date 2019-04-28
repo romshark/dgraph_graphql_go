@@ -2,11 +2,12 @@ package setup
 
 import (
 	"context"
-	"demo/api"
-	"demo/store"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/store"
 )
 
 // TestContext represents a test context

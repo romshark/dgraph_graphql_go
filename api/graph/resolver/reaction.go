@@ -1,11 +1,11 @@
 package resolver
 
 import (
-	"demo/store"
-	"demo/store/enum/emotion"
 	"time"
 
 	"github.com/graph-gophers/graphql-go"
+	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
 )
 
 // Reaction represents the resolver of the identically named type
