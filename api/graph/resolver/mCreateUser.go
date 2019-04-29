@@ -17,6 +17,7 @@ func (rsv *Resolver) CreateUser(
 ) (*User, error) {
 	newID, err := rsv.str.CreateUser(ctx, params.Email, params.DisplayName)
 	if err != nil {
+		rsv.error(ctx, err)
 		return nil, err
 	}
 
@@ -39,14 +40,17 @@ func (rsv *Resolver) CreateUser(
 		},
 		&result,
 	); err != nil {
+		rsv.error(ctx, err)
 		return nil, err
 	}
 
 	if len(result.NewUser) != 1 {
-		return nil, errors.Errorf(
+		err := errors.Errorf(
 			"unexpected number of new users: %d",
 			len(result.NewUser),
 		)
+		rsv.error(ctx, err)
+		return nil, err
 	}
 
 	newUser := result.NewUser[0]

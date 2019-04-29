@@ -68,6 +68,7 @@ func (rsv *User) Posts(
 		},
 		&query,
 	); err != nil {
+		rsv.root.error(ctx, err)
 		return nil, err
 	}
 

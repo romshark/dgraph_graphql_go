@@ -48,6 +48,7 @@ func (rsv *Post) Author(ctx context.Context) (*User, error) {
 		},
 		&query,
 	); err != nil {
+		rsv.root.error(ctx, err)
 		return nil, err
 	}
 	return &User{

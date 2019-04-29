@@ -6,13 +6,15 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/romshark/dgraph_graphql_go/api"
 )
 
 // Query performs a query on the test API
 func (ts *TestSetup) Query(
 	query string,
 	result interface{},
-) []string {
+) *api.ResponseError {
 	return ts.QueryVar(query, nil, result)
 }
 
@@ -21,7 +23,7 @@ func (ts *TestSetup) QueryVar(
 	query string,
 	vars map[string]string,
 	result interface{},
-) []string {
+) *api.ResponseError {
 	// Marshal form data
 	requestData := struct {
 		Query         string            `json:"query"`
@@ -57,7 +59,8 @@ func (ts *TestSetup) QueryVar(
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK &&
+		resp.StatusCode != http.StatusBadRequest {
 		ts.t.Fatalf("unexpected status code: %d", resp.StatusCode)
 	}
 
@@ -66,14 +69,11 @@ func (ts *TestSetup) QueryVar(
 		ts.t.Fatalf("read HTTP response: %s", err)
 	}
 
-	var res struct {
-		Data   interface{} `json:"data"`
-		Errors []string    `json:"errors"`
-	}
+	var res api.Response
 	res.Data = result
 	if err := json.Unmarshal(body, &res); err != nil {
 		ts.t.Fatalf("unmarshal response: %s", err)
 	}
 
-	return res.Errors
+	return res.Error
 }

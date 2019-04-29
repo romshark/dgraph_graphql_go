@@ -15,8 +15,8 @@ func TestCreateUserErr(t *testing.T) {
 		defer ts.Teardown()
 
 		ts.Help.OK.CreateUser("fooBarowich", "foo@bar.buz")
-		res, errs := ts.Help.CreateUser("bazBazowich", "foo@bar.buz")
+		res, err := ts.Help.CreateUser("bazBuzowich", "foo@bar.buz")
 		require.Nil(t, res)
-		require.Len(t, errs, 1)
+		verifyError(t, "InvalidInput", err)
 	})
 }

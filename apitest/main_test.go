@@ -6,7 +6,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/romshark/dgraph_graphql_go/api"
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
+	"github.com/stretchr/testify/require"
 )
 
 // stats represents the global statistics recorder the setups must use
@@ -62,4 +64,15 @@ func TestMain(m *testing.M) {
 	)
 	fmt.Println(" ")
 	os.Exit(exitCode)
+}
+
+// verifyError helps verifying an API error
+func verifyError(
+	t *testing.T,
+	expectedCode string,
+	err *api.ResponseError,
+) {
+	require.NotNil(t, err)
+	require.Equal(t, expectedCode, err.Code)
+	require.True(t, len(err.Message) > 0)
 }

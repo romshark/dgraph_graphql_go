@@ -6,6 +6,12 @@ import (
 	"github.com/romshark/dgraph_graphql_go/store"
 )
 
+// CtxKey represents a context.Context value key type
+type CtxKey int
+
+// CtxErrorRef defines the context.Context error reference value key
+const CtxErrorRef CtxKey = 1
+
 // Resolver represents the root Graph resolver
 type Resolver struct {
 	str store.Store
@@ -26,4 +32,10 @@ func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
 // Posts resolves Query.posts
 func (rsv *Resolver) Posts(ctx context.Context) ([]*Post, error) {
 	return nil, nil
+}
+
+// error writes an error to the resolver context for the API server to read
+func (rsv *Resolver) error(ctx context.Context, err error) {
+	ctxErr := ctx.Value(CtxErrorRef).(*error)
+	*ctxErr = err
 }

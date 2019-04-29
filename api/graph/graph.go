@@ -26,13 +26,7 @@ func New(str store.Store) *Graph {
 	}
 }
 
-// QueryError represents a graph query error
-type QueryError struct {
-	Code    string `json:"c"`
-	Message string `json:"m"`
-}
-
-// Query executes a graph query and returns a JSON result (or error)
+// Query executes a graph query and returns a JSON encoded result (or an error)
 func (graph *Graph) Query(
 	ctx context.Context,
 	query []byte,
@@ -43,7 +37,7 @@ func (graph *Graph) Query(
 		Variables     map[string]interface{} `json:"variables"`
 	}
 	if err := json.Unmarshal(query, &params); err != nil {
-		return []byte(""), errors.Wrap(err, "unmarshalling query")
+		return nil, errors.Wrap(err, "unmarshalling query")
 	}
 	rep := graph.schema.Exec(
 		ctx,
@@ -52,32 +46,14 @@ func (graph *Graph) Query(
 		params.Variables,
 	)
 
-	// Serialize errors
 	if rep.Errors != nil {
-		errs := make([]QueryError, len(rep.Errors))
-		for index, err := range rep.Errors {
-			typedErr, isExpectedErr := store.ParseError(err.Message)
-			if !isExpectedErr {
-				return nil, errors.Errorf("unexpected error: %s", err.Message)
-			}
-			errs[index] = QueryError{
-				Code:    typedErr.Code,
-				Message: typedErr.Message,
-			}
+		// Serialize errors
+		errMsg := "graph error:"
+		for _, err := range rep.Errors {
+			errMsg += " " + err.Error() + ";"
 		}
-
-		jsonErr, err := json.Marshal(errs)
-		if err != nil {
-			return nil, errors.Wrap(err, "marshal graph query errors")
-		}
-
-		return jsonErr, nil
+		return nil, errors.New(errMsg)
 	}
 
-	reply, err = json.Marshal(rep)
-	if err != nil {
-		return []byte(""), errors.Wrap(err, "failed marshalling JSON response")
-	}
-
-	return reply, nil
+	return rep.Data, nil
 }

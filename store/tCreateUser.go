@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // CreateUser creates a new user account
@@ -31,7 +32,9 @@ func (str *store) CreateUser(
 	// Ensure no users with a similar email already exist
 	//TODO: check ID and displayName as well
 	var res struct {
-		Users []string `json:"users"`
+		Users []struct {
+			UID string `json:"uid"`
+		} `json:"users"`
 	}
 	err = txn.QueryVars(
 		ctx,
@@ -48,12 +51,14 @@ func (str *store) CreateUser(
 	}
 
 	if len(res.Users) > 0 {
-		err = errors.Errorf(
+		err = strerr.Newf(
+			strerr.ErrInvalidInput,
 			"%d users with a similar email already exist",
 			len(res.Users),
 		)
 		return
 	}
+	err = errors.Wrap(nil, "")
 
 	err = newUser(ctx, txn, newID, email, displayName, time.Now())
 	return

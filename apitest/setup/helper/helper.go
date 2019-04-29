@@ -3,6 +3,8 @@ package helper
 import (
 	"testing"
 	"time"
+
+	"github.com/romshark/dgraph_graphql_go/api"
 )
 
 type successAssumption bool
@@ -14,8 +16,12 @@ const (
 
 type testSetupInterface interface {
 	T() *testing.T
-	Query(q string, res interface{}) []string
-	QueryVar(q string, vars map[string]string, res interface{}) []string
+	Query(q string, res interface{}) *api.ResponseError
+	QueryVar(
+		q string,
+		vars map[string]string,
+		res interface{},
+	) *api.ResponseError
 }
 
 // New creates a new test helper
