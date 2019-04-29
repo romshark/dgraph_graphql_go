@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/apitest/setup/helper"
 	"github.com/romshark/dgraph_graphql_go/store"
 )
 
@@ -22,6 +23,13 @@ type TestSetup struct {
 	stats         *StatisticsRecorder
 	apiServer     api.Server
 	defaultClient *http.Client
+
+	Help helper.Helper
+}
+
+// T returns the test reference
+func (ts *TestSetup) T() *testing.T {
+	return ts.t
 }
 
 // New creates a new test setup
@@ -44,6 +52,9 @@ func New(t *testing.T, context TestContext) *TestSetup {
 			Timeout: time.Second * 1,
 		},
 	}
+
+	// Initialize helper
+	testSetup.Help = helper.New(testSetup)
 
 	// Record setup time
 	context.Stats.Set(t, func(stat *TestStatistics) {

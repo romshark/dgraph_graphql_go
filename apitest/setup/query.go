@@ -12,8 +12,8 @@ import (
 func (ts *TestSetup) Query(
 	query string,
 	result interface{},
-) {
-	ts.QueryVar(query, nil, result)
+) []string {
+	return ts.QueryVar(query, nil, result)
 }
 
 // QueryVar performs a parameterized query on the test API
@@ -21,7 +21,7 @@ func (ts *TestSetup) QueryVar(
 	query string,
 	vars map[string]string,
 	result interface{},
-) {
+) []string {
 	// Marshal form data
 	requestData := struct {
 		Query         string            `json:"query"`
@@ -74,4 +74,6 @@ func (ts *TestSetup) QueryVar(
 	if err := json.Unmarshal(body, &res); err != nil {
 		ts.t.Fatalf("unmarshal response: %s", err)
 	}
+
+	return res.Errors
 }
