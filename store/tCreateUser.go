@@ -30,19 +30,31 @@ func (str *store) CreateUser(
 	defer close()
 
 	// Ensure no users with a similar email already exist
-	//TODO: check ID and displayName as well
 	var res struct {
-		Users []struct {
+		ByID []struct {
 			UID string `json:"uid"`
-		} `json:"users"`
+		} `json:"byId"`
+		ByEmail []struct {
+			UID string `json:"uid"`
+		} `json:"byEmail"`
+		ByDisplayName []struct {
+			UID string `json:"uid"`
+		} `json:"byDisplayName"`
 	}
 	err = txn.QueryVars(
 		ctx,
-		`query User($email: string) {
-			users(func: eq(User.email, $email)) { uid }
+		`query User(
+			$id: string,
+			$email: string,
+			$displayName: string
+		) {
+			byId(func: eq(User.id, $id)) { uid }
+			byEmail(func: eq(User.email, $email)) { uid }
+			byDisplayName(func: eq(User.displayName, $displayName)) { uid }
 		}`,
 		map[string]string{
-			"$email": email,
+			"$email":       email,
+			"$displayName": displayName,
 		},
 		&res,
 	)
@@ -50,15 +62,26 @@ func (str *store) CreateUser(
 		return
 	}
 
-	if len(res.Users) > 0 {
+	if len(res.ByID) > 0 {
+		err = errors.Errorf("duplicate User.id: %s", newID)
+		return
+	}
+	if len(res.ByEmail) > 0 {
 		err = strerr.Newf(
 			strerr.ErrInvalidInput,
 			"%d users with a similar email already exist",
-			len(res.Users),
+			len(res.ByEmail),
 		)
 		return
 	}
-	err = errors.Wrap(nil, "")
+	if len(res.ByDisplayName) > 0 {
+		err = strerr.Newf(
+			strerr.ErrInvalidInput,
+			"%d users with a similar displayName already exist",
+			len(res.ByDisplayName),
+		)
+		return
+	}
 
 	err = newUser(ctx, txn, newID, email, displayName, time.Now())
 	return
