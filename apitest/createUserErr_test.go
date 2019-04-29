@@ -19,4 +19,15 @@ func TestCreateUserErr(t *testing.T) {
 		require.Nil(t, res)
 		verifyError(t, "InvalidInput", err)
 	})
+
+	// Test duplicate displayName on creation
+	t.Run("duplicateDisplayName", func(t *testing.T) {
+		ts := setup.New(t, tcx)
+		defer ts.Teardown()
+
+		ts.Help.OK.CreateUser("fooBarowich", "foo@bar.buz")
+		res, err := ts.Help.CreateUser("fooBarowich", "baz@buzowich.buz")
+		require.Nil(t, res)
+		verifyError(t, "InvalidInput", err)
+	})
 }
