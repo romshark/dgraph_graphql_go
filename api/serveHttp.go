@@ -99,13 +99,13 @@ func (srv *server) handleGraphQuery(
 
 		// Retrieve error stack trace and log the error
 		var tracedError string
-		if tracErr, ok := resolverErr.(stackTracer); ok {
-			tracedError = resolverErr.Error() + "\n"
+		if tracErr, ok := internalErr.(stackTracer); ok {
+			tracedError = internalErr.Error() + "\n"
 			for _, f := range tracErr.StackTrace() {
 				tracedError = fmt.Sprintf("%s%+s:%d\n", tracedError, f, f)
 			}
 		} else {
-			tracedError = resolverErr.Error()
+			tracedError = internalErr.Error()
 		}
 		log.Printf("graph query: %s", tracedError)
 		return
