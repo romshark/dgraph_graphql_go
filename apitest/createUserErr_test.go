@@ -9,8 +9,8 @@ import (
 
 // TestCreateUserErr tests all possible user account creation errors
 func TestCreateUserErr(t *testing.T) {
-	// Test duplicate email on creation
-	t.Run("duplicateEmail", func(t *testing.T) {
+	// Test reserved email on creation
+	t.Run("reservedEmail", func(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
@@ -20,8 +20,8 @@ func TestCreateUserErr(t *testing.T) {
 		verifyError(t, "InvalidInput", err)
 	})
 
-	// Test duplicate displayName on creation
-	t.Run("duplicateDisplayName", func(t *testing.T) {
+	// Test reserved displayName on creation
+	t.Run("reservedDisplayName", func(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
