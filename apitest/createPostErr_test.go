@@ -35,4 +35,36 @@ func TestCreatePostErr(t *testing.T) {
 			})
 		}
 	})
+
+	// Test invalid contents
+	t.Run("invalidContents", func(t *testing.T) {
+		invalidContents := map[string]string{
+			"empty": "",
+			"tooLong": "11111111000000001111111100000000" +
+				"11111111000000001111111100000000" +
+				"11111111000000001111111100000000" +
+				"11111111000000001111111100000000" +
+				"11111111000000001111111100000000" +
+				"11111111000000001111111100000000" +
+				"11111111000000001111111100000000" +
+				"11111111000000001111111100000000" +
+				"2",
+		}
+
+		for tName, invalidContent := range invalidContents {
+			t.Run(tName, func(t *testing.T) {
+				ts := setup.New(t, tcx)
+				defer ts.Teardown()
+
+				author := ts.Help.OK.CreateUser("fooBarowich", "foo@bar.buz")
+				res, err := ts.Help.CreatePost(
+					*author.ID,
+					"test title",
+					invalidContent,
+				)
+				require.Nil(t, res)
+				verifyError(t, "InvalidInput", err)
+			})
+		}
+	})
 }
