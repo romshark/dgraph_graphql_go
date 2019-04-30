@@ -18,7 +18,7 @@ func (str *store) CreateUser(
 ) (newUID UID, newID ID, err error) {
 	// Validate inputs
 	if err := ValidateUserDisplayName(displayName); err != nil {
-		return UID{}, "", err
+		return UID{}, "", strerr.Wrap(strerr.ErrInvalidInput, err)
 	}
 
 	// Prepare

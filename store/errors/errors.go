@@ -42,6 +42,14 @@ func Newf(code Code, format string, v ...interface{}) Error {
 	}
 }
 
+// Wrap wraps an error into a new store error
+func Wrap(code Code, err error) Error {
+	return Error{
+		Code:    filterCode(code),
+		Message: err.Error(),
+	}
+}
+
 // Error implements the error interface
 func (err Error) Error() string {
 	return err.Message
