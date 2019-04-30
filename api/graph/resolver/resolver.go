@@ -95,6 +95,50 @@ func (rsv *Resolver) Posts(ctx context.Context) ([]*Post, error) {
 	return resolvers, nil
 }
 
+// User resolves Query.user
+func (rsv *Resolver) User(
+	ctx context.Context,
+	param struct {
+		Id string
+	},
+) (*User, error) {
+	var result struct {
+		Users []dbmod.User `json:"users"`
+	}
+	if err := rsv.str.QueryVars(
+		ctx,
+		`query User($userId: string) {
+			users(func: eq(User.id, $userId)) {
+				uid
+				User.id
+				User.creation
+				User.email
+				User.displayName
+			}
+		}`,
+		map[string]string{
+			"$userId": param.Id,
+		},
+		&result,
+	); err != nil {
+		rsv.error(ctx, err)
+		return nil, err
+	}
+	if len(result.Users) < 1 {
+		return nil, nil
+	}
+
+	usr := result.Users[0]
+	return &User{
+		root:        rsv,
+		uid:         store.UID{NodeID: usr.UID},
+		id:          usr.ID,
+		displayName: usr.DisplayName,
+		email:       usr.Email,
+		creation:    usr.Creation,
+	}, nil
+}
+
 // error writes an error to the resolver context for the API server to read
 func (rsv *Resolver) error(ctx context.Context, err error) {
 	ctxErr := ctx.Value(CtxErrorRef).(*error)

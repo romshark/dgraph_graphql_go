@@ -9,6 +9,8 @@ schema {
 type Query {
 	users: [User!]!
 	posts: [Post!]!
+
+	user(id: Identifier!): User
 }
 
 type Mutation {
