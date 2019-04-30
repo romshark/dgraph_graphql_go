@@ -10,7 +10,7 @@ import (
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
-// CreateUser creates a new user account
+// CreateUser creates a new user account and adds it to the global index
 func (str *store) CreateUser(
 	ctx context.Context,
 	email string,
@@ -102,12 +102,30 @@ func (str *store) CreateUser(
 		return
 	}
 
-	// Write
 	var userCreationMut map[string]string
 	userCreationMut, err = txn.Mutation(ctx, &api.Mutation{
 		SetJson: newUserJSON,
 	})
+	if err != nil {
+		return
+	}
 	newUID = UID{userCreationMut["blank-0"]}
+
+	// Add the new account to the global Index
+	var newUsersIndexJSON []byte
+	newUsersIndexJSON, err = json.Marshal(struct {
+		UID UID `json:"users"`
+	}{
+		UID: newUID,
+	})
+	if err != nil {
+		return
+	}
+
+	_, err = txn.Mutation(ctx, &api.Mutation{
+		SetJson: newUsersIndexJSON,
+		Set:     nil,
+	})
 
 	return
 }

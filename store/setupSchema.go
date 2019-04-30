@@ -16,6 +16,9 @@ func (str *store) setupSchema(ctx context.Context) error {
 
 	return str.db.Alter(ctx, &api.Operation{
 		Schema: `
+			users: uid .
+			posts: uid .
+
 			User.id: string @index(exact) .
 			User.creation: dateTime .
 			User.email: string @index(exact) .

@@ -115,6 +115,24 @@ func (str *store) CreatePost(
 	_, err = txn.Mutation(ctx, &api.Mutation{
 		SetJson: updatedAuthorJSON,
 	})
+	if err != nil {
+		return
+	}
+
+	// Add the new post to the global Index
+	var newPostsIndexJSON []byte
+	newPostsIndexJSON, err = json.Marshal(struct {
+		UID UID `json:"posts"`
+	}{
+		UID: newUID,
+	})
+	if err != nil {
+		return
+	}
+
+	_, err = txn.Mutation(ctx, &api.Mutation{
+		SetJson: newPostsIndexJSON,
+	})
 
 	return
 }
