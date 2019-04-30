@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestQueryPosts tests post creation
-func TestQueryPosts(t *testing.T) {
+// TestQuery tests post creation
+func TestQuery(t *testing.T) {
 	type TestSetup struct {
 		ts    *setup.TestSetup
 		users map[store.ID]*gqlmod.User
@@ -96,6 +96,36 @@ func TestQueryPosts(t *testing.T) {
 		for _, actual := range query.Posts {
 			require.Contains(t, s.posts, *actual.ID)
 			require.Equal(t, *s.posts[*actual.ID], actual)
+		}
+	})
+
+	t.Run("user", func(t *testing.T) {
+		s := setupTest(t)
+		defer s.ts.Teardown()
+
+		for _, expected := range s.users {
+			var query struct {
+				User *gqlmod.User `json:"user"`
+			}
+			s.ts.QueryVar(
+				`query($userId: Identifier!) {
+					user(id: $userId) {
+						id
+						creation
+						displayName
+						email
+						posts {
+							id
+						}
+					}
+				}`,
+				map[string]string{
+					"userId": string(*expected.ID),
+				},
+				&query,
+			)
+			require.NotNil(t, query.User)
+			require.Equal(t, *expected, *query.User)
 		}
 	})
 }
