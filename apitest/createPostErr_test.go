@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
+	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/stretchr/testify/require"
 )
 
@@ -66,5 +67,19 @@ func TestCreatePostErr(t *testing.T) {
 				verifyError(t, "InvalidInput", err)
 			})
 		}
+	})
+
+	// Test inexistent author
+	t.Run("inexistentAuthor", func(t *testing.T) {
+		ts := setup.New(t, tcx)
+		defer ts.Teardown()
+
+		res, err := ts.Help.CreatePost(
+			store.NewID(),
+			"test title",
+			"test contents",
+		)
+		require.Nil(t, res)
+		verifyError(t, "InvalidInput", err)
 	})
 }
