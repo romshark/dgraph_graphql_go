@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/dbmod"
 )
 
 // CtxKey represents a context.Context value key type
@@ -26,7 +27,37 @@ func New(str store.Store) *Resolver {
 
 // Users resolves Query.users
 func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
-	return nil, nil
+	var result struct {
+		Users []dbmod.User `json:"users"`
+	}
+	if err := rsv.str.Query(
+		ctx,
+		`{
+			users(func: has(User.id)) {
+				uid
+				User.id
+				User.creation
+				User.email
+				User.displayName
+			}
+		}`,
+		&result,
+	); err != nil {
+		rsv.error(ctx, err)
+		return nil, err
+	}
+	resolvers := make([]*User, len(result.Users))
+	for i, usr := range result.Users {
+		resolvers[i] = &User{
+			root:        rsv,
+			uid:         store.UID{NodeID: usr.UID},
+			id:          usr.ID,
+			displayName: usr.DisplayName,
+			email:       usr.Email,
+			creation:    usr.Creation,
+		}
+	}
+	return resolvers, nil
 }
 
 // Posts resolves Query.posts
