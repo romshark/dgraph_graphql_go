@@ -128,4 +128,34 @@ func TestQuery(t *testing.T) {
 			require.Equal(t, *expected, *query.User)
 		}
 	})
+
+	t.Run("post", func(t *testing.T) {
+		s := setupTest(t)
+		defer s.ts.Teardown()
+
+		for _, expected := range s.posts {
+			var query struct {
+				Post *gqlmod.Post `json:"post"`
+			}
+			s.ts.QueryVar(
+				`query($postId: Identifier!) {
+					post(id: $postId) {
+						id
+						creation
+						title
+						contents
+						author {
+							id
+						}
+					}
+				}`,
+				map[string]string{
+					"postId": string(*expected.ID),
+				},
+				&query,
+			)
+			require.NotNil(t, query.Post)
+			require.Equal(t, *expected, *query.Post)
+		}
+	})
 }
