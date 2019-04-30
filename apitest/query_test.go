@@ -73,4 +73,33 @@ func TestQueryPosts(t *testing.T) {
 			require.Equal(t, *s.users[*actual.ID], actual)
 		}
 	})
+
+	t.Run("posts", func(t *testing.T) {
+		s := setupTest(t)
+		defer s.ts.Teardown()
+
+		var query struct {
+			Posts []gqlmod.Post `json:"posts"`
+		}
+		s.ts.QueryVar(
+			`query {
+				posts {
+					id
+					creation
+					title
+					contents
+					author {
+						id
+					}
+				}
+			}`,
+			map[string]string{},
+			&query,
+		)
+		require.Len(t, query.Posts, len(s.posts))
+		for _, actual := range query.Posts {
+			require.Contains(t, s.posts, *actual.ID)
+			require.Equal(t, *s.posts[*actual.ID], actual)
+		}
+	})
 }
