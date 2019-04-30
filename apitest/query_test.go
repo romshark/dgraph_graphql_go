@@ -4,11 +4,9 @@ import (
 	"testing"
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
-	"github.com/romshark/dgraph_graphql_go/store"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
+	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/stretchr/testify/require"
 )
 
 // TestQueryPosts tests post creation
@@ -52,7 +50,7 @@ func TestQueryPosts(t *testing.T) {
 		var query struct {
 			Users []gqlmod.User `json:"users"`
 		}
-		s.ts.QueryVar(
+		s.ts.Query(
 			`query {
 				users {
 					id
@@ -64,7 +62,6 @@ func TestQueryPosts(t *testing.T) {
 					}
 				}
 			}`,
-			map[string]string{},
 			&query,
 		)
 		require.Len(t, query.Users, len(s.users))
@@ -81,7 +78,7 @@ func TestQueryPosts(t *testing.T) {
 		var query struct {
 			Posts []gqlmod.Post `json:"posts"`
 		}
-		s.ts.QueryVar(
+		s.ts.Query(
 			`query {
 				posts {
 					id
@@ -93,7 +90,6 @@ func TestQueryPosts(t *testing.T) {
 					}
 				}
 			}`,
-			map[string]string{},
 			&query,
 		)
 		require.Len(t, query.Posts, len(s.posts))
