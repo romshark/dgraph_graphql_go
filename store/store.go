@@ -17,7 +17,7 @@ type Transactions interface {
 		author ID,
 		title string,
 		contents string,
-	) error
+	) (UID, ID, error)
 
 	CreateReaction(
 		ctx context.Context,
@@ -30,7 +30,7 @@ type Transactions interface {
 		ctx context.Context,
 		email string,
 		displayName string,
-	) (ID, error)
+	) (UID, ID, error)
 }
 
 // Store interfaces a store implementation

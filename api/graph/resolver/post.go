@@ -12,7 +12,7 @@ import (
 // Post represents the resolver of the identically named type
 type Post struct {
 	root     *Resolver
-	uid      string
+	uid      store.UID
 	id       store.ID
 	creation time.Time
 	title    string
@@ -27,12 +27,14 @@ func (rsv *Post) Id() store.ID {
 // Author resolves Post.author
 func (rsv *Post) Author(ctx context.Context) (*User, error) {
 	var query struct {
-		Author dbmod.User `json:"author"`
+		Post []struct {
+			Author []dbmod.User `json:"Post.author"`
+		} `json:"post"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
-		`query Author($uid: uid) {
-			author(func: uid($uid)) {
+		`query Author($nodeId: string) {
+			post(func: uid($nodeId)) {
 				Post.author {
 					uid
 					User.id
@@ -44,20 +46,22 @@ func (rsv *Post) Author(ctx context.Context) (*User, error) {
 			}
 		}`,
 		map[string]string{
-			"$uid": rsv.uid,
+			"$nodeId": rsv.uid.NodeID,
 		},
 		&query,
 	); err != nil {
 		rsv.root.error(ctx, err)
 		return nil, err
 	}
+
+	author := query.Post[0].Author[0]
 	return &User{
 		root:        rsv.root,
-		uid:         *query.Author.UID,
-		id:          *query.Author.ID,
-		creation:    *query.Author.Creation,
-		email:       *query.Author.Email,
-		displayName: *query.Author.DisplayName,
+		uid:         store.UID{NodeID: author.UID},
+		id:          author.ID,
+		creation:    author.Creation,
+		email:       author.Email,
+		displayName: author.DisplayName,
 	}, nil
 }
 

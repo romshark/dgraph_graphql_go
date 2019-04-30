@@ -15,7 +15,11 @@ func (rsv *Resolver) CreateUser(
 		DisplayName string
 	},
 ) (*User, error) {
-	newID, err := rsv.str.CreateUser(ctx, params.Email, params.DisplayName)
+	newUID, newID, err := rsv.str.CreateUser(
+		ctx,
+		params.Email,
+		params.DisplayName,
+	)
 	if err != nil {
 		rsv.error(ctx, err)
 		return nil, err
@@ -26,17 +30,15 @@ func (rsv *Resolver) CreateUser(
 	}
 	if err := rsv.str.QueryVars(
 		ctx,
-		`query NewUser($id: string) {
-			newUser(func: eq(User.id, $id)) {
-				uid
-				User.id
+		`query NewUser($nodeId: string) {
+			newUser(func: uid($nodeId)) {
 				User.creation
 				User.email
 				User.displayName
 			}
 		}`,
 		map[string]string{
-			"$id": string(newID),
+			"$nodeId": newUID.NodeID,
 		},
 		&result,
 	); err != nil {
@@ -57,10 +59,10 @@ func (rsv *Resolver) CreateUser(
 
 	return &User{
 		root:        rsv,
-		uid:         *newUser.UID,
-		id:          *newUser.ID,
-		creation:    *newUser.Creation,
-		displayName: *newUser.DisplayName,
-		email:       *newUser.Email,
+		uid:         newUID,
+		id:          newID,
+		creation:    newUser.Creation,
+		displayName: newUser.DisplayName,
+		email:       newUser.Email,
 	}, nil
 }

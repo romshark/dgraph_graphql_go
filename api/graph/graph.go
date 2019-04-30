@@ -31,19 +31,19 @@ func (graph *Graph) Query(
 	ctx context.Context,
 	query []byte,
 ) (reply []byte, err error) {
-	var params struct {
+	var queryObject struct {
 		Query         string                 `json:"query"`
 		OperationName string                 `json:"operationName"`
 		Variables     map[string]interface{} `json:"variables"`
 	}
-	if err := json.Unmarshal(query, &params); err != nil {
-		return nil, errors.Wrap(err, "unmarshalling query")
+	if err := json.Unmarshal(query, &queryObject); err != nil {
+		return nil, errors.New("invalid query object")
 	}
 	rep := graph.schema.Exec(
 		ctx,
-		params.Query,
-		params.OperationName,
-		params.Variables,
+		queryObject.Query,
+		queryObject.OperationName,
+		queryObject.Variables,
 	)
 
 	if rep.Errors != nil {

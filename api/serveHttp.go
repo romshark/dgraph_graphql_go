@@ -71,25 +71,21 @@ func (srv *server) handleGraphQuery(
 	replyData, queryErr := srv.graph.Query(ctxWithRsvErr, query)
 
 	errCode := strerr.ErrorCode(resolverErr)
-	if resolverErr != nil && errCode != "" {
-		// User error
-		resp.WriteHeader(http.StatusBadRequest)
+	if resolverErr != nil {
+		if errCode != "" {
+			// User error
+			resp.WriteHeader(http.StatusBadRequest)
 
-		respErr := responseError{
-			Code:    errCode,
-			Message: resolverErr.Error(),
+			respErr := responseError{
+				Code:    errCode,
+				Message: resolverErr.Error(),
+			}
+			if err := jsonEncoder.Encode(response{Error: &respErr}); err != nil {
+				panic(fmt.Errorf("response JSON encode: %s", err))
+			}
+			return
 		}
-		if err := jsonEncoder.Encode(response{Error: &respErr}); err != nil {
-			panic(fmt.Errorf("response JSON encode: %s", err))
-		}
-		return
-	}
 
-	internalErr := resolverErr
-	if internalErr == nil {
-		internalErr = queryErr
-	}
-	if internalErr != nil {
 		// Unexpected internal error
 		http.Error(
 			resp,
@@ -99,15 +95,28 @@ func (srv *server) handleGraphQuery(
 
 		// Retrieve error stack trace and log the error
 		var tracedError string
-		if tracErr, ok := internalErr.(stackTracer); ok {
-			tracedError = internalErr.Error() + "\n"
+		if tracErr, ok := resolverErr.(stackTracer); ok {
+			tracedError = resolverErr.Error() + "\n"
 			for _, f := range tracErr.StackTrace() {
 				tracedError = fmt.Sprintf("%s%+s:%d\n", tracedError, f, f)
 			}
 		} else {
-			tracedError = internalErr.Error()
+			tracedError = resolverErr.Error()
 		}
 		log.Printf("graph query: %s", tracedError)
+		return
+	}
+
+	if queryErr != nil {
+		// User error
+		resp.WriteHeader(http.StatusBadRequest)
+
+		respErr := responseError{
+			Message: queryErr.Error(),
+		}
+		if err := jsonEncoder.Encode(response{Error: &respErr}); err != nil {
+			panic(fmt.Errorf("response JSON encode: %s", err))
+		}
 		return
 	}
 

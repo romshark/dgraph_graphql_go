@@ -18,6 +18,7 @@ type Mutation {
 	): User!
 
 	createPost(
+		author: Identifier!
 		title: String!
 		contents: String!
 	): Post!

@@ -2,8 +2,10 @@ package store
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
+	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
@@ -13,10 +15,10 @@ func (str *store) CreateUser(
 	ctx context.Context,
 	email string,
 	displayName string,
-) (newID ID, err error) {
+) (newUID UID, newID ID, err error) {
 	// Validate inputs
 	if err := ValidateUserDisplayName(displayName); err != nil {
-		return "", err
+		return UID{}, "", err
 	}
 
 	// Prepare
@@ -83,6 +85,29 @@ func (str *store) CreateUser(
 		return
 	}
 
-	err = newUser(ctx, txn, newID, email, displayName, time.Now())
+	// Create user account
+	var newUserJSON []byte
+	newUserJSON, err = json.Marshal(struct {
+		ID          string    `json:"User.id"`
+		Email       string    `json:"User.email"`
+		DisplayName string    `json:"User.displayName"`
+		Creation    time.Time `json:"User.creation"`
+	}{
+		ID:          string(newID),
+		Email:       email,
+		DisplayName: displayName,
+		Creation:    time.Now(),
+	})
+	if err != nil {
+		return
+	}
+
+	// Write
+	var userCreationMut map[string]string
+	userCreationMut, err = txn.Mutation(ctx, &api.Mutation{
+		SetJson: newUserJSON,
+	})
+	newUID = UID{userCreationMut["blank-0"]}
+
 	return
 }

@@ -12,7 +12,7 @@ import (
 // User represents the resolver of the identically named type
 type User struct {
 	root        *Resolver
-	uid         string
+	uid         store.UID
 	id          store.ID
 	creation    time.Time
 	email       string
@@ -64,7 +64,7 @@ func (rsv *User) Posts(
 			}
 		}`,
 		map[string]string{
-			"$nodeId": rsv.uid,
+			"$nodeId": rsv.uid.NodeID,
 		},
 		&query,
 	); err != nil {
@@ -76,11 +76,11 @@ func (rsv *User) Posts(
 	for i, post := range query.Posts {
 		resolvers[i] = &Post{
 			root:     rsv.root,
-			uid:      *post.UID,
-			id:       *post.ID,
-			creation: *post.Creation,
-			title:    *post.Title,
-			contents: *post.Contents,
+			uid:      store.UID{NodeID: post.UID},
+			id:       post.ID,
+			creation: post.Creation,
+			title:    post.Title,
+			contents: post.Contents,
 		}
 	}
 
