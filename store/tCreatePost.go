@@ -19,10 +19,10 @@ func (str *store) CreatePost(
 ) (newUID UID, newID ID, err error) {
 	// Validate input
 	if err := ValidatePostTitle(title); err != nil {
-		return UID{}, "", err
+		return UID{}, "", strerr.Wrap(strerr.ErrInvalidInput, err)
 	}
 	if err := ValidatePostContents(contents); err != nil {
-		return UID{}, "", err
+		return UID{}, "", strerr.Wrap(strerr.ErrInvalidInput, err)
 	}
 
 	// Prepare
