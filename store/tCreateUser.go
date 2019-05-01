@@ -20,6 +20,9 @@ func (str *store) CreateUser(
 	if err := ValidateUserDisplayName(displayName); err != nil {
 		return UID{}, "", strerr.Wrap(strerr.ErrInvalidInput, err)
 	}
+	if err := ValidateEmail(email); err != nil {
+		return UID{}, "", strerr.Wrap(strerr.ErrInvalidInput, err)
+	}
 
 	// Prepare
 	newID = NewID()
