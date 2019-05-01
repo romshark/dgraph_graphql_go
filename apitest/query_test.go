@@ -16,6 +16,7 @@ func TestQuery(t *testing.T) {
 		users         map[store.ID]*gqlmod.User
 		posts         map[store.ID]*gqlmod.Post
 		postsByAuthor map[store.ID]map[store.ID]*gqlmod.Post
+		authorByPosts map[store.ID]*gqlmod.User
 	}
 
 	setupTest := func(t *testing.T) TestSetup {
@@ -32,6 +33,7 @@ func TestQuery(t *testing.T) {
 		users := make(map[store.ID]*gqlmod.User, 2)
 		users[*userA.ID] = userA
 		users[*userB.ID] = userB
+		users[*userC.ID] = userC
 
 		posts := make(map[store.ID]*gqlmod.Post, 3)
 		posts[*postA1.ID] = postA1
@@ -44,20 +46,38 @@ func TestQuery(t *testing.T) {
 			len(posts),
 		)
 
+		// User A
+		userA.Posts = []gqlmod.Post{}
 		postsByAuthor[*userA.ID] = make(map[store.ID]*gqlmod.Post, 2)
 		postsByAuthor[*userA.ID][*postA1.ID] = postA1
 		postsByAuthor[*userA.ID][*postA2.ID] = postA2
 
+		// User B
+		userB.Posts = []gqlmod.Post{}
 		postsByAuthor[*userB.ID] = make(map[store.ID]*gqlmod.Post, 1)
 		postsByAuthor[*userB.ID][*postB1.ID] = postB1
 
+		// User C
+		userB.Posts = []gqlmod.Post{}
 		postsByAuthor[*userC.ID] = make(map[store.ID]*gqlmod.Post)
+
+		// Index: author by posts
+		authorByPosts := make(
+			map[store.ID]*gqlmod.User,
+			len(posts),
+		)
+		for authorID, posts := range postsByAuthor {
+			for postID := range posts {
+				authorByPosts[postID] = users[authorID]
+			}
+		}
 
 		return TestSetup{
 			ts:            ts,
 			users:         users,
 			posts:         posts,
 			postsByAuthor: postsByAuthor,
+			authorByPosts: authorByPosts,
 		}
 	}
 
@@ -75,9 +95,6 @@ func TestQuery(t *testing.T) {
 					creation
 					displayName
 					email
-					posts {
-						id
-					}
 				}
 			}`,
 			&query,
@@ -85,7 +102,7 @@ func TestQuery(t *testing.T) {
 		require.Len(t, query.Users, len(s.users))
 		for _, actual := range query.Users {
 			require.Contains(t, s.users, *actual.ID)
-			require.Equal(t, *s.users[*actual.ID], actual)
+			compareUsers(t, s.users[*actual.ID], &actual)
 		}
 	})
 
@@ -103,9 +120,6 @@ func TestQuery(t *testing.T) {
 					creation
 					title
 					contents
-					author {
-						id
-					}
 				}
 			}`,
 			&query,
@@ -113,7 +127,7 @@ func TestQuery(t *testing.T) {
 		require.Len(t, query.Posts, len(s.posts))
 		for _, actual := range query.Posts {
 			require.Contains(t, s.posts, *actual.ID)
-			require.Equal(t, *s.posts[*actual.ID], actual)
+			comparePosts(t, s.posts[*actual.ID], &actual)
 		}
 	})
 
@@ -132,9 +146,6 @@ func TestQuery(t *testing.T) {
 						creation
 						displayName
 						email
-						posts {
-							id
-						}
 					}
 				}`,
 				map[string]string{
@@ -143,7 +154,7 @@ func TestQuery(t *testing.T) {
 				&query,
 			)
 			require.NotNil(t, query.User)
-			require.Equal(t, *expected, *query.User)
+			compareUsers(t, expected, query.User)
 		}
 	})
 
@@ -162,9 +173,6 @@ func TestQuery(t *testing.T) {
 						creation
 						title
 						contents
-						author {
-							id
-						}
 					}
 				}`,
 				map[string]string{
@@ -173,11 +181,11 @@ func TestQuery(t *testing.T) {
 				&query,
 			)
 			require.NotNil(t, query.Post)
-			require.Equal(t, *expected, *query.Post)
+			comparePosts(t, expected, query.Post)
 		}
 	})
 
-	t.Run("user.posts", func(t *testing.T) {
+	t.Run("User.posts", func(t *testing.T) {
 		s := setupTest(t)
 		defer s.ts.Teardown()
 
@@ -193,9 +201,6 @@ func TestQuery(t *testing.T) {
 							title
 							contents
 							creation
-							author {
-								id
-							}
 						}
 					}
 				}`,
@@ -211,7 +216,7 @@ func TestQuery(t *testing.T) {
 			for _, actualPost := range query.User.Posts {
 				id := *actualPost.ID
 				require.Contains(t, posts, id)
-				require.Equal(t, *posts[id], actualPost)
+				comparePosts(t, posts[id], &actualPost)
 			}
 		}
 	})
