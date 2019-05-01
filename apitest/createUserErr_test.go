@@ -55,4 +55,31 @@ func TestCreateUserErr(t *testing.T) {
 			})
 		}
 	})
+
+	// Test reserved displayName on creation
+	t.Run("invalidEmail", func(t *testing.T) {
+		invalidEmails := map[string]string{
+			"empty":       "",
+			"missingTld":  "test@test",
+			"missingHost": "test",
+			"tooLong": "teeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" +
+				"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" +
+				"eeeeeeeeeeeeeeeeeeee@teeest.test" +
+				"t",
+		}
+
+		for tName, invalidEmail := range invalidEmails {
+			t.Run(tName, func(t *testing.T) {
+				ts := setup.New(t, tcx)
+				defer ts.Teardown()
+
+				res, err := ts.Help.CreateUser(
+					"testDisplayName",
+					invalidEmail,
+				)
+				require.Nil(t, res)
+				verifyError(t, "InvalidInput", err)
+			})
+		}
+	})
 }
