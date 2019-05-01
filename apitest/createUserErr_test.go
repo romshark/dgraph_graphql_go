@@ -30,4 +30,29 @@ func TestCreateUserErr(t *testing.T) {
 		require.Nil(t, res)
 		verifyError(t, "InvalidInput", err)
 	})
+
+	// Test reserved displayName on creation
+	t.Run("invalidDisplayName", func(t *testing.T) {
+		invalidDisplayNames := map[string]string{
+			"empty":    "",
+			"tooShort": "t",
+			"tooLong": "11111111000000001111111100000000" +
+				"11111111000000001111111100000000" +
+				"2",
+		}
+
+		for tName, invalidDisplayName := range invalidDisplayNames {
+			t.Run(tName, func(t *testing.T) {
+				ts := setup.New(t, tcx)
+				defer ts.Teardown()
+
+				res, err := ts.Help.CreateUser(
+					invalidDisplayName,
+					"test@test.test",
+				)
+				require.Nil(t, res)
+				verifyError(t, "InvalidInput", err)
+			})
+		}
+	})
 }
