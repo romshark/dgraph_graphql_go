@@ -46,12 +46,12 @@ func (rsv *User) Posts(
 	ctx context.Context,
 ) ([]*Post, error) {
 	var query struct {
-		Posts []dbmod.Post `json:"posts"`
+		Users []dbmod.User `json:"users"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
 		`query Posts($nodeId: string) {
-			posts(func: uid($nodeId)) {
+			users(func: uid($nodeId)) {
 				User.posts {
 					uid
 					Post.id
@@ -72,8 +72,13 @@ func (rsv *User) Posts(
 		return nil, err
 	}
 
-	resolvers := make([]*Post, len(query.Posts))
-	for i, post := range query.Posts {
+	if len(query.Users) < 1 {
+		return nil, nil
+	}
+
+	usr := query.Users[0]
+	resolvers := make([]*Post, len(usr.Posts))
+	for i, post := range usr.Posts {
 		resolvers[i] = &Post{
 			root:     rsv.root,
 			uid:      store.UID{NodeID: post.UID},

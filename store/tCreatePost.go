@@ -100,10 +100,10 @@ func (str *store) CreatePost(
 
 	// Update author (User.posts -> new post)
 	updateAuthor := struct {
-		UID   UID `json:"uid"`
-		Posts UID `json:"User.posts"`
+		UID   string `json:"uid"`
+		Posts UID    `json:"User.posts"`
 	}{
-		UID:   UID{string(res.Author[0].NodeID)},
+		UID:   res.Author[0].NodeID,
 		Posts: newUID,
 	}
 	var updatedAuthorJSON []byte
