@@ -220,4 +220,35 @@ func TestQuery(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("Post.author", func(t *testing.T) {
+		s := setupTest(t)
+		defer s.ts.Teardown()
+
+		for postID, author := range s.authorByPosts {
+			var query struct {
+				Post *gqlmod.Post `json:"post"`
+			}
+			s.ts.QueryVar(
+				`query($postId: Identifier!) {
+					post(id: $postId) {
+						author {
+							id
+							email
+							displayName
+							creation
+						}
+					}
+				}`,
+				map[string]string{
+					"postId": string(postID),
+				},
+				&query,
+			)
+
+			require.NotNil(t, query.Post)
+			require.NotNil(t, query.Post.Author)
+			compareUsers(t, s.users[*author.ID], query.Post.Author)
+		}
+	})
 }
