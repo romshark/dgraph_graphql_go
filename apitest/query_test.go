@@ -22,19 +22,52 @@ func TestQuery(t *testing.T) {
 	setupTest := func(t *testing.T) TestSetup {
 		ts := setup.New(t, tcx)
 
-		userA := ts.Help.OK.CreateUser("fooBarowich", "foo@bar.buz")
-		userB := ts.Help.OK.CreateUser("buzBazowich", "buz@foo.foo")
-		userC := ts.Help.OK.CreateUser("fuzFuzzowich", "fuz@fuz.fuz")
+		clt := ts.Root()
 
-		postA1 := ts.Help.OK.CreatePost(*userA.ID, "A post 1", "test content 1")
-		postA2 := ts.Help.OK.CreatePost(*userA.ID, "A post 2", "test content 2")
-		postB1 := ts.Help.OK.CreatePost(*userB.ID, "B post 1", "test content 3")
+		userA := clt.Help.OK.CreateUser(
+			"fooBarowich",
+			"foo@bar.buz",
+			"testpass",
+		)
+		userB := clt.Help.OK.CreateUser(
+			"buzBazowich",
+			"buz@foo.foo",
+			"testpass",
+		)
+		userC := clt.Help.OK.CreateUser(
+			"fuzFuzzowich",
+			"fuz@fuz.fuz",
+			"testpass",
+		)
 
+		// Post A1
+		postA1 := clt.Help.OK.CreatePost(
+			*userA.ID,
+			"A post 1",
+			"test content 1",
+		)
+
+		// Post A2
+		postA2 := clt.Help.OK.CreatePost(
+			*userA.ID,
+			"A post 2",
+			"test content 2",
+		)
+
+		// Post B1
+		postB1 := clt.Help.OK.CreatePost(
+			*userB.ID,
+			"B post 1",
+			"test content 3",
+		)
+
+		// Index: users
 		users := make(map[store.ID]*gqlmod.User, 2)
 		users[*userA.ID] = userA
 		users[*userB.ID] = userB
 		users[*userC.ID] = userC
 
+		// Index: posts
 		posts := make(map[store.ID]*gqlmod.Post, 3)
 		posts[*postA1.ID] = postA1
 		posts[*postA2.ID] = postA2
@@ -85,10 +118,12 @@ func TestQuery(t *testing.T) {
 		s := setupTest(t)
 		defer s.ts.Teardown()
 
+		clt := s.ts.Root()
+
 		var query struct {
 			Users []gqlmod.User `json:"users"`
 		}
-		s.ts.Query(
+		clt.Query(
 			`query {
 				users {
 					id
@@ -110,10 +145,12 @@ func TestQuery(t *testing.T) {
 		s := setupTest(t)
 		defer s.ts.Teardown()
 
+		clt := s.ts.Root()
+
 		var query struct {
 			Posts []gqlmod.Post `json:"posts"`
 		}
-		s.ts.Query(
+		clt.Query(
 			`query {
 				posts {
 					id
@@ -135,11 +172,13 @@ func TestQuery(t *testing.T) {
 		s := setupTest(t)
 		defer s.ts.Teardown()
 
+		clt := s.ts.Root()
+
 		for _, expected := range s.users {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			s.ts.QueryVar(
+			clt.QueryVar(
 				`query($userId: Identifier!) {
 					user(id: $userId) {
 						id
@@ -162,11 +201,13 @@ func TestQuery(t *testing.T) {
 		s := setupTest(t)
 		defer s.ts.Teardown()
 
+		clt := s.ts.Root()
+
 		for _, expected := range s.posts {
 			var query struct {
 				Post *gqlmod.Post `json:"post"`
 			}
-			s.ts.QueryVar(
+			clt.QueryVar(
 				`query($postId: Identifier!) {
 					post(id: $postId) {
 						id
@@ -189,11 +230,13 @@ func TestQuery(t *testing.T) {
 		s := setupTest(t)
 		defer s.ts.Teardown()
 
+		clt := s.ts.Root()
+
 		for authorID, posts := range s.postsByAuthor {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			s.ts.QueryVar(
+			clt.QueryVar(
 				`query($userId: Identifier!) {
 					user(id: $userId) {
 						posts {
@@ -225,11 +268,13 @@ func TestQuery(t *testing.T) {
 		s := setupTest(t)
 		defer s.ts.Teardown()
 
+		clt := s.ts.Root()
+
 		for postID, author := range s.authorByPosts {
 			var query struct {
 				Post *gqlmod.Post `json:"post"`
 			}
-			s.ts.QueryVar(
+			clt.QueryVar(
 				`query($postId: Identifier!) {
 					post(id: $postId) {
 						author {
@@ -250,5 +295,54 @@ func TestQuery(t *testing.T) {
 			require.NotNil(t, query.Post.Author)
 			compareUsers(t, s.users[*author.ID], query.Post.Author)
 		}
+	})
+
+	t.Run("User.sessions", func(t *testing.T) {
+		s := setupTest(t)
+		defer s.ts.Teardown()
+
+		clt, sess := s.ts.Client("foo@bar.buz", "testpass")
+
+		type expectedSessions = []*gqlmod.Session
+
+		expect := func(expectedSessions expectedSessions) {
+			var query struct {
+				User *gqlmod.User `json:"user"`
+			}
+			clt.QueryVar(
+				`query($userId: Identifier!) {
+					user(id: $userId) {
+						sessions {
+							key
+							creation
+						}
+					}
+				}`,
+				map[string]string{
+					"userId": string(*sess.User.ID),
+				},
+				&query,
+			)
+
+			require.NotNil(t, query.User)
+			require.Len(t, query.User.Sessions, len(expectedSessions))
+
+			// Create key -> session index
+			index := make(map[string]*gqlmod.Session)
+			for _, expected := range expectedSessions {
+				index[*expected.Key] = expected
+			}
+
+			// Check actual sessions
+			for _, actualSession := range query.User.Sessions {
+				actualKey := *actualSession.Key
+				require.Contains(t, index, actualKey)
+			}
+		}
+
+		// Sign in twice
+		expect(expectedSessions{sess})
+		_, sess2 := s.ts.Client("foo@bar.buz", "testpass")
+		expect(expectedSessions{sess, sess2})
 	})
 }

@@ -106,6 +106,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:9d5b5d543996dd584da1db1e0de1926f3e4c3a8dba0fa2f8db70f3ebee2342e0"
+  name = "golang.org/x/crypto"
+  packages = [
+    "bcrypt",
+    "blowfish",
+  ]
+  pruneopts = "UT"
+  revision = "a29dc8fdc73485234dbef99ebedb95d2eced08de"
+
+[[projects]]
+  branch = "master"
   digest = "1:ba3cf4e71b3db902c6a219b58be3b6a2cb76bb0626016f5ffa5e3ab261c8cb53"
   name = "golang.org/x/net"
   packages = [
@@ -211,6 +222,7 @@
     "github.com/pkg/errors",
     "github.com/satori/go.uuid",
     "github.com/stretchr/testify/require",
+    "golang.org/x/crypto/bcrypt",
     "google.golang.org/grpc",
   ]
   solver-name = "gps-cdcl"

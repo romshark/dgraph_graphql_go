@@ -91,3 +91,49 @@ func (rsv *User) Posts(
 
 	return resolvers, nil
 }
+
+// Sessions resolves User.sessions
+func (rsv *User) Sessions(
+	ctx context.Context,
+) ([]*Session, error) {
+	var query struct {
+		Users []dbmod.User `json:"users"`
+	}
+	if err := rsv.root.str.QueryVars(
+		ctx,
+		`query Sessions($nodeId: string) {
+			users(func: uid($nodeId)) {
+				User.sessions {
+					uid
+					Session.key
+					Session.creation
+				}
+			}
+		}`,
+		map[string]string{
+			"$nodeId": rsv.uid.NodeID,
+		},
+		&query,
+	); err != nil {
+		rsv.root.error(ctx, err)
+		return nil, err
+	}
+
+	if len(query.Users) < 1 {
+		return nil, nil
+	}
+
+	usr := query.Users[0]
+	resolvers := make([]*Session, len(usr.Sessions))
+	for i, sess := range usr.Sessions {
+		resolvers[i] = &Session{
+			root:     rsv.root,
+			uid:      store.UID{NodeID: sess.UID},
+			key:      sess.Key,
+			creation: sess.Creation,
+			userUID:  rsv.uid,
+		}
+	}
+
+	return resolvers, nil
+}

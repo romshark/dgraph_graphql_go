@@ -8,6 +8,10 @@ type Code string
 const (
 	// ErrInvalidInput is thrown when the API user input is invalid
 	ErrInvalidInput Code = "InvalidInput"
+
+	// ErrWrongCreds is thrown when the API user provides wrong authentication
+	// credentials
+	ErrWrongCreds Code = "WrongCreds"
 )
 
 // Error represents a typed store error
@@ -21,6 +25,8 @@ type Error struct {
 func filterCode(code Code) string {
 	switch code {
 	case ErrInvalidInput:
+		return string(code)
+	case ErrWrongCreds:
 		return string(code)
 	}
 	return ""

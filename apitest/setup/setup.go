@@ -2,13 +2,11 @@ package setup
 
 import (
 	"context"
-	"net/http"
+	"encoding/base64"
 	"testing"
 	"time"
 
 	"github.com/romshark/dgraph_graphql_go/api"
-	"github.com/romshark/dgraph_graphql_go/apitest/setup/helper"
-	"github.com/romshark/dgraph_graphql_go/store"
 )
 
 // TestContext represents a test context
@@ -19,12 +17,12 @@ type TestContext struct {
 
 // TestSetup represents the ArangoDB-based setup of an individual test
 type TestSetup struct {
-	t             *testing.T
-	stats         *StatisticsRecorder
-	apiServer     api.Server
-	defaultClient *http.Client
-
-	Help helper.Helper
+	t                 *testing.T
+	stats             *StatisticsRecorder
+	apiServer         api.Server
+	rootUsername      string
+	rootPassword      string
+	rootHTTPBasicAuth string
 }
 
 // T returns the test reference
@@ -36,25 +34,34 @@ func (ts *TestSetup) T() *testing.T {
 func New(t *testing.T, context TestContext) *TestSetup {
 	start := time.Now()
 
-	// Launch API server
-	str := store.NewStore(context.DBHost)
+	rootUsername := "test"
+	rootPassword := "test"
 
-	apiServer := api.NewServer(api.ServerOptions{}, str)
+	srvOpts := api.ServerOptions{
+		DBHost: context.DBHost,
+		RootUser: api.RootUserOptions{
+			// Enable the root user in read-write mode
+			Status:   api.RootUserRW,
+			Username: rootUsername,
+			Password: rootPassword,
+		},
+	}
+
+	apiServer := api.NewServer(srvOpts)
 	if err := apiServer.Launch(); err != nil {
 		t.Fatalf("API server launch: %s", err)
 	}
 
 	testSetup := &TestSetup{
-		t:         t,
-		stats:     context.Stats,
-		apiServer: apiServer,
-		defaultClient: &http.Client{
-			Timeout: time.Second * 1,
-		},
+		t:            t,
+		stats:        context.Stats,
+		apiServer:    apiServer,
+		rootUsername: rootUsername,
+		rootPassword: rootPassword,
+		rootHTTPBasicAuth: "Basic " + base64.StdEncoding.EncodeToString(
+			[]byte(rootUsername+":"+rootPassword),
+		),
 	}
-
-	// Initialize helper
-	testSetup.Help = helper.New(testSetup)
 
 	// Record setup time
 	context.Stats.Set(t, func(stat *TestStatistics) {

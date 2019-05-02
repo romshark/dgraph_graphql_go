@@ -3,15 +3,30 @@ package store
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
+	"github.com/romshark/dgraph_graphql_go/api/passhash"
+	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
 	"google.golang.org/grpc"
 )
 
 // Transactions interfaces a transactional store
 type Transactions interface {
+	CreateSession(
+		ctx context.Context,
+		email string,
+		password string,
+	) (
+		uid UID,
+		key string,
+		creation time.Time,
+		userUid UID,
+		err error,
+	)
+
 	CreatePost(
 		ctx context.Context,
 		author ID,
@@ -30,6 +45,7 @@ type Transactions interface {
 		ctx context.Context,
 		email string,
 		displayName string,
+		password string,
 	) (UID, ID, error)
 }
 
@@ -55,16 +71,24 @@ type Store interface {
 
 // store represents the service store
 type store struct {
-	host    string
-	db      *dgo.Dgraph
-	onClose func()
+	host                string
+	sessionKeyGenerator sesskeygen.SessionKeyGenerator
+	passwordHasher      passhash.PasswordHasher
+	db                  *dgo.Dgraph
+	onClose             func()
 }
 
 // NewStore creates a new disconnected database client instance
-func NewStore(host string) Store {
+func NewStore(
+	host string,
+	sessionKeyGenerator sesskeygen.SessionKeyGenerator,
+	passwordHasher passhash.PasswordHasher,
+) Store {
 	return &store{
-		host: host,
-		db:   nil,
+		host:                host,
+		sessionKeyGenerator: sessionKeyGenerator,
+		passwordHasher:      passwordHasher,
+		db:                  nil,
 	}
 }
 
@@ -72,6 +96,17 @@ func NewStore(host string) Store {
 func (str *store) Prepare() error {
 	if str.db != nil {
 		return nil
+	}
+
+	if str.sessionKeyGenerator == nil {
+		return errors.Errorf(
+			"missing session key generator during store initialization",
+		)
+	}
+	if str.passwordHasher == nil {
+		return errors.Errorf(
+			"missing password hasher during store initialization",
+		)
 	}
 
 	conn, err := grpc.Dial(str.host, grpc.WithInsecure())

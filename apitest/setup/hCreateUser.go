@@ -1,32 +1,34 @@
-package helper
+package setup
 
 import (
 	"time"
 
 	"github.com/romshark/dgraph_graphql_go/api"
-
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) createUser(
 	successAssumption successAssumption,
-	displayName string,
-	email string,
+	displayName,
+	email,
+	password string,
 ) (*gqlmod.User, *api.ResponseError) {
-	t := h.ts.T()
+	t := h.c.t
 
 	var result struct {
 		CreateUser *gqlmod.User `json:"createUser"`
 	}
-	err := h.ts.QueryVar(
+	err := h.c.QueryVar(
 		`mutation (
 			$email: String!
 			$displayName: String!
+			$password: String!
 		) {
 			createUser(
 				email: $email
-				displayName: $displayName,
+				displayName: $displayName
+				password: $password
 			) {
 				id
 				email
@@ -40,6 +42,7 @@ func (h Helper) createUser(
 		map[string]string{
 			"displayName": displayName,
 			"email":       email,
+			"password":    password,
 		},
 		&result,
 	)
@@ -67,17 +70,19 @@ func (h Helper) createUser(
 
 // CreateUser helps creating a user
 func (h Helper) CreateUser(
-	displayName string,
-	email string,
+	displayName,
+	email,
+	password string,
 ) (*gqlmod.User, *api.ResponseError) {
-	return h.createUser(potentialFailure, displayName, email)
+	return h.createUser(potentialFailure, displayName, email, password)
 }
 
 // CreateUser helps creating a user and assumes success
 func (ok AssumeSuccess) CreateUser(
-	displayName string,
-	email string,
+	displayName,
+	email,
+	password string,
 ) *gqlmod.User {
-	result, _ := ok.h.createUser(success, displayName, email)
+	result, _ := ok.h.createUser(success, displayName, email, password)
 	return result
 }

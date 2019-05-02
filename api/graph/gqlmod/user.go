@@ -13,4 +13,5 @@ type User struct {
 	Email       *string    `json:"email"`
 	DisplayName *string    `json:"displayName"`
 	Posts       []Post     `json:"posts"`
+	Sessions    []Session  `json:"sessions"`
 }

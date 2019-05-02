@@ -7,46 +7,51 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/store"
 )
 
-// ServerOptions defines the API server options
-type ServerOptions struct {
-	Host              string
-	KeepAliveDuration time.Duration
-}
-
-// SetDefaults sets the default options
-func (opts *ServerOptions) SetDefaults() {
-	if opts.KeepAliveDuration == time.Duration(0) {
-		opts.KeepAliveDuration = 3 * time.Minute
-	}
-}
-
 // Server interfaces an API server implementation
 type Server interface {
+	// Launche starts the API server and unblocks as soon as the server
+	// is running
 	Launch() error
+
+	// Shutdown instructs the server to shut down gracefuly and blocks until
+	// the server is shut down
 	Shutdown(context.Context) error
+
+	// AwaitShutdown blocks until the server is shut down
 	AwaitShutdown()
+
+	// Addr returns the address the API server is serving on
 	Addr() url.URL
 }
 
 type server struct {
-	opts    ServerOptions
-	httpSrv *http.Server
-	wg      *sync.WaitGroup
-	store   store.Store
-	addr    net.Addr
-	graph   *graph.Graph
+	opts           ServerOptions
+	httpSrv        *http.Server
+	wg             *sync.WaitGroup
+	store          store.Store
+	addr           net.Addr
+	graph          *graph.Graph
+	rootSessionKey []byte
 }
 
 // NewServer creates a new API server instance
-func NewServer(opts ServerOptions, str store.Store) Server {
+func NewServer(opts ServerOptions) Server {
 	opts.SetDefaults()
+
+	// Initialize store instance
+	str := store.NewStore(
+		opts.DBHost,
+		opts.SessionKeyGenerator,
+		opts.PasswordHasher,
+	)
+
+	// Initialize API server instance
 	newSrv := &server{
 		store: str,
 		opts:  opts,
@@ -58,10 +63,16 @@ func NewServer(opts ServerOptions, str store.Store) Server {
 		Addr:    opts.Host,
 		Handler: newSrv,
 	}
+
+	// Generate the root session key if the root user is enabled
+	if opts.RootUser.Status != RootUserDisabled {
+		newSrv.rootSessionKey = []byte(opts.SessionKeyGenerator.Generate())
+	}
+
 	return newSrv
 }
 
-// Run implements the Server interface
+// Launch implements the Server interface
 func (srv *server) Launch() error {
 	if err := srv.store.Prepare(); err != nil {
 		return errors.Wrap(err, "store preparation")
@@ -88,6 +99,7 @@ func (srv *server) Launch() error {
 	return nil
 }
 
+// AwaitShutdown implements the Server interface
 func (srv *server) AwaitShutdown() {
 	srv.wg.Wait()
 }

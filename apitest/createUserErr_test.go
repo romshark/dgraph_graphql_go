@@ -14,8 +14,14 @@ func TestCreateUserErr(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		ts.Help.OK.CreateUser("fooBarowich", "foo@bar.buz")
-		res, err := ts.Help.CreateUser("bazBuzowich", "foo@bar.buz")
+		clt := ts.Root()
+
+		clt.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
+		res, err := clt.Help.CreateUser(
+			"bazBuzowich",
+			"foo@bar.buz",
+			"testpass",
+		)
 		require.Nil(t, res)
 		verifyError(t, "InvalidInput", err)
 	})
@@ -25,8 +31,14 @@ func TestCreateUserErr(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		ts.Help.OK.CreateUser("fooBarowich", "foo@bar.buz")
-		res, err := ts.Help.CreateUser("fooBarowich", "baz@buzowich.buz")
+		clt := ts.Root()
+
+		clt.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
+		res, err := clt.Help.CreateUser(
+			"fooBarowich",
+			"baz@buzowich.buz",
+			"testpass",
+		)
 		require.Nil(t, res)
 		verifyError(t, "InvalidInput", err)
 	})
@@ -46,9 +58,12 @@ func TestCreateUserErr(t *testing.T) {
 				ts := setup.New(t, tcx)
 				defer ts.Teardown()
 
-				res, err := ts.Help.CreateUser(
+				clt := ts.Root()
+
+				res, err := clt.Help.CreateUser(
 					invalidDisplayName,
 					"test@test.test",
+					"foobar",
 				)
 				require.Nil(t, res)
 				verifyError(t, "InvalidInput", err)
@@ -73,9 +88,12 @@ func TestCreateUserErr(t *testing.T) {
 				ts := setup.New(t, tcx)
 				defer ts.Teardown()
 
-				res, err := ts.Help.CreateUser(
+				clt := ts.Root()
+
+				res, err := clt.Help.CreateUser(
 					"testDisplayName",
 					invalidEmail,
+					"testpass",
 				)
 				require.Nil(t, res)
 				verifyError(t, "InvalidInput", err)

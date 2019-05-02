@@ -6,6 +6,8 @@ import (
 	"log"
 
 	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/passhash"
+	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
 	"github.com/romshark/dgraph_graphql_go/store"
 )
 
@@ -15,13 +17,16 @@ var dbHost = flag.String("dbhost", "localhost:9080", "database host address")
 func main() {
 	flag.Parse()
 
-	str := store.NewStore(*dbHost)
+	str := store.NewStore()
 	if err := str.Prepare(); err != nil {
 		log.Fatalf("store prepare: %s", err)
 	}
 
 	api := api.NewServer(api.ServerOptions{
-		Host: *host,
+		Host:                *host,
+		DBHost:              *dbHost,                 // database host address
+		SessionKeyGenerator: sesskeygen.NewDefault(), // session key generator
+		PasswordHasher:      passhash.Bcrypt{},       // password hasher
 	}, str)
 
 	if err := api.Launch(); err != nil {

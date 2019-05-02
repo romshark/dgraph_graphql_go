@@ -18,12 +18,19 @@ func (str *store) setupSchema(ctx context.Context) error {
 		Schema: `
 			users: uid .
 			posts: uid .
+			sessions: uid .
+
+			Session.key: string @index(exact) .
+			Session.creation: dateTime .
+			Session.user: uid .
 
 			User.id: string @index(exact) .
 			User.creation: dateTime .
 			User.email: string @index(exact) .
 			User.displayName: string @index(exact) .
 			User.posts: uid .
+			User.sessions: uid .
+			User.password: string .
 
 			Post.id: string @index(exact) .
 			Post.creation: dateTime .

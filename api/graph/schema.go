@@ -15,9 +15,15 @@ type Query {
 }
 
 type Mutation {
+	signIn(
+		email: String!
+		password: String!
+	): Session!
+
 	createUser(
 		email: String!
 		displayName: String!
+		password: String!
 	): User!
 
 	createPost(
@@ -32,12 +38,19 @@ type Mutation {
 	): Reaction!
 }
 
+type Session {
+	key: String!
+	user: User!
+	creation: Time!
+}
+
 type User {
 	id: Identifier!
 	creation: Time!
 	email: String!
 	displayName: String!
 	posts: [Post!]!
+	sessions: [Session!]!
 }
 
 type Post {

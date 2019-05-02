@@ -15,17 +15,31 @@ func (str *store) CreateUser(
 	ctx context.Context,
 	email string,
 	displayName string,
+	password string,
 ) (newUID UID, newID ID, err error) {
 	// Validate inputs
-	if err := ValidateUserDisplayName(displayName); err != nil {
-		return UID{}, "", strerr.Wrap(strerr.ErrInvalidInput, err)
+	if valerr := ValidateUserDisplayName(displayName); valerr != nil {
+		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
+		return
 	}
-	if err := ValidateEmail(email); err != nil {
-		return UID{}, "", strerr.Wrap(strerr.ErrInvalidInput, err)
+	if valerr := ValidateEmail(email); valerr != nil {
+		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
+		return
+	}
+	if valerr := ValidatePassword(password); valerr != nil {
+		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
+		return
 	}
 
 	// Prepare
 	newID = NewID()
+
+	// Create password hash
+	var passwordHash []byte
+	passwordHash, err = str.passwordHasher.Hash([]byte(password))
+	if err != nil {
+		return
+	}
 
 	// Begin transaction
 	txn, close := str.txn(&err)
@@ -95,11 +109,13 @@ func (str *store) CreateUser(
 		Email       string    `json:"User.email"`
 		DisplayName string    `json:"User.displayName"`
 		Creation    time.Time `json:"User.creation"`
+		Password    string    `json:"User.password"`
 	}{
 		ID:          string(newID),
 		Email:       email,
 		DisplayName: displayName,
 		Creation:    time.Now(),
+		Password:    string(passwordHash),
 	})
 	if err != nil {
 		return

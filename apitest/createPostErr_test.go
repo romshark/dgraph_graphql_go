@@ -25,8 +25,14 @@ func TestCreatePostErr(t *testing.T) {
 				ts := setup.New(t, tcx)
 				defer ts.Teardown()
 
-				author := ts.Help.OK.CreateUser("fooBarowich", "foo@bar.buz")
-				res, err := ts.Help.CreatePost(
+				clt := ts.Root()
+
+				author := clt.Help.OK.CreateUser(
+					"fooBarowich",
+					"foo@bar.buz",
+					"testpass",
+				)
+				res, err := clt.Help.CreatePost(
 					*author.ID,
 					invalidTitle,
 					"test contents",
@@ -57,8 +63,14 @@ func TestCreatePostErr(t *testing.T) {
 				ts := setup.New(t, tcx)
 				defer ts.Teardown()
 
-				author := ts.Help.OK.CreateUser("fooBarowich", "foo@bar.buz")
-				res, err := ts.Help.CreatePost(
+				clt := ts.Root()
+
+				author := clt.Help.OK.CreateUser(
+					"fooBarowich",
+					"foo@bar.buz",
+					"testpass",
+				)
+				res, err := clt.Help.CreatePost(
 					*author.ID,
 					"test title",
 					invalidContent,
@@ -74,7 +86,9 @@ func TestCreatePostErr(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		res, err := ts.Help.CreatePost(
+		clt := ts.Root()
+
+		res, err := clt.Help.CreatePost(
 			store.NewID(),
 			"test title",
 			"test contents",

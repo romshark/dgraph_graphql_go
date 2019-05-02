@@ -13,5 +13,7 @@ type User struct {
 	Creation    time.Time `json:"User.creation"`
 	Email       string    `json:"User.email"`
 	DisplayName string    `json:"User.displayName"`
+	Password    string    `json:"User.password"`
 	Posts       []Post    `json:"User.posts"`
+	Sessions    []Session `json:"User.sessions"`
 }

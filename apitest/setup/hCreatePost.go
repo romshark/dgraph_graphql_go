@@ -1,4 +1,4 @@
-package helper
+package setup
 
 import (
 	"time"
@@ -15,12 +15,12 @@ func (h Helper) createPost(
 	title string,
 	contents string,
 ) (*gqlmod.Post, *api.ResponseError) {
-	t := h.ts.T()
+	t := h.c.t
 
 	var result struct {
 		CreatePost *gqlmod.Post `json:"createPost"`
 	}
-	err := h.ts.QueryVar(
+	err := h.c.QueryVar(
 		`mutation (
 			$author: Identifier!
 			$title: String!

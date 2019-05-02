@@ -13,12 +13,14 @@ func (rsv *Resolver) CreateUser(
 	params struct {
 		Email       string
 		DisplayName string
+		Password    string
 	},
 ) (*User, error) {
 	newUID, newID, err := rsv.str.CreateUser(
 		ctx,
 		params.Email,
 		params.DisplayName,
+		params.Password,
 	)
 	if err != nil {
 		rsv.error(ctx, err)
