@@ -15,12 +15,10 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		var query struct {
 			Users []gqlmod.User `json:"users"`
 		}
-		clt.Query(
+		s.ts.Root().Query(
 			`query {
 				users {
 					id
@@ -63,12 +61,10 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		var query struct {
 			Posts []gqlmod.Post `json:"posts"`
 		}
-		clt.Query(
+		s.ts.Root().Query(
 			`query {
 				posts {
 					id
@@ -140,12 +136,10 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		var query struct {
 			User *gqlmod.User `json:"user"`
 		}
-		clt.QueryVar(
+		s.ts.Root().QueryVar(
 			`query($userId: Identifier!) {
 				user(id: $userId) {
 					id
@@ -166,13 +160,11 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		for _, expected := range s.posts {
 			var query struct {
 				Post *gqlmod.Post `json:"post"`
 			}
-			clt.QueryVar(
+			s.ts.Root().QueryVar(
 				`query($postId: Identifier!) {
 					post(id: $postId) {
 						id
@@ -195,12 +187,10 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		var query struct {
 			Post *gqlmod.Post `json:"post"`
 		}
-		clt.QueryVar(
+		s.ts.Root().QueryVar(
 			`query($postId: Identifier!) {
 				post(id: $postId) {
 					id
@@ -221,13 +211,11 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		for _, expected := range s.reactions {
 			var query struct {
 				Reaction *gqlmod.Reaction `json:"reaction"`
 			}
-			clt.QueryVar(
+			s.ts.Root().QueryVar(
 				`query($reactionId: Identifier!) {
 					reaction(id: $reactionId) {
 						id
@@ -249,12 +237,10 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		var query struct {
 			Reaction *gqlmod.Reaction `json:"reaction"`
 		}
-		clt.QueryVar(
+		s.ts.Root().QueryVar(
 			`query($reactionId: Identifier!) {
 				reaction(id: $reactionId) {
 					id
@@ -275,13 +261,11 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		for authorID, posts := range s.postsByAuthor {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			clt.QueryVar(
+			s.ts.Root().QueryVar(
 				`query($userId: Identifier!) {
 					user(id: $userId) {
 						posts {
@@ -313,13 +297,11 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		for postID, author := range s.authorByPosts {
 			var query struct {
 				Post *gqlmod.Post `json:"post"`
 			}
-			clt.QueryVar(
+			s.ts.Root().QueryVar(
 				`query($postId: Identifier!) {
 					post(id: $postId) {
 						author {
@@ -394,13 +376,12 @@ func TestQuery(t *testing.T) {
 	t.Run("User.sessions (empty)", func(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
-		root := s.ts.Root()
 
 		for userID := range s.users {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			root.QueryVar(
+			s.ts.Root().QueryVar(
 				`query($userId: Identifier!) {
 					user(id: $userId) {
 						sessions {
@@ -423,13 +404,11 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		for postID, reactions := range s.reactionsByPost {
 			var query struct {
 				Post *gqlmod.Post `json:"post"`
 			}
-			clt.QueryVar(
+			s.ts.Root().QueryVar(
 				`query($postId: Identifier!) {
 					post(id: $postId) {
 						reactions {
@@ -461,13 +440,11 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		for authorID, reactions := range s.reactionsByAuthor {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			clt.QueryVar(
+			s.ts.Root().QueryVar(
 				`query($authorId: Identifier!) {
 					user(id: $authorId) {
 						publishedReactions {
@@ -499,13 +476,11 @@ func TestQuery(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
 
-		clt := s.ts.Root()
-
 		for subjectReactionID, subReactions := range s.subReaction {
 			var query struct {
 				Reaction *gqlmod.Reaction `json:"reaction"`
 			}
-			clt.QueryVar(
+			s.ts.Root().QueryVar(
 				`query($subjectReactionId: Identifier!) {
 					reaction(id: $subjectReactionId) {
 						reactions {
