@@ -31,7 +31,6 @@ func (rsv *Post) Author(ctx context.Context) (*User, error) {
 			Author []dbmod.User `json:"Post.author"`
 		} `json:"post"`
 	}
-	//TODO: remove User.posts from the query
 	if err := rsv.root.str.QueryVars(
 		ctx,
 		`query Author($nodeId: string) {
@@ -42,7 +41,6 @@ func (rsv *Post) Author(ctx context.Context) (*User, error) {
 					User.creation
 					User.email
 					User.displayName
-					User.posts
 				}
 			}
 		}`,

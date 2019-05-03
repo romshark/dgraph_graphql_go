@@ -48,7 +48,6 @@ func (rsv *User) Posts(
 	var query struct {
 		Users []dbmod.User `json:"users"`
 	}
-	// TODO: remove Post.author and Post.reaction from the query
 	if err := rsv.root.str.QueryVars(
 		ctx,
 		`query Posts($nodeId: string) {
@@ -57,10 +56,8 @@ func (rsv *User) Posts(
 					uid
 					Post.id
 					Post.creation
-					Post.author
 					Post.title
 					Post.contents
-					Post.reaction
 				}
 			}
 		}`,
