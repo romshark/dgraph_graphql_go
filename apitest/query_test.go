@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
+	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,6 +91,32 @@ func TestQuery(t *testing.T) {
 			require.NotNil(t, query.User)
 			compareUsers(t, expected, query.User)
 		}
+	})
+
+	t.Run("user (inexistent)", func(t *testing.T) {
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
+
+		clt := s.ts.Root()
+
+		var query struct {
+			User *gqlmod.User `json:"user"`
+		}
+		clt.QueryVar(
+			`query($userId: Identifier!) {
+				user(id: $userId) {
+					id
+					creation
+					displayName
+					email
+				}
+			}`,
+			map[string]string{
+				"userId": string(store.NewID()),
+			},
+			&query,
+		)
+		require.Nil(t, query.User)
 	})
 
 	t.Run("post", func(t *testing.T) {
