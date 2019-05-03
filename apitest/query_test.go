@@ -86,6 +86,27 @@ func TestQuery(t *testing.T) {
 		}
 	})
 
+	t.Run("posts (none)", func(t *testing.T) {
+		ts := setup.New(t, tcx)
+		defer ts.Teardown()
+
+		var query struct {
+			Posts []gqlmod.Post `json:"posts"`
+		}
+		ts.Root().Query(
+			`query {
+				posts {
+					id
+					creation
+					title
+					contents
+				}
+			}`,
+			&query,
+		)
+		require.Len(t, query.Posts, 0)
+	})
+
 	t.Run("user", func(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
