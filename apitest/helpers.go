@@ -61,15 +61,44 @@ func comparePosts(
 	require.NotNil(t, actual.ID)
 	require.Equal(t, *expected.ID, *actual.ID)
 
-	// email
+	// title
 	require.NotNil(t, expected.Title)
 	require.NotNil(t, actual.Title)
 	require.Equal(t, *expected.Title, *actual.Title)
 
-	// displayName
+	// contents
 	require.NotNil(t, expected.Contents)
 	require.NotNil(t, actual.Contents)
 	require.Equal(t, *expected.Contents, *actual.Contents)
+
+	// creation
+	require.NotNil(t, expected.Creation)
+	require.NotNil(t, actual.Creation)
+	require.Equal(t, *expected.Creation, *actual.Creation)
+}
+
+func compareReactions(
+	t *testing.T,
+	expected *gqlmod.Reaction,
+	actual *gqlmod.Reaction,
+) {
+	require.NotNil(t, expected)
+	require.NotNil(t, actual)
+
+	// id
+	require.NotNil(t, expected.ID)
+	require.NotNil(t, actual.ID)
+	require.Equal(t, *expected.ID, *actual.ID)
+
+	// emotion
+	require.NotNil(t, expected.Emotion)
+	require.NotNil(t, actual.Emotion)
+	require.Equal(t, *expected.Emotion, *actual.Emotion)
+
+	// message
+	require.NotNil(t, expected.Message)
+	require.NotNil(t, actual.Message)
+	require.Equal(t, *expected.Message, *actual.Message)
 
 	// creation
 	require.NotNil(t, expected.Creation)

@@ -13,5 +13,5 @@ type Post struct {
 	Author    *User      `json:"author"`
 	Title     *string    `json:"title"`
 	Contents  *string    `json:"contents"`
-	Reactions []Reaction `json:"reaction"`
+	Reactions []Reaction `json:"reactions"`
 }

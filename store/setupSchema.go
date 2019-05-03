@@ -31,6 +31,7 @@ func (str *store) setupSchema(ctx context.Context) error {
 			User.posts: uid .
 			User.sessions: uid .
 			User.password: string .
+			User.publishedReactions: uid .
 
 			Post.id: string @index(exact) .
 			Post.creation: dateTime .
@@ -40,6 +41,7 @@ func (str *store) setupSchema(ctx context.Context) error {
 			Post.reactions: uid .
 
 			Reaction.id: string @index(exact) .
+			Reaction.subject: uid .
 			Reaction.creation: dateTime .
 			Reaction.emotion: string .
 			Reaction.message: string .

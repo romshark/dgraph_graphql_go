@@ -31,6 +31,7 @@ func (rsv *Post) Author(ctx context.Context) (*User, error) {
 			Author []dbmod.User `json:"Post.author"`
 		} `json:"post"`
 	}
+	//TODO: remove User.posts from the query
 	if err := rsv.root.str.QueryVars(
 		ctx,
 		`query Author($nodeId: string) {
@@ -83,6 +84,53 @@ func (rsv *Post) Contents() string {
 }
 
 // Reactions resolves Post.reactions
-func (rsv *Post) Reactions() ([]*Reaction, error) {
-	return nil, nil
+func (rsv *Post) Reactions(ctx context.Context) ([]*Reaction, error) {
+	var query struct {
+		Posts []dbmod.Post `json:"posts"`
+	}
+	if err := rsv.root.str.QueryVars(
+		ctx,
+		`query ReactionsToPost($nodeId: string) {
+			posts(func: uid($nodeId)) {
+				Post.reactions {
+					uid
+					Reaction.id
+					Reaction.creation
+					Reaction.emotion
+					Reaction.message
+					Reaction.author {
+						uid
+					}
+				}
+			}
+		}`,
+		map[string]string{
+			"$nodeId": rsv.uid.NodeID,
+		},
+		&query,
+	); err != nil {
+		rsv.root.error(ctx, err)
+		return nil, err
+	}
+
+	if len(query.Posts) < 1 {
+		return nil, nil
+	}
+
+	post := query.Posts[0]
+	resolvers := make([]*Reaction, len(post.Reactions))
+	for i, reaction := range post.Reactions {
+		resolvers[i] = &Reaction{
+			root:       rsv.root,
+			uid:        reaction.UID,
+			id:         reaction.ID,
+			subjectUID: rsv.uid.NodeID,
+			authorUID:  reaction.Author[0].UID,
+			creation:   reaction.Creation,
+			emotion:    reaction.Emotion,
+			message:    reaction.Message,
+		}
+	}
+
+	return resolvers, nil
 }

@@ -1,6 +1,8 @@
 package store
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 // ValidateReactionMessage returns an error if invalid, otherwise returns nil
 func ValidateReactionMessage(v string) error {

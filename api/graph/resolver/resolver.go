@@ -183,6 +183,60 @@ func (rsv *Resolver) Post(
 	}, nil
 }
 
+// Reaction resolves Query.reaction
+func (rsv *Resolver) Reaction(
+	ctx context.Context,
+	param struct {
+		Id string
+	},
+) (*Reaction, error) {
+	var result struct {
+		Reactions []dbmod.Reaction `json:"reactions"`
+	}
+	if err := rsv.str.QueryVars(
+		ctx,
+		`query Reaction($reactionId: string) {
+			reactions(func: eq(Reaction.id, $reactionId)) {
+				uid
+				Reaction.id
+				Reaction.creation
+				Reaction.emotion
+				Reaction.message
+				Reaction.author {
+					uid
+				}
+				Reaction.subject {
+					uid
+					Post.id
+					Reaction.id
+				}
+			}
+		}`,
+		map[string]string{
+			"$reactionId": param.Id,
+		},
+		&result,
+	); err != nil {
+		rsv.error(ctx, err)
+		return nil, err
+	}
+	if len(result.Reactions) < 1 {
+		return nil, nil
+	}
+
+	reaction := result.Reactions[0]
+	return &Reaction{
+		root:       rsv,
+		uid:        reaction.UID,
+		id:         reaction.ID,
+		emotion:    reaction.Emotion,
+		message:    reaction.Message,
+		creation:   reaction.Creation,
+		authorUID:  reaction.Author[0].UID,
+		subjectUID: *reaction.Subject[0].UID(),
+	}, nil
+}
+
 // error writes an error to the resolver context for the API server to read
 func (rsv *Resolver) error(ctx context.Context, err error) {
 	ctxErr := ctx.Value(CtxErrorRef).(*error)

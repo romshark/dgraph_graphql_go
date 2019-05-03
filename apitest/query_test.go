@@ -4,119 +4,14 @@ import (
 	"testing"
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
-	"github.com/romshark/dgraph_graphql_go/apitest/setup"
-	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/stretchr/testify/require"
 )
 
 // TestQuery tests post creation
 func TestQuery(t *testing.T) {
-	type TestSetup struct {
-		ts            *setup.TestSetup
-		users         map[store.ID]*gqlmod.User
-		posts         map[store.ID]*gqlmod.Post
-		postsByAuthor map[store.ID]map[store.ID]*gqlmod.Post
-		authorByPosts map[store.ID]*gqlmod.User
-	}
-
-	setupTest := func(t *testing.T) TestSetup {
-		ts := setup.New(t, tcx)
-
-		clt := ts.Root()
-
-		userA := clt.Help.OK.CreateUser(
-			"fooBarowich",
-			"foo@bar.buz",
-			"testpass",
-		)
-		userB := clt.Help.OK.CreateUser(
-			"buzBazowich",
-			"buz@foo.foo",
-			"testpass",
-		)
-		userC := clt.Help.OK.CreateUser(
-			"fuzFuzzowich",
-			"fuz@fuz.fuz",
-			"testpass",
-		)
-
-		// Post A1
-		postA1 := clt.Help.OK.CreatePost(
-			*userA.ID,
-			"A post 1",
-			"test content 1",
-		)
-
-		// Post A2
-		postA2 := clt.Help.OK.CreatePost(
-			*userA.ID,
-			"A post 2",
-			"test content 2",
-		)
-
-		// Post B1
-		postB1 := clt.Help.OK.CreatePost(
-			*userB.ID,
-			"B post 1",
-			"test content 3",
-		)
-
-		// Index: users
-		users := make(map[store.ID]*gqlmod.User, 2)
-		users[*userA.ID] = userA
-		users[*userB.ID] = userB
-		users[*userC.ID] = userC
-
-		// Index: posts
-		posts := make(map[store.ID]*gqlmod.Post, 3)
-		posts[*postA1.ID] = postA1
-		posts[*postA2.ID] = postA2
-		posts[*postB1.ID] = postB1
-
-		// Index: posts by author
-		postsByAuthor := make(
-			map[store.ID]map[store.ID]*gqlmod.Post,
-			len(posts),
-		)
-
-		// User A
-		userA.Posts = []gqlmod.Post{}
-		postsByAuthor[*userA.ID] = make(map[store.ID]*gqlmod.Post, 2)
-		postsByAuthor[*userA.ID][*postA1.ID] = postA1
-		postsByAuthor[*userA.ID][*postA2.ID] = postA2
-
-		// User B
-		userB.Posts = []gqlmod.Post{}
-		postsByAuthor[*userB.ID] = make(map[store.ID]*gqlmod.Post, 1)
-		postsByAuthor[*userB.ID][*postB1.ID] = postB1
-
-		// User C
-		userB.Posts = []gqlmod.Post{}
-		postsByAuthor[*userC.ID] = make(map[store.ID]*gqlmod.Post)
-
-		// Index: author by posts
-		authorByPosts := make(
-			map[store.ID]*gqlmod.User,
-			len(posts),
-		)
-		for authorID, posts := range postsByAuthor {
-			for postID := range posts {
-				authorByPosts[postID] = users[authorID]
-			}
-		}
-
-		return TestSetup{
-			ts:            ts,
-			users:         users,
-			posts:         posts,
-			postsByAuthor: postsByAuthor,
-			authorByPosts: authorByPosts,
-		}
-	}
-
 	t.Run("users", func(t *testing.T) {
-		s := setupTest(t)
-		defer s.ts.Teardown()
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
 
 		clt := s.ts.Root()
 
@@ -142,8 +37,8 @@ func TestQuery(t *testing.T) {
 	})
 
 	t.Run("posts", func(t *testing.T) {
-		s := setupTest(t)
-		defer s.ts.Teardown()
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
 
 		clt := s.ts.Root()
 
@@ -169,8 +64,8 @@ func TestQuery(t *testing.T) {
 	})
 
 	t.Run("user", func(t *testing.T) {
-		s := setupTest(t)
-		defer s.ts.Teardown()
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
 
 		clt := s.ts.Root()
 
@@ -198,8 +93,8 @@ func TestQuery(t *testing.T) {
 	})
 
 	t.Run("post", func(t *testing.T) {
-		s := setupTest(t)
-		defer s.ts.Teardown()
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
 
 		clt := s.ts.Root()
 
@@ -227,8 +122,8 @@ func TestQuery(t *testing.T) {
 	})
 
 	t.Run("User.posts", func(t *testing.T) {
-		s := setupTest(t)
-		defer s.ts.Teardown()
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
 
 		clt := s.ts.Root()
 
@@ -265,8 +160,8 @@ func TestQuery(t *testing.T) {
 	})
 
 	t.Run("Post.author", func(t *testing.T) {
-		s := setupTest(t)
-		defer s.ts.Teardown()
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
 
 		clt := s.ts.Root()
 
@@ -298,10 +193,10 @@ func TestQuery(t *testing.T) {
 	})
 
 	t.Run("User.sessions", func(t *testing.T) {
-		s := setupTest(t)
-		defer s.ts.Teardown()
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
 
-		clt, sess := s.ts.Client("foo@bar.buz", "testpass")
+		clt, sess := s.ts.Client("1@test.test", "testpass")
 
 		type expectedSessions = []*gqlmod.Session
 
@@ -342,7 +237,121 @@ func TestQuery(t *testing.T) {
 
 		// Sign in twice
 		expect(expectedSessions{sess})
-		_, sess2 := s.ts.Client("foo@bar.buz", "testpass")
+		_, sess2 := s.ts.Client("1@test.test", "testpass")
 		expect(expectedSessions{sess, sess2})
+	})
+
+	t.Run("Post.reactions", func(t *testing.T) {
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
+
+		clt := s.ts.Root()
+
+		for postID, reactions := range s.reactionsByPost {
+			var query struct {
+				Post *gqlmod.Post `json:"post"`
+			}
+			clt.QueryVar(
+				`query($postId: Identifier!) {
+					post(id: $postId) {
+						reactions {
+							id
+							emotion
+							message
+							creation
+						}
+					}
+				}`,
+				map[string]string{
+					"postId": string(postID),
+				},
+				&query,
+			)
+
+			require.NotNil(t, query.Post)
+			require.Len(t, query.Post.Reactions, len(reactions))
+
+			for _, actualReaction := range query.Post.Reactions {
+				id := *actualReaction.ID
+				require.Contains(t, reactions, id)
+				compareReactions(t, reactions[id], &actualReaction)
+			}
+		}
+	})
+
+	t.Run("User.publishedReactions", func(t *testing.T) {
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
+
+		clt := s.ts.Root()
+
+		for authorID, reactions := range s.reactionsByAuthor {
+			var query struct {
+				User *gqlmod.User `json:"user"`
+			}
+			clt.QueryVar(
+				`query($authorId: Identifier!) {
+					user(id: $authorId) {
+						publishedReactions {
+							id
+							emotion
+							message
+							creation
+						}
+					}
+				}`,
+				map[string]string{
+					"authorId": string(authorID),
+				},
+				&query,
+			)
+
+			require.NotNil(t, query.User)
+			require.Len(t, query.User.PublishedReactions, len(reactions))
+
+			for _, actualReaction := range query.User.PublishedReactions {
+				id := *actualReaction.ID
+				require.Contains(t, reactions, id)
+				compareReactions(t, reactions[id], &actualReaction)
+			}
+		}
+	})
+
+	t.Run("Reaction.reactions", func(t *testing.T) {
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
+
+		clt := s.ts.Root()
+
+		for subjectReactionID, subReactions := range s.subReaction {
+			var query struct {
+				Reaction *gqlmod.Reaction `json:"reaction"`
+			}
+			clt.QueryVar(
+				`query($subjectReactionId: Identifier!) {
+					reaction(id: $subjectReactionId) {
+						reactions {
+							id
+							emotion
+							message
+							creation
+						}
+					}
+				}`,
+				map[string]string{
+					"subjectReactionId": string(subjectReactionID),
+				},
+				&query,
+			)
+
+			require.NotNil(t, query.Reaction)
+			require.Len(t, query.Reaction.Reactions, len(subReactions))
+
+			for _, actualReaction := range query.Reaction.Reactions {
+				id := *actualReaction.ID
+				require.Contains(t, subReactions, id)
+				compareReactions(t, subReactions[id], &actualReaction)
+			}
+		}
 	})
 }

@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
+
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
@@ -36,10 +38,20 @@ type Transactions interface {
 
 	CreateReaction(
 		ctx context.Context,
-		post ID,
 		author ID,
+		subject ID,
+		emotion emotion.Emotion,
 		message string,
-	) error
+	) (
+		result struct {
+			UID          UID
+			ID           ID
+			SubjectUID   UID
+			AuthorUID    UID
+			CreationTime time.Time
+		},
+		err error,
+	)
 
 	CreateUser(
 		ctx context.Context,

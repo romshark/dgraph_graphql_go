@@ -1,21 +1,27 @@
 package resolver
 
 import (
+	"context"
+	"reflect"
 	"time"
 
 	"github.com/graph-gophers/graphql-go"
+	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/dbmod"
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
 )
 
 // Reaction represents the resolver of the identically named type
 type Reaction struct {
-	root     *Resolver
-	uid      string
-	id       store.ID
-	creation time.Time
-	emotion  emotion.Emotion
-	message  string
+	root       *Resolver
+	uid        string
+	authorUID  string
+	subjectUID string
+	id         store.ID
+	creation   time.Time
+	emotion    emotion.Emotion
+	message    string
 }
 
 // Id resolves Reaction.id
@@ -31,13 +37,112 @@ func (rsv *Reaction) Creation() graphql.Time {
 }
 
 // Subject resolves Reaction.subject
-func (rsv *Reaction) Subject() *ReactionSubject {
-	return nil
+func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
+	var query struct {
+		Reactions []dbmod.Reaction `json:"reactions"`
+	}
+	if err := rsv.root.str.QueryVars(
+		ctx,
+		`query ReactionSubject($nodeId: string) {
+			reaction(func: uid($nodeId)) {
+				Reaction.subject {
+					uid
+
+					Post.id
+					Post.creation
+					Post.author {
+						uid
+					}
+					Post.title
+					Post.contents
+
+					Reaction.id
+					Reaction.creation
+					Reaction.author {
+						uid
+					}
+					Reaction.message
+					Reaction.emotion
+				}
+			}
+		}`,
+		map[string]string{
+			"$nodeId": rsv.subjectUID,
+		},
+		&query,
+	); err != nil {
+		rsv.root.error(ctx, err)
+		return nil, err
+	}
+
+	subject := query.Reactions[0].Subject[0]
+
+	switch v := subject.V.(type) {
+	case *dbmod.Post:
+		return &ReactionSubject{&Post{
+			root:     rsv.root,
+			uid:      store.UID{NodeID: v.UID},
+			id:       v.ID,
+			creation: v.Creation,
+			title:    v.Title,
+			contents: v.Contents,
+		}}, nil
+	case *dbmod.Reaction:
+		return &ReactionSubject{&Reaction{
+			root:       rsv.root,
+			uid:        v.UID,
+			authorUID:  v.Author[0].UID,
+			subjectUID: rsv.uid,
+			id:         v.ID,
+			creation:   v.Creation,
+			emotion:    v.Emotion,
+			message:    v.Message,
+		}}, nil
+	}
+	err := errors.Errorf(
+		"unsupported union ReactionSubject type: %s",
+		reflect.TypeOf(subject.V),
+	)
+	rsv.root.error(ctx, err)
+	return nil, err
 }
 
 // Author resolves Reaction.author
-func (rsv *Reaction) Author() *User {
-	return nil
+func (rsv *Reaction) Author(ctx context.Context) (*User, error) {
+	var query struct {
+		Reaction []dbmod.Reaction `json:"reaction"`
+	}
+	if err := rsv.root.str.QueryVars(
+		ctx,
+		`query Author($nodeId: string) {
+			reaction(func: uid($nodeId)) {
+				Reaction.author {
+					uid
+					User.id
+					User.creation
+					User.email
+					User.displayName
+				}
+			}
+		}`,
+		map[string]string{
+			"$nodeId": rsv.authorUID,
+		},
+		&query,
+	); err != nil {
+		rsv.root.error(ctx, err)
+		return nil, err
+	}
+
+	author := query.Reaction[0].Author[0]
+	return &User{
+		root:        rsv.root,
+		uid:         store.UID{NodeID: author.UID},
+		id:          author.ID,
+		creation:    author.Creation,
+		email:       author.Email,
+		displayName: author.DisplayName,
+	}, nil
 }
 
 // Emotion resolves Reaction.emotion
@@ -51,6 +156,48 @@ func (rsv *Reaction) Message() string {
 }
 
 // Reactions resolves Reaction.reactions
-func (rsv *Reaction) Reactions() ([]*Reaction, error) {
-	return nil, nil
+func (rsv *Reaction) Reactions(ctx context.Context) ([]*Reaction, error) {
+	var query struct {
+		Reaction []dbmod.Reaction `json:"reaction"`
+	}
+	if err := rsv.root.str.QueryVars(
+		ctx,
+		`query SubReactions($nodeId: string) {
+			reaction(func: uid($nodeId)) {
+				Reaction.reactions {
+					uid
+					Reaction.id
+					Reaction.creation
+					Reaction.emotion
+					Reaction.message
+					Reaction.author {
+						uid
+					}
+				}
+			}
+		}`,
+		map[string]string{
+			"$nodeId": rsv.uid,
+		},
+		&query,
+	); err != nil {
+		rsv.root.error(ctx, err)
+		return nil, err
+	}
+
+	resolvers := make([]*Reaction, len(query.Reaction[0].Reactions))
+	for i, subReaction := range query.Reaction[0].Reactions {
+		resolvers[i] = &Reaction{
+			root:       rsv.root,
+			uid:        subReaction.UID,
+			id:         subReaction.ID,
+			authorUID:  subReaction.Author[0].UID,
+			subjectUID: rsv.uid,
+			creation:   subReaction.Creation,
+			emotion:    subReaction.Emotion,
+			message:    subReaction.Message,
+		}
+	}
+
+	return resolvers, nil
 }

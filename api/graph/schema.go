@@ -12,6 +12,7 @@ type Query {
 
 	user(id: Identifier!): User
 	post(id: Identifier!): Post
+	reaction(id: Identifier!): Reaction
 }
 
 type Mutation {
@@ -33,6 +34,8 @@ type Mutation {
 	): Post!
 
 	createReaction(
+		author: Identifier!
+		subject: Identifier!
 		emotion: Emotion!
 		message: String!
 	): Reaction!
@@ -51,6 +54,9 @@ type User {
 	displayName: String!
 	posts: [Post!]!
 	sessions: [Session!]!
+
+	# publishedReactions lists all reactions published by the user
+	publishedReactions: [Reaction!]!
 }
 
 type Post {
