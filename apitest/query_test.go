@@ -148,6 +148,32 @@ func TestQuery(t *testing.T) {
 		}
 	})
 
+	t.Run("post (inexistent)", func(t *testing.T) {
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
+
+		clt := s.ts.Root()
+
+		var query struct {
+			Post *gqlmod.Post `json:"post"`
+		}
+		clt.QueryVar(
+			`query($postId: Identifier!) {
+				post(id: $postId) {
+					id
+					creation
+					title
+					contents
+				}
+			}`,
+			map[string]string{
+				"postId": string(store.NewID()),
+			},
+			&query,
+		)
+		require.Nil(t, query.Post)
+	})
+
 	t.Run("User.posts", func(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
