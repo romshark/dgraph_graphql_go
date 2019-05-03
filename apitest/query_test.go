@@ -202,6 +202,32 @@ func TestQuery(t *testing.T) {
 		}
 	})
 
+	t.Run("reaction (inexistent)", func(t *testing.T) {
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
+
+		clt := s.ts.Root()
+
+		var query struct {
+			Reaction *gqlmod.Reaction `json:"reaction"`
+		}
+		clt.QueryVar(
+			`query($reactionId: Identifier!) {
+				reaction(id: $reactionId) {
+					id
+					creation
+					emotion
+					message
+				}
+			}`,
+			map[string]string{
+				"reactionId": string(store.NewID()),
+			},
+			&query,
+		)
+		require.Nil(t, query.Reaction)
+	})
+
 	t.Run("User.posts", func(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
