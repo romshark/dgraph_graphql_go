@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
+	"github.com/romshark/dgraph_graphql_go/apitest/setup"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/stretchr/testify/require"
 )
@@ -35,6 +36,27 @@ func TestQuery(t *testing.T) {
 			require.Contains(t, s.users, *actual.ID)
 			compareUsers(t, s.users[*actual.ID], &actual)
 		}
+	})
+
+	t.Run("users (none)", func(t *testing.T) {
+		ts := setup.New(t, tcx)
+		defer ts.Teardown()
+
+		var query struct {
+			Users []gqlmod.User `json:"users"`
+		}
+		ts.Root().Query(
+			`query {
+				users {
+					id
+					creation
+					displayName
+					email
+				}
+			}`,
+			&query,
+		)
+		require.Len(t, query.Users, 0)
 	})
 
 	t.Run("posts", func(t *testing.T) {
