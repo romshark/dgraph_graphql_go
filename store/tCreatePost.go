@@ -16,17 +16,30 @@ func (str *store) CreatePost(
 	authorID ID,
 	title string,
 	contents string,
-) (newUID UID, newID ID, err error) {
+) (
+	result struct {
+		UID          UID
+		ID           ID
+		AuthorUID    UID
+		CreationTime time.Time
+	},
+	err error,
+) {
 	// Validate input
-	if err := ValidatePostTitle(title); err != nil {
-		return UID{}, "", strerr.Wrap(strerr.ErrInvalidInput, err)
+	err = ValidatePostTitle(title)
+	if err != nil {
+		err = strerr.Wrap(strerr.ErrInvalidInput, err)
+		return
 	}
-	if err := ValidatePostContents(contents); err != nil {
-		return UID{}, "", strerr.Wrap(strerr.ErrInvalidInput, err)
+	err = ValidatePostContents(contents)
+	if err != nil {
+		err = strerr.Wrap(strerr.ErrInvalidInput, err)
+		return
 	}
 
 	// Prepare
-	newID = NewID()
+	result.ID = NewID()
+	result.CreationTime = time.Now()
 
 	// Begin transaction
 	txn, close := str.txn(&err)
@@ -50,7 +63,7 @@ func (str *store) CreatePost(
 			author(func: eq(User.id, $authorId)) { uid }
 		}`,
 		map[string]string{
-			"$id":       string(newID),
+			"$id":       string(result.ID),
 			"$authorId": string(authorID),
 		},
 		&res,
@@ -60,7 +73,7 @@ func (str *store) CreatePost(
 	}
 
 	if len(res.ByID) > 0 {
-		err = errors.Errorf("duplicate Post.id: %s", newID)
+		err = errors.Errorf("duplicate Post.id: %s", result.ID)
 		return
 	}
 	if len(res.Author) < 1 {
@@ -71,6 +84,8 @@ func (str *store) CreatePost(
 		return
 	}
 
+	result.AuthorUID = res.Author[0]
+
 	// Create new post
 	var newPostJSON []byte
 	newPostJSON, err = json.Marshal(struct {
@@ -80,11 +95,11 @@ func (str *store) CreatePost(
 		Contents string    `json:"Post.contents"`
 		Creation time.Time `json:"Post.creation"`
 	}{
-		Author:   UID{string(res.Author[0].NodeID)},
-		ID:       string(newID),
+		Author:   result.AuthorUID,
+		ID:       string(result.ID),
 		Title:    title,
 		Contents: contents,
-		Creation: time.Now(),
+		Creation: result.CreationTime,
 	})
 	if err != nil {
 		return
@@ -96,18 +111,17 @@ func (str *store) CreatePost(
 	if err != nil {
 		return
 	}
-	newUID = UID{postCreationMut["blank-0"]}
+	result.UID = UID{postCreationMut["blank-0"]}
 
 	// Update author (User.posts -> new post)
-	updateAuthor := struct {
+	var updatedAuthorJSON []byte
+	updatedAuthorJSON, err = json.Marshal(struct {
 		UID   string `json:"uid"`
 		Posts UID    `json:"User.posts"`
 	}{
-		UID:   res.Author[0].NodeID,
-		Posts: newUID,
-	}
-	var updatedAuthorJSON []byte
-	updatedAuthorJSON, err = json.Marshal(updateAuthor)
+		UID:   result.AuthorUID.NodeID,
+		Posts: result.UID,
+	})
 	if err != nil {
 		return
 	}
@@ -124,7 +138,7 @@ func (str *store) CreatePost(
 	newPostsIndexJSON, err = json.Marshal(struct {
 		UID UID `json:"posts"`
 	}{
-		UID: newUID,
+		UID: result.UID,
 	})
 	if err != nil {
 		return

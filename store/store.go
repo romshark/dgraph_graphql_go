@@ -22,10 +22,12 @@ type Transactions interface {
 		email string,
 		password string,
 	) (
-		uid UID,
-		key string,
-		creation time.Time,
-		userUid UID,
+		result struct {
+			UID          UID
+			Key          string
+			CreationTime time.Time
+			UserUID      UID
+		},
 		err error,
 	)
 
@@ -34,7 +36,15 @@ type Transactions interface {
 		author ID,
 		title string,
 		contents string,
-	) (UID, ID, error)
+	) (
+		result struct {
+			UID          UID
+			ID           ID
+			AuthorUID    UID
+			CreationTime time.Time
+		},
+		err error,
+	)
 
 	CreateReaction(
 		ctx context.Context,
@@ -58,7 +68,14 @@ type Transactions interface {
 		email string,
 		displayName string,
 		password string,
-	) (UID, ID, error)
+	) (
+		result struct {
+			UID          UID
+			ID           ID
+			CreationTime time.Time
+		},
+		err error,
+	)
 }
 
 // Store interfaces a store implementation

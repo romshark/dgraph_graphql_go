@@ -15,10 +15,12 @@ func (str *store) CreateSession(
 	email string,
 	password string,
 ) (
-	newUID UID,
-	newKey string,
-	creation time.Time,
-	userId UID,
+	result struct {
+		UID          UID
+		Key          string
+		CreationTime time.Time
+		UserUID      UID
+	},
 	err error,
 ) {
 	// Validate inputs
@@ -28,7 +30,8 @@ func (str *store) CreateSession(
 	}
 
 	// Prepare
-	newKey = str.sessionKeyGenerator.Generate()
+	result.Key = str.sessionKeyGenerator.Generate()
+	result.CreationTime = time.Now()
 
 	// Begin transaction
 	txn, close := str.txn(&err)
@@ -72,8 +75,7 @@ func (str *store) CreateSession(
 		return
 	}
 
-	userId = UID{NodeID: res.ByEmail[0].UID}
-	creation = time.Now()
+	result.UserUID = UID{NodeID: res.ByEmail[0].UID}
 
 	// Create new session
 	var newSessionJSON []byte
@@ -82,9 +84,9 @@ func (str *store) CreateSession(
 		Creation time.Time `json:"Session.creation"`
 		User     UID       `json:"Session.user"`
 	}{
-		Key:      newKey,
-		Creation: creation,
-		User:     userId,
+		Key:      result.Key,
+		Creation: result.CreationTime,
+		User:     result.UserUID,
 	})
 	if err != nil {
 		return
@@ -97,18 +99,17 @@ func (str *store) CreateSession(
 	if err != nil {
 		return
 	}
-	newUID = UID{sessCreationMut["blank-0"]}
+	result.UID = UID{sessCreationMut["blank-0"]}
 
 	// Update owner (User.sessions -> new session)
-	updateOwner := struct {
+	var updateOwnerJSON []byte
+	updateOwnerJSON, err = json.Marshal(struct {
 		UID      string `json:"uid"`
 		Sessions UID    `json:"User.sessions"`
 	}{
-		UID:      userId.NodeID,
-		Sessions: newUID,
-	}
-	var updateOwnerJSON []byte
-	updateOwnerJSON, err = json.Marshal(updateOwner)
+		UID:      result.UserUID.NodeID,
+		Sessions: result.UID,
+	})
 	if err != nil {
 		return
 	}
@@ -125,7 +126,7 @@ func (str *store) CreateSession(
 	newSessionIndexJSON, err = json.Marshal(struct {
 		UID UID `json:"sessions"`
 	}{
-		UID: newUID,
+		UID: result.UID,
 	})
 	if err != nil {
 		return

@@ -12,15 +12,15 @@ import (
 // User represents the resolver of the identically named type
 type User struct {
 	root        *Resolver
-	uid         store.UID
+	uid         string
 	id          store.ID
 	creation    time.Time
 	email       string
 	displayName string
 }
 
-// Id resolves User.id
-func (rsv *User) Id() store.ID {
+// ID resolves User.id
+func (rsv *User) ID() store.ID {
 	return rsv.id
 }
 
@@ -62,7 +62,7 @@ func (rsv *User) Posts(
 			}
 		}`,
 		map[string]string{
-			"$nodeId": rsv.uid.NodeID,
+			"$nodeId": rsv.uid,
 		},
 		&query,
 	); err != nil {
@@ -78,12 +78,13 @@ func (rsv *User) Posts(
 	resolvers := make([]*Post, len(usr.Posts))
 	for i, post := range usr.Posts {
 		resolvers[i] = &Post{
-			root:     rsv.root,
-			uid:      store.UID{NodeID: post.UID},
-			id:       post.ID,
-			creation: post.Creation,
-			title:    post.Title,
-			contents: post.Contents,
+			root:      rsv.root,
+			uid:       post.UID,
+			id:        post.ID,
+			creation:  post.Creation,
+			title:     post.Title,
+			contents:  post.Contents,
+			authorUID: rsv.uid,
 		}
 	}
 
@@ -109,7 +110,7 @@ func (rsv *User) Sessions(
 			}
 		}`,
 		map[string]string{
-			"$nodeId": rsv.uid.NodeID,
+			"$nodeId": rsv.uid,
 		},
 		&query,
 	); err != nil {
@@ -126,7 +127,7 @@ func (rsv *User) Sessions(
 	for i, sess := range usr.Sessions {
 		resolvers[i] = &Session{
 			root:     rsv.root,
-			uid:      store.UID{NodeID: sess.UID},
+			uid:      sess.UID,
 			key:      sess.Key,
 			creation: sess.Creation,
 			userUID:  rsv.uid,
@@ -153,9 +154,6 @@ func (rsv *User) PublishedReactions(
 					Reaction.creation
 					Reaction.emotion
 					Reaction.message
-					Reaction.author {
-						uid
-					}
 					Reaction.subject {
 						uid
 						Post.id
@@ -165,7 +163,7 @@ func (rsv *User) PublishedReactions(
 			}
 		}`,
 		map[string]string{
-			"$nodeId": rsv.uid.NodeID,
+			"$nodeId": rsv.uid,
 		},
 		&query,
 	); err != nil {
@@ -192,7 +190,7 @@ func (rsv *User) PublishedReactions(
 			uid:        reaction.UID,
 			id:         reaction.ID,
 			subjectUID: subjectUID,
-			authorUID:  reaction.Author[0].UID,
+			authorUID:  rsv.uid,
 			creation:   reaction.Creation,
 			emotion:    reaction.Emotion,
 			message:    reaction.Message,

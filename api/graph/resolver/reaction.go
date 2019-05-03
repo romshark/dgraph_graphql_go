@@ -24,8 +24,8 @@ type Reaction struct {
 	message    string
 }
 
-// Id resolves Reaction.id
-func (rsv *Reaction) Id() store.ID {
+// ID resolves Reaction.id
+func (rsv *Reaction) ID() store.ID {
 	return rsv.id
 }
 
@@ -80,12 +80,13 @@ func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 	switch v := subject.V.(type) {
 	case *dbmod.Post:
 		return &ReactionSubject{&Post{
-			root:     rsv.root,
-			uid:      store.UID{NodeID: v.UID},
-			id:       v.ID,
-			creation: v.Creation,
-			title:    v.Title,
-			contents: v.Contents,
+			root:      rsv.root,
+			uid:       v.UID,
+			id:        v.ID,
+			creation:  v.Creation,
+			title:     v.Title,
+			contents:  v.Contents,
+			authorUID: v.Author[0].UID,
 		}}, nil
 	case *dbmod.Reaction:
 		return &ReactionSubject{&Reaction{
@@ -137,7 +138,7 @@ func (rsv *Reaction) Author(ctx context.Context) (*User, error) {
 	author := query.Reaction[0].Author[0]
 	return &User{
 		root:        rsv.root,
-		uid:         store.UID{NodeID: author.UID},
+		uid:         author.UID,
 		id:          author.ID,
 		creation:    author.Creation,
 		email:       author.Email,

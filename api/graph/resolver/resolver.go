@@ -50,7 +50,7 @@ func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
 	for i, usr := range result.Users {
 		resolvers[i] = &User{
 			root:        rsv,
-			uid:         store.UID{NodeID: usr.UID},
+			uid:         usr.UID,
 			id:          usr.ID,
 			displayName: usr.DisplayName,
 			email:       usr.Email,
@@ -74,6 +74,9 @@ func (rsv *Resolver) Posts(ctx context.Context) ([]*Post, error) {
 				Post.creation
 				Post.title
 				Post.contents
+				Post.author {
+					uid
+				}
 			}
 		}`,
 		&result,
@@ -82,14 +85,15 @@ func (rsv *Resolver) Posts(ctx context.Context) ([]*Post, error) {
 		return nil, err
 	}
 	resolvers := make([]*Post, len(result.Posts))
-	for i, usr := range result.Posts {
+	for i, post := range result.Posts {
 		resolvers[i] = &Post{
-			root:     rsv,
-			uid:      store.UID{NodeID: usr.UID},
-			id:       usr.ID,
-			title:    usr.Title,
-			contents: usr.Contents,
-			creation: usr.Creation,
+			root:      rsv,
+			uid:       post.UID,
+			id:        post.ID,
+			title:     post.Title,
+			contents:  post.Contents,
+			creation:  post.Creation,
+			authorUID: post.UID,
 		}
 	}
 	return resolvers, nil
@@ -98,8 +102,8 @@ func (rsv *Resolver) Posts(ctx context.Context) ([]*Post, error) {
 // User resolves Query.user
 func (rsv *Resolver) User(
 	ctx context.Context,
-	param struct {
-		Id string
+	params struct {
+		ID string
 	},
 ) (*User, error) {
 	var result struct {
@@ -117,7 +121,7 @@ func (rsv *Resolver) User(
 			}
 		}`,
 		map[string]string{
-			"$userId": param.Id,
+			"$userId": params.ID,
 		},
 		&result,
 	); err != nil {
@@ -131,7 +135,7 @@ func (rsv *Resolver) User(
 	usr := result.Users[0]
 	return &User{
 		root:        rsv,
-		uid:         store.UID{NodeID: usr.UID},
+		uid:         usr.UID,
 		id:          usr.ID,
 		displayName: usr.DisplayName,
 		email:       usr.Email,
@@ -142,8 +146,8 @@ func (rsv *Resolver) User(
 // Post resolves Query.post
 func (rsv *Resolver) Post(
 	ctx context.Context,
-	param struct {
-		Id string
+	params struct {
+		ID string
 	},
 ) (*Post, error) {
 	var result struct {
@@ -158,10 +162,13 @@ func (rsv *Resolver) Post(
 				Post.creation
 				Post.title
 				Post.contents
+				Post.author {
+					uid
+				}
 			}
 		}`,
 		map[string]string{
-			"$postId": param.Id,
+			"$postId": params.ID,
 		},
 		&result,
 	); err != nil {
@@ -172,22 +179,23 @@ func (rsv *Resolver) Post(
 		return nil, nil
 	}
 
-	usr := result.Posts[0]
+	post := result.Posts[0]
 	return &Post{
-		root:     rsv,
-		uid:      store.UID{NodeID: usr.UID},
-		id:       usr.ID,
-		title:    usr.Title,
-		contents: usr.Contents,
-		creation: usr.Creation,
+		root:      rsv,
+		uid:       post.UID,
+		id:        post.ID,
+		title:     post.Title,
+		contents:  post.Contents,
+		creation:  post.Creation,
+		authorUID: post.Author[0].UID,
 	}, nil
 }
 
 // Reaction resolves Query.reaction
 func (rsv *Resolver) Reaction(
 	ctx context.Context,
-	param struct {
-		Id string
+	params struct {
+		ID string
 	},
 ) (*Reaction, error) {
 	var result struct {
@@ -213,7 +221,7 @@ func (rsv *Resolver) Reaction(
 			}
 		}`,
 		map[string]string{
-			"$reactionId": param.Id,
+			"$reactionId": params.ID,
 		},
 		&result,
 	); err != nil {

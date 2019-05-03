@@ -16,7 +16,14 @@ func (str *store) CreateUser(
 	email string,
 	displayName string,
 	password string,
-) (newUID UID, newID ID, err error) {
+) (
+	result struct {
+		UID          UID
+		ID           ID
+		CreationTime time.Time
+	},
+	err error,
+) {
 	// Validate inputs
 	if valerr := ValidateUserDisplayName(displayName); valerr != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
@@ -32,7 +39,8 @@ func (str *store) CreateUser(
 	}
 
 	// Prepare
-	newID = NewID()
+	result.ID = NewID()
+	result.CreationTime = time.Now()
 
 	// Create password hash
 	var passwordHash []byte
@@ -82,7 +90,7 @@ func (str *store) CreateUser(
 	}
 
 	if len(res.ByID) > 0 {
-		err = errors.Errorf("duplicate User.id: %s", newID)
+		err = errors.Errorf("duplicate User.id: %s", result.ID)
 		return
 	}
 	if len(res.ByEmail) > 0 {
@@ -111,10 +119,10 @@ func (str *store) CreateUser(
 		Creation    time.Time `json:"User.creation"`
 		Password    string    `json:"User.password"`
 	}{
-		ID:          string(newID),
+		ID:          string(result.ID),
 		Email:       email,
 		DisplayName: displayName,
-		Creation:    time.Now(),
+		Creation:    result.CreationTime,
 		Password:    string(passwordHash),
 	})
 	if err != nil {
@@ -128,14 +136,14 @@ func (str *store) CreateUser(
 	if err != nil {
 		return
 	}
-	newUID = UID{userCreationMut["blank-0"]}
+	result.UID = UID{userCreationMut["blank-0"]}
 
 	// Add the new account to the global Index
 	var newUsersIndexJSON []byte
 	newUsersIndexJSON, err = json.Marshal(struct {
 		UID UID `json:"users"`
 	}{
-		UID: newUID,
+		UID: result.UID,
 	})
 	if err != nil {
 		return

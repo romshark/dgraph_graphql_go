@@ -5,17 +5,16 @@ import (
 	"time"
 
 	"github.com/graph-gophers/graphql-go"
-	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/dbmod"
 )
 
 // Session represents the resolver of the identically named type
 type Session struct {
 	root     *Resolver
-	uid      store.UID
+	uid      string
 	key      string
 	creation time.Time
-	userUID  store.UID
+	userUID  string
 }
 
 // Key resolves Session.key
@@ -49,7 +48,7 @@ func (rsv *Session) User(
 			}
 		}`,
 		map[string]string{
-			"$nodeId": rsv.uid.NodeID,
+			"$nodeId": rsv.uid,
 		},
 		&query,
 	); err != nil {
@@ -60,7 +59,7 @@ func (rsv *Session) User(
 	owner := query.Sessions[0].User[0]
 	return &User{
 		root:        rsv.root,
-		uid:         store.UID{NodeID: owner.UID},
+		uid:         owner.UID,
 		id:          owner.ID,
 		creation:    owner.Creation,
 		email:       owner.Email,

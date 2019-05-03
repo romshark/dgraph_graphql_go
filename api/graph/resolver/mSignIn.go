@@ -12,7 +12,7 @@ func (rsv *Resolver) SignIn(
 		Password string
 	},
 ) (*Session, error) {
-	newUID, key, creation, userUID, err := rsv.str.CreateSession(
+	transactRes, err := rsv.str.CreateSession(
 		ctx,
 		params.Email,
 		params.Password,
@@ -24,9 +24,9 @@ func (rsv *Resolver) SignIn(
 
 	return &Session{
 		root:     rsv,
-		uid:      newUID,
-		key:      key,
-		creation: creation,
-		userUID:  userUID,
+		uid:      transactRes.UID.NodeID,
+		key:      transactRes.Key,
+		creation: transactRes.CreationTime,
+		userUID:  transactRes.UserUID.NodeID,
 	}, nil
 }

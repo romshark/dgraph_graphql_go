@@ -11,41 +11,38 @@ import (
 
 // Post represents the resolver of the identically named type
 type Post struct {
-	root     *Resolver
-	uid      store.UID
-	id       store.ID
-	creation time.Time
-	title    string
-	contents string
+	root      *Resolver
+	uid       string
+	authorUID string
+	id        store.ID
+	creation  time.Time
+	title     string
+	contents  string
 }
 
-// Id resolves Post.id
-func (rsv *Post) Id() store.ID {
+// ID resolves Post.id
+func (rsv *Post) ID() store.ID {
 	return rsv.id
 }
 
 // Author resolves Post.author
 func (rsv *Post) Author(ctx context.Context) (*User, error) {
 	var query struct {
-		Post []struct {
-			Author []dbmod.User `json:"Post.author"`
-		} `json:"post"`
+		Author []dbmod.User `json:"author"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
 		`query Author($nodeId: string) {
-			post(func: uid($nodeId)) {
-				Post.author {
-					uid
-					User.id
-					User.creation
-					User.email
-					User.displayName
-				}
+			author(func: uid($nodeId)) {
+				uid
+				User.id
+				User.creation
+				User.email
+				User.displayName
 			}
 		}`,
 		map[string]string{
-			"$nodeId": rsv.uid.NodeID,
+			"$nodeId": rsv.authorUID,
 		},
 		&query,
 	); err != nil {
@@ -53,10 +50,10 @@ func (rsv *Post) Author(ctx context.Context) (*User, error) {
 		return nil, err
 	}
 
-	author := query.Post[0].Author[0]
+	author := query.Author[0]
 	return &User{
 		root:        rsv.root,
-		uid:         store.UID{NodeID: author.UID},
+		uid:         rsv.authorUID,
 		id:          author.ID,
 		creation:    author.Creation,
 		email:       author.Email,
@@ -103,7 +100,7 @@ func (rsv *Post) Reactions(ctx context.Context) ([]*Reaction, error) {
 			}
 		}`,
 		map[string]string{
-			"$nodeId": rsv.uid.NodeID,
+			"$nodeId": rsv.uid,
 		},
 		&query,
 	); err != nil {
@@ -122,7 +119,7 @@ func (rsv *Post) Reactions(ctx context.Context) ([]*Reaction, error) {
 			root:       rsv.root,
 			uid:        reaction.UID,
 			id:         reaction.ID,
-			subjectUID: rsv.uid.NodeID,
+			subjectUID: rsv.uid,
 			authorUID:  reaction.Author[0].UID,
 			creation:   reaction.Creation,
 			emotion:    reaction.Emotion,
