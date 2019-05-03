@@ -26,7 +26,7 @@ func (rsv *Resolver) CreateUser(
 
 	return &User{
 		root:        rsv,
-		uid:         transactRes.UID.NodeID,
+		uid:         transactRes.UID,
 		id:          transactRes.ID,
 		creation:    transactRes.CreationTime,
 		displayName: params.DisplayName,

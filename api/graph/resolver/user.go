@@ -6,7 +6,7 @@ import (
 
 	"github.com/graph-gophers/graphql-go"
 	"github.com/romshark/dgraph_graphql_go/store"
-	"github.com/romshark/dgraph_graphql_go/store/dbmod"
+	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
 
 // User represents the resolver of the identically named type
@@ -46,7 +46,7 @@ func (rsv *User) Posts(
 	ctx context.Context,
 ) ([]*Post, error) {
 	var query struct {
-		Users []dbmod.User `json:"users"`
+		Users []dgraph.User `json:"users"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
@@ -96,7 +96,7 @@ func (rsv *User) Sessions(
 	ctx context.Context,
 ) ([]*Session, error) {
 	var query struct {
-		Users []dbmod.User `json:"users"`
+		Users []dgraph.User `json:"users"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
@@ -142,7 +142,7 @@ func (rsv *User) PublishedReactions(
 	ctx context.Context,
 ) ([]*Reaction, error) {
 	var query struct {
-		Users []dbmod.User `json:"users"`
+		Users []dgraph.User `json:"users"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
@@ -180,9 +180,9 @@ func (rsv *User) PublishedReactions(
 	for i, reaction := range usr.PublishedReactions {
 		var subjectUID string
 		switch v := reaction.Subject[0].V.(type) {
-		case *dbmod.Post:
+		case *dgraph.Post:
 			subjectUID = v.UID
-		case *dbmod.Reaction:
+		case *dgraph.Reaction:
 			subjectUID = v.UID
 		}
 		resolvers[i] = &Reaction{

@@ -1,4 +1,4 @@
-package store
+package dgraph
 
 import (
 	"context"
@@ -7,29 +7,30 @@ import (
 
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
+	"github.com/romshark/dgraph_graphql_go/store"
 	emo "github.com/romshark/dgraph_graphql_go/store/enum/emotion"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // CreateReaction creates a new post
-func (str *store) CreateReaction(
+func (str *impl) CreateReaction(
 	ctx context.Context,
-	authorID ID,
-	subjectID ID,
+	authorID store.ID,
+	subjectID store.ID,
 	emotion emo.Emotion,
 	message string,
 ) (
 	result struct {
-		UID          UID
-		ID           ID
-		SubjectUID   UID
-		AuthorUID    UID
+		UID          string
+		ID           store.ID
+		SubjectUID   string
+		AuthorUID    string
 		CreationTime time.Time
 	},
 	err error,
 ) {
 	// Validate input
-	err = ValidateReactionMessage(message)
+	err = store.ValidateReactionMessage(message)
 	if err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		return
@@ -41,7 +42,7 @@ func (str *store) CreateReaction(
 	}
 
 	// Prepare
-	result.ID = NewID()
+	result.ID = store.NewID()
 	result.CreationTime = time.Now()
 
 	// Begin transaction
@@ -95,10 +96,10 @@ func (str *store) CreateReaction(
 	// subjectType: "p" for post, "r" for reaction
 	subjectType := "p"
 	if len(res.PostSubject) > 0 {
-		result.SubjectUID = res.PostSubject[0]
+		result.SubjectUID = res.PostSubject[0].NodeID
 	} else if len(res.ReactionSubject) > 0 {
 		subjectType = "r"
-		result.SubjectUID = res.ReactionSubject[0]
+		result.SubjectUID = res.ReactionSubject[0].NodeID
 	} else {
 		err = strerr.Newf(
 			strerr.ErrInvalidInput,
@@ -107,7 +108,7 @@ func (str *store) CreateReaction(
 		return
 	}
 
-	result.AuthorUID = res.Author[0]
+	result.AuthorUID = res.Author[0].NodeID
 
 	// Create new reaction
 	var newReactionJSON []byte
@@ -120,8 +121,8 @@ func (str *store) CreateReaction(
 		Creation time.Time `json:"Reaction.creation"`
 	}{
 		ID:       string(result.ID),
-		Author:   result.AuthorUID,
-		Subject:  result.SubjectUID,
+		Author:   UID{NodeID: result.AuthorUID},
+		Subject:  UID{NodeID: result.SubjectUID},
 		Emotion:  string(emotion),
 		Message:  message,
 		Creation: result.CreationTime,
@@ -136,7 +137,7 @@ func (str *store) CreateReaction(
 	if err != nil {
 		return
 	}
-	result.UID = UID{reactionCreationMut["blank-0"]}
+	result.UID = reactionCreationMut["blank-0"]
 
 	// Update author (User.publishedReactions -> new reaction)
 	var updatedAuthorJSON []byte
@@ -144,8 +145,8 @@ func (str *store) CreateReaction(
 		UID                string `json:"uid"`
 		PublishedReactions UID    `json:"User.publishedReactions"`
 	}{
-		UID:                result.AuthorUID.NodeID,
-		PublishedReactions: result.UID,
+		UID:                result.AuthorUID,
+		PublishedReactions: UID{NodeID: result.UID},
 	})
 	if err != nil {
 		return
@@ -166,8 +167,8 @@ func (str *store) CreateReaction(
 			UID       string `json:"uid"`
 			Reactions UID    `json:"Post.reactions"`
 		}{
-			UID:       result.SubjectUID.NodeID,
-			Reactions: result.UID,
+			UID:       result.SubjectUID,
+			Reactions: UID{NodeID: result.UID},
 		})
 	} else {
 		// Update reaction (Reaction.reactions -> new reaction)
@@ -175,8 +176,8 @@ func (str *store) CreateReaction(
 			UID       string `json:"uid"`
 			Reactions UID    `json:"Reaction.reactions"`
 		}{
-			UID:       result.SubjectUID.NodeID,
-			Reactions: result.UID,
+			UID:       result.SubjectUID,
+			Reactions: UID{NodeID: result.UID},
 		})
 	}
 	if err != nil {

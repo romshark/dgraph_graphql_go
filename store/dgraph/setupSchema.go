@@ -1,4 +1,4 @@
-package store
+package dgraph
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/dgraph-io/dgo/protos/api"
 )
 
-func (str *store) setupSchema(ctx context.Context) error {
+func (str *impl) setupSchema(ctx context.Context) error {
 	// TODO: avoid DropAll
 	if err := str.db.Alter(ctx, &api.Operation{
 		DropAll: true,

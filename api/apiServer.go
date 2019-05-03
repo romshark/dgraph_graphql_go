@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
 
 // Server interfaces an API server implementation
@@ -45,7 +46,7 @@ func NewServer(opts ServerOptions) Server {
 	opts.SetDefaults()
 
 	// Initialize store instance
-	str := store.NewStore(
+	str := dgraph.NewStore(
 		opts.DBHost,
 		opts.SessionKeyGenerator,
 		opts.PasswordHasher,

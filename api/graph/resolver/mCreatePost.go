@@ -28,11 +28,11 @@ func (rsv *Resolver) CreatePost(
 
 	return &Post{
 		root:      rsv,
-		uid:       transactRes.UID.NodeID,
+		uid:       transactRes.UID,
 		id:        transactRes.ID,
 		creation:  transactRes.CreationTime,
 		title:     params.Title,
 		contents:  params.Contents,
-		authorUID: transactRes.AuthorUID.NodeID,
+		authorUID: transactRes.AuthorUID,
 	}, nil
 }

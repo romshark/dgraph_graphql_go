@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/romshark/dgraph_graphql_go/store"
-	"github.com/romshark/dgraph_graphql_go/store/dbmod"
+	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
 
 // CtxKey represents a context.Context value key type
@@ -28,7 +28,7 @@ func New(str store.Store) *Resolver {
 // Users resolves Query.users
 func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
 	var result struct {
-		Users []dbmod.User `json:"users"`
+		Users []dgraph.User `json:"users"`
 	}
 	if err := rsv.str.Query(
 		ctx,
@@ -51,7 +51,7 @@ func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
 		resolvers[i] = &User{
 			root:        rsv,
 			uid:         usr.UID,
-			id:          usr.ID,
+			id:          store.ID(usr.ID),
 			displayName: usr.DisplayName,
 			email:       usr.Email,
 			creation:    usr.Creation,
@@ -63,7 +63,7 @@ func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
 // Posts resolves Query.posts
 func (rsv *Resolver) Posts(ctx context.Context) ([]*Post, error) {
 	var result struct {
-		Posts []dbmod.Post `json:"posts"`
+		Posts []dgraph.Post `json:"posts"`
 	}
 	if err := rsv.str.Query(
 		ctx,
@@ -107,7 +107,7 @@ func (rsv *Resolver) User(
 	},
 ) (*User, error) {
 	var result struct {
-		Users []dbmod.User `json:"users"`
+		Users []dgraph.User `json:"users"`
 	}
 	if err := rsv.str.QueryVars(
 		ctx,
@@ -136,7 +136,7 @@ func (rsv *Resolver) User(
 	return &User{
 		root:        rsv,
 		uid:         usr.UID,
-		id:          usr.ID,
+		id:          store.ID(usr.ID),
 		displayName: usr.DisplayName,
 		email:       usr.Email,
 		creation:    usr.Creation,
@@ -151,7 +151,7 @@ func (rsv *Resolver) Post(
 	},
 ) (*Post, error) {
 	var result struct {
-		Posts []dbmod.Post `json:"posts"`
+		Posts []dgraph.Post `json:"posts"`
 	}
 	if err := rsv.str.QueryVars(
 		ctx,
@@ -199,7 +199,7 @@ func (rsv *Resolver) Reaction(
 	},
 ) (*Reaction, error) {
 	var result struct {
-		Reactions []dbmod.Reaction `json:"reactions"`
+		Reactions []dgraph.Reaction `json:"reactions"`
 	}
 	if err := rsv.str.QueryVars(
 		ctx,

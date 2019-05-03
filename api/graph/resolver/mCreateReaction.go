@@ -34,11 +34,11 @@ func (rsv *Resolver) CreateReaction(
 
 	return &Reaction{
 		root:       rsv,
-		uid:        transactRes.UID.NodeID,
+		uid:        transactRes.UID,
 		id:         transactRes.ID,
 		creation:   transactRes.CreationTime,
-		authorUID:  transactRes.AuthorUID.NodeID,
-		subjectUID: transactRes.SubjectUID.NodeID,
+		authorUID:  transactRes.AuthorUID,
+		subjectUID: transactRes.SubjectUID,
 		emotion:    emot,
 		message:    params.Message,
 	}, nil

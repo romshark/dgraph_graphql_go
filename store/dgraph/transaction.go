@@ -1,4 +1,4 @@
-package store
+package dgraph
 
 import (
 	"context"
@@ -75,7 +75,7 @@ func (txn *txn) Mutation(
 	return assigned.Uids, nil
 }
 
-func (str *store) txn(terr *error) (transaction, func()) {
+func (str *impl) txn(terr *error) (transaction, func()) {
 	// Ensure the database is connected
 	if err := str.ensureActive(); err != nil {
 		*terr = err

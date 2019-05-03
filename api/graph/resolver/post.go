@@ -6,7 +6,7 @@ import (
 
 	"github.com/graph-gophers/graphql-go"
 	"github.com/romshark/dgraph_graphql_go/store"
-	"github.com/romshark/dgraph_graphql_go/store/dbmod"
+	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
 
 // Post represents the resolver of the identically named type
@@ -28,7 +28,7 @@ func (rsv *Post) ID() store.ID {
 // Author resolves Post.author
 func (rsv *Post) Author(ctx context.Context) (*User, error) {
 	var query struct {
-		Author []dbmod.User `json:"author"`
+		Author []dgraph.User `json:"author"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
@@ -54,7 +54,7 @@ func (rsv *Post) Author(ctx context.Context) (*User, error) {
 	return &User{
 		root:        rsv.root,
 		uid:         rsv.authorUID,
-		id:          author.ID,
+		id:          store.ID(author.ID),
 		creation:    author.Creation,
 		email:       author.Email,
 		displayName: author.DisplayName,
@@ -81,7 +81,7 @@ func (rsv *Post) Contents() string {
 // Reactions resolves Post.reactions
 func (rsv *Post) Reactions(ctx context.Context) ([]*Reaction, error) {
 	var query struct {
-		Posts []dbmod.Post `json:"posts"`
+		Posts []dgraph.Post `json:"posts"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,

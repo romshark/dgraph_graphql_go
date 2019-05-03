@@ -1,4 +1,4 @@
-package store
+package dgraph
 
 import (
 	"context"
@@ -7,39 +7,40 @@ import (
 
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
+	"github.com/romshark/dgraph_graphql_go/store"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // CreateUser creates a new user account and adds it to the global index
-func (str *store) CreateUser(
+func (str *impl) CreateUser(
 	ctx context.Context,
 	email string,
 	displayName string,
 	password string,
 ) (
 	result struct {
-		UID          UID
-		ID           ID
+		UID          string
+		ID           store.ID
 		CreationTime time.Time
 	},
 	err error,
 ) {
 	// Validate inputs
-	if valerr := ValidateUserDisplayName(displayName); valerr != nil {
+	if valerr := store.ValidateUserDisplayName(displayName); valerr != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
 		return
 	}
-	if valerr := ValidateEmail(email); valerr != nil {
+	if valerr := store.ValidateEmail(email); valerr != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
 		return
 	}
-	if valerr := ValidatePassword(password); valerr != nil {
+	if valerr := store.ValidatePassword(password); valerr != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
 		return
 	}
 
 	// Prepare
-	result.ID = NewID()
+	result.ID = store.NewID()
 	result.CreationTime = time.Now()
 
 	// Create password hash
@@ -136,14 +137,14 @@ func (str *store) CreateUser(
 	if err != nil {
 		return
 	}
-	result.UID = UID{userCreationMut["blank-0"]}
+	result.UID = userCreationMut["blank-0"]
 
 	// Add the new account to the global Index
 	var newUsersIndexJSON []byte
 	newUsersIndexJSON, err = json.Marshal(struct {
 		UID UID `json:"users"`
 	}{
-		UID: result.UID,
+		UID: UID{NodeID: result.UID},
 	})
 	if err != nil {
 		return

@@ -24,9 +24,9 @@ func (rsv *Resolver) SignIn(
 
 	return &Session{
 		root:     rsv,
-		uid:      transactRes.UID.NodeID,
+		uid:      transactRes.UID,
 		key:      transactRes.Key,
 		creation: transactRes.CreationTime,
-		userUID:  transactRes.UserUID.NodeID,
+		userUID:  transactRes.UserUID,
 	}, nil
 }

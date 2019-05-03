@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/graph-gophers/graphql-go"
-	"github.com/romshark/dgraph_graphql_go/store/dbmod"
+	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
 
 // Session represents the resolver of the identically named type
@@ -32,7 +33,7 @@ func (rsv *Session) User(
 	ctx context.Context,
 ) (*User, error) {
 	var query struct {
-		Sessions []dbmod.Session `json:"session"`
+		Sessions []dgraph.Session `json:"session"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
@@ -60,7 +61,7 @@ func (rsv *Session) User(
 	return &User{
 		root:        rsv.root,
 		uid:         owner.UID,
-		id:          owner.ID,
+		id:          store.ID(owner.ID),
 		creation:    owner.Creation,
 		email:       owner.Email,
 		displayName: owner.DisplayName,

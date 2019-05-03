@@ -1,4 +1,4 @@
-package dbmod
+package dgraph
 
 import "time"
 

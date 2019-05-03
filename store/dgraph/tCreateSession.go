@@ -1,4 +1,4 @@
-package store
+package dgraph
 
 import (
 	"context"
@@ -10,16 +10,16 @@ import (
 )
 
 // CreateSession creates a new session and updates the indexes
-func (str *store) CreateSession(
+func (str *impl) CreateSession(
 	ctx context.Context,
 	email string,
 	password string,
 ) (
 	result struct {
-		UID          UID
+		UID          string
 		Key          string
 		CreationTime time.Time
-		UserUID      UID
+		UserUID      string
 	},
 	err error,
 ) {
@@ -75,7 +75,7 @@ func (str *store) CreateSession(
 		return
 	}
 
-	result.UserUID = UID{NodeID: res.ByEmail[0].UID}
+	result.UserUID = res.ByEmail[0].UID
 
 	// Create new session
 	var newSessionJSON []byte
@@ -86,7 +86,7 @@ func (str *store) CreateSession(
 	}{
 		Key:      result.Key,
 		Creation: result.CreationTime,
-		User:     result.UserUID,
+		User:     UID{NodeID: result.UserUID},
 	})
 	if err != nil {
 		return
@@ -99,7 +99,7 @@ func (str *store) CreateSession(
 	if err != nil {
 		return
 	}
-	result.UID = UID{sessCreationMut["blank-0"]}
+	result.UID = sessCreationMut["blank-0"]
 
 	// Update owner (User.sessions -> new session)
 	var updateOwnerJSON []byte
@@ -107,8 +107,8 @@ func (str *store) CreateSession(
 		UID      string `json:"uid"`
 		Sessions UID    `json:"User.sessions"`
 	}{
-		UID:      result.UserUID.NodeID,
-		Sessions: result.UID,
+		UID:      result.UserUID,
+		Sessions: UID{NodeID: result.UID},
 	})
 	if err != nil {
 		return
@@ -126,7 +126,7 @@ func (str *store) CreateSession(
 	newSessionIndexJSON, err = json.Marshal(struct {
 		UID UID `json:"sessions"`
 	}{
-		UID: result.UID,
+		UID: UID{NodeID: result.UID},
 	})
 	if err != nil {
 		return

@@ -2,17 +2,9 @@ package store
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
-
-	"github.com/dgraph-io/dgo"
-	"github.com/dgraph-io/dgo/protos/api"
-	"github.com/pkg/errors"
-	"github.com/romshark/dgraph_graphql_go/api/passhash"
-	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
-	"google.golang.org/grpc"
 )
 
 // Transactions interfaces a transactional store
@@ -23,10 +15,10 @@ type Transactions interface {
 		password string,
 	) (
 		result struct {
-			UID          UID
+			UID          string
 			Key          string
 			CreationTime time.Time
-			UserUID      UID
+			UserUID      string
 		},
 		err error,
 	)
@@ -38,9 +30,9 @@ type Transactions interface {
 		contents string,
 	) (
 		result struct {
-			UID          UID
+			UID          string
 			ID           ID
-			AuthorUID    UID
+			AuthorUID    string
 			CreationTime time.Time
 		},
 		err error,
@@ -54,10 +46,10 @@ type Transactions interface {
 		message string,
 	) (
 		result struct {
-			UID          UID
+			UID          string
 			ID           ID
-			SubjectUID   UID
-			AuthorUID    UID
+			SubjectUID   string
+			AuthorUID    string
 			CreationTime time.Time
 		},
 		err error,
@@ -70,7 +62,7 @@ type Transactions interface {
 		password string,
 	) (
 		result struct {
-			UID          UID
+			UID          string
 			ID           ID
 			CreationTime time.Time
 		},
@@ -96,73 +88,4 @@ type Store interface {
 		vars map[string]string,
 		result interface{},
 	) error
-}
-
-// store represents the service store
-type store struct {
-	host                string
-	sessionKeyGenerator sesskeygen.SessionKeyGenerator
-	passwordHasher      passhash.PasswordHasher
-	db                  *dgo.Dgraph
-	onClose             func()
-}
-
-// NewStore creates a new disconnected database client instance
-func NewStore(
-	host string,
-	sessionKeyGenerator sesskeygen.SessionKeyGenerator,
-	passwordHasher passhash.PasswordHasher,
-) Store {
-	return &store{
-		host:                host,
-		sessionKeyGenerator: sessionKeyGenerator,
-		passwordHasher:      passwordHasher,
-		db:                  nil,
-	}
-}
-
-// Prepare prepares the store for use
-func (str *store) Prepare() error {
-	if str.db != nil {
-		return nil
-	}
-
-	if str.sessionKeyGenerator == nil {
-		return errors.Errorf(
-			"missing session key generator during store initialization",
-		)
-	}
-	if str.passwordHasher == nil {
-		return errors.Errorf(
-			"missing password hasher during store initialization",
-		)
-	}
-
-	conn, err := grpc.Dial(str.host, grpc.WithInsecure())
-	if err != nil {
-		return errors.Wrap(err, "gRPC dial")
-	}
-
-	str.db = dgo.NewDgraphClient(api.NewDgraphClient(conn))
-	str.onClose = func() {
-		if err := conn.Close(); err != nil {
-			log.Printf("closing db conn: %s", err)
-		}
-		str.db = nil
-		str.onClose = nil
-	}
-
-	return str.setupSchema(context.Background())
-}
-
-// IsActive returns true if the store is operational, otherwise returns false
-func (str *store) IsActive() bool {
-	return str.db != nil
-}
-
-func (str *store) ensureActive() error {
-	if str.IsActive() {
-		return nil
-	}
-	return errors.New("store inactive")
 }

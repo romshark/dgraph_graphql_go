@@ -1,4 +1,4 @@
-package store
+package dgraph
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (str *store) Query(
+func (str *impl) Query(
 	ctx context.Context,
 	query string,
 	result interface{},
@@ -24,7 +24,7 @@ func (str *store) Query(
 	return nil
 }
 
-func (str *store) QueryVars(
+func (str *impl) QueryVars(
 	ctx context.Context,
 	query string,
 	vars map[string]string,

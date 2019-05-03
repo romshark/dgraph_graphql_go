@@ -8,7 +8,7 @@ import (
 	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/store"
-	"github.com/romshark/dgraph_graphql_go/store/dbmod"
+	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
 )
 
@@ -39,7 +39,7 @@ func (rsv *Reaction) Creation() graphql.Time {
 // Subject resolves Reaction.subject
 func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 	var query struct {
-		Reactions []dbmod.Reaction `json:"reactions"`
+		Reactions []dgraph.Reaction `json:"reactions"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
@@ -78,7 +78,7 @@ func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 	subject := query.Reactions[0].Subject[0]
 
 	switch v := subject.V.(type) {
-	case *dbmod.Post:
+	case *dgraph.Post:
 		return &ReactionSubject{&Post{
 			root:      rsv.root,
 			uid:       v.UID,
@@ -88,7 +88,7 @@ func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 			contents:  v.Contents,
 			authorUID: v.Author[0].UID,
 		}}, nil
-	case *dbmod.Reaction:
+	case *dgraph.Reaction:
 		return &ReactionSubject{&Reaction{
 			root:       rsv.root,
 			uid:        v.UID,
@@ -111,7 +111,7 @@ func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 // Author resolves Reaction.author
 func (rsv *Reaction) Author(ctx context.Context) (*User, error) {
 	var query struct {
-		Reaction []dbmod.Reaction `json:"reaction"`
+		Reaction []dgraph.Reaction `json:"reaction"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
@@ -139,7 +139,7 @@ func (rsv *Reaction) Author(ctx context.Context) (*User, error) {
 	return &User{
 		root:        rsv.root,
 		uid:         author.UID,
-		id:          author.ID,
+		id:          store.ID(author.ID),
 		creation:    author.Creation,
 		email:       author.Email,
 		displayName: author.DisplayName,
@@ -159,7 +159,7 @@ func (rsv *Reaction) Message() string {
 // Reactions resolves Reaction.reactions
 func (rsv *Reaction) Reactions(ctx context.Context) ([]*Reaction, error) {
 	var query struct {
-		Reaction []dbmod.Reaction `json:"reaction"`
+		Reaction []dgraph.Reaction `json:"reaction"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,

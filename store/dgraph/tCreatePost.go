@@ -1,4 +1,4 @@
-package store
+package dgraph
 
 import (
 	"context"
@@ -7,38 +7,39 @@ import (
 
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
+	"github.com/romshark/dgraph_graphql_go/store"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // CreatePost creates a new post
-func (str *store) CreatePost(
+func (str *impl) CreatePost(
 	ctx context.Context,
-	authorID ID,
+	authorID store.ID,
 	title string,
 	contents string,
 ) (
 	result struct {
-		UID          UID
-		ID           ID
-		AuthorUID    UID
+		UID          string
+		ID           store.ID
+		AuthorUID    string
 		CreationTime time.Time
 	},
 	err error,
 ) {
 	// Validate input
-	err = ValidatePostTitle(title)
+	err = store.ValidatePostTitle(title)
 	if err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		return
 	}
-	err = ValidatePostContents(contents)
+	err = store.ValidatePostContents(contents)
 	if err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		return
 	}
 
 	// Prepare
-	result.ID = NewID()
+	result.ID = store.NewID()
 	result.CreationTime = time.Now()
 
 	// Begin transaction
@@ -84,7 +85,7 @@ func (str *store) CreatePost(
 		return
 	}
 
-	result.AuthorUID = res.Author[0]
+	result.AuthorUID = res.Author[0].NodeID
 
 	// Create new post
 	var newPostJSON []byte
@@ -95,7 +96,7 @@ func (str *store) CreatePost(
 		Contents string    `json:"Post.contents"`
 		Creation time.Time `json:"Post.creation"`
 	}{
-		Author:   result.AuthorUID,
+		Author:   UID{NodeID: result.AuthorUID},
 		ID:       string(result.ID),
 		Title:    title,
 		Contents: contents,
@@ -111,7 +112,7 @@ func (str *store) CreatePost(
 	if err != nil {
 		return
 	}
-	result.UID = UID{postCreationMut["blank-0"]}
+	result.UID = postCreationMut["blank-0"]
 
 	// Update author (User.posts -> new post)
 	var updatedAuthorJSON []byte
@@ -119,8 +120,8 @@ func (str *store) CreatePost(
 		UID   string `json:"uid"`
 		Posts UID    `json:"User.posts"`
 	}{
-		UID:   result.AuthorUID.NodeID,
-		Posts: result.UID,
+		UID:   result.AuthorUID,
+		Posts: UID{NodeID: result.UID},
 	})
 	if err != nil {
 		return
@@ -138,7 +139,7 @@ func (str *store) CreatePost(
 	newPostsIndexJSON, err = json.Marshal(struct {
 		UID UID `json:"posts"`
 	}{
-		UID: result.UID,
+		UID: UID{NodeID: result.UID},
 	})
 	if err != nil {
 		return
