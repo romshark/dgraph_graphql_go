@@ -348,6 +348,34 @@ func TestQuery(t *testing.T) {
 		expect(expectedSessions{sess, sess2})
 	})
 
+	t.Run("User.sessions (empty)", func(t *testing.T) {
+		s := newQueryTestSetup(t, tcx)
+		defer s.Teardown()
+		root := s.ts.Root()
+
+		for userID := range s.users {
+			var query struct {
+				User *gqlmod.User `json:"user"`
+			}
+			root.QueryVar(
+				`query($userId: Identifier!) {
+					user(id: $userId) {
+						sessions {
+							key
+							creation
+						}
+					}
+				}`,
+				map[string]string{
+					"userId": string(userID),
+				},
+				&query,
+			)
+			require.NotNil(t, query.User)
+			require.Len(t, query.User.Sessions, 0)
+		}
+	})
+
 	t.Run("Post.reactions", func(t *testing.T) {
 		s := newQueryTestSetup(t, tcx)
 		defer s.Teardown()
