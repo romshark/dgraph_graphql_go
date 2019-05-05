@@ -1,10 +1,10 @@
 package api
 
 import (
-	"time"
-
 	"github.com/romshark/dgraph_graphql_go/api/passhash"
 	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
+	"github.com/romshark/dgraph_graphql_go/api/transport"
+	thttp "github.com/romshark/dgraph_graphql_go/api/transport/http"
 )
 
 // RootUserStatus defines the root user status option
@@ -55,16 +55,12 @@ type ServerOptions struct {
 	DBHost              string
 	SessionKeyGenerator sesskeygen.SessionKeyGenerator
 	PasswordHasher      passhash.PasswordHasher
-	KeepAliveDuration   time.Duration
 	RootUser            RootUserOptions
+	Transport           []transport.Server
 }
 
 // SetDefaults sets the default options
 func (opts *ServerOptions) SetDefaults() {
-	if opts.KeepAliveDuration == time.Duration(0) {
-		opts.KeepAliveDuration = 3 * time.Minute
-	}
-
 	// Use default non-production database port
 	if opts.DBHost == "" {
 		opts.DBHost = "localhost:6000"
@@ -78,5 +74,12 @@ func (opts *ServerOptions) SetDefaults() {
 	// Use default password hasher
 	if opts.PasswordHasher == nil {
 		opts.PasswordHasher = passhash.Bcrypt{}
+	}
+
+	// Use HTTP as the default transport
+	if len(opts.Transport) < 1 {
+		opts.Transport = []transport.Server{
+			thttp.NewServer(thttp.ServerOptions{}),
+		}
 	}
 }

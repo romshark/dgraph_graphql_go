@@ -3,7 +3,7 @@ package setup
 import (
 	"time"
 
-	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
@@ -11,12 +11,12 @@ import (
 )
 
 func (h Helper) createReaction(
-	successAssumption successAssumption,
+	assumedSuccess successAssumption,
 	author store.ID,
 	subject store.ID,
 	emotion emotion.Emotion,
 	message string,
-) (*gqlmod.Reaction, *api.ResponseError) {
+) (*gqlmod.Reaction, *graph.ResponseError) {
 	t := h.c.t
 
 	var result struct {
@@ -50,9 +50,7 @@ func (h Helper) createReaction(
 		&result,
 	)
 
-	if successAssumption {
-		require.Nil(t, err, 0)
-	} else if err != nil {
+	if err := checkErr(t, assumedSuccess, err); err != nil {
 		return nil, err
 	}
 
@@ -76,7 +74,7 @@ func (h Helper) CreateReaction(
 	subject store.ID,
 	emotion emotion.Emotion,
 	message string,
-) (*gqlmod.Reaction, *api.ResponseError) {
+) (*gqlmod.Reaction, *graph.ResponseError) {
 	return h.createReaction(
 		potentialFailure,
 		author,

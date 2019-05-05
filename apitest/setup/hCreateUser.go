@@ -3,17 +3,17 @@ package setup
 import (
 	"time"
 
-	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) createUser(
-	successAssumption successAssumption,
+	assumedSuccess successAssumption,
 	displayName,
 	email,
 	password string,
-) (*gqlmod.User, *api.ResponseError) {
+) (*gqlmod.User, *graph.ResponseError) {
 	t := h.c.t
 
 	var result struct {
@@ -47,9 +47,7 @@ func (h Helper) createUser(
 		&result,
 	)
 
-	if successAssumption {
-		require.Nil(t, err, 0)
-	} else if err != nil {
+	if err := checkErr(t, assumedSuccess, err); err != nil {
 		return nil, err
 	}
 
@@ -73,7 +71,7 @@ func (h Helper) CreateUser(
 	displayName,
 	email,
 	password string,
-) (*gqlmod.User, *api.ResponseError) {
+) (*gqlmod.User, *graph.ResponseError) {
 	return h.createUser(potentialFailure, displayName, email, password)
 }
 

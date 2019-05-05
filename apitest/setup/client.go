@@ -1,12 +1,14 @@
 package setup
 
 import (
-	"net/http"
-	"net/http/cookiejar"
+	"net/url"
 	"testing"
 	"time"
 
+	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
+	trn "github.com/romshark/dgraph_graphql_go/api/transport"
+	thttp "github.com/romshark/dgraph_graphql_go/api/transport/http"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,33 +16,52 @@ import (
 type Client struct {
 	t              *testing.T
 	ts             *TestSetup
-	httpClient     *http.Client
+	apiClient      trn.Client
 	rootSessionKey []byte
 
 	Help Helper
 }
 
+// Query performs an API query
+func (tclt *Client) Query(
+	query string,
+	result interface{},
+) error {
+	return tclt.apiClient.Query(query, result)
+}
+
+// QueryVar performs a parameterized API query
+func (tclt *Client) QueryVar(
+	query string,
+	vars map[string]string,
+	result interface{},
+) error {
+	return tclt.apiClient.QueryVar(query, vars, result)
+}
+
 // Guest creates a new unauthenticated API client
 func (ts *TestSetup) Guest() *Client {
-	// Initialize the http cookie jar
-	cookieJar, err := cookiejar.New(nil)
-	if err != nil {
-		ts.t.Fatalf("client cookie jar init: %s", err)
-	}
-
 	// Initialize client
-	clt := &Client{
-		t:  ts.t,
-		ts: ts,
-		httpClient: &http.Client{
-			Timeout: time.Second * 1,
-			Jar:     cookieJar,
+	apiClt, err := thttp.NewClient(
+		url.URL{
+			Scheme: "http",
+			Host:   ts.serverTransport.(*thttp.Server).Addr().Host,
 		},
+		thttp.ClientOptions{
+			Timeout: time.Second * 10,
+		},
+	)
+	require.NoError(ts.t, err)
+
+	clt := &Client{
+		t:         ts.t,
+		ts:        ts,
+		apiClient: apiClt,
 	}
 
 	// Initialize helper
 	clt.Help = Helper{
-		c:                      clt,
+		c: clt,
 		creationTimeTollerance: time.Second * 3,
 	}
 	clt.Help.OK = AssumeSuccess{
@@ -62,4 +83,21 @@ func (ts *TestSetup) Client(
 	require.Nil(ts.t, err)
 
 	return clt, sess
+}
+
+func checkErr(
+	t *testing.T,
+	assumedSuccess successAssumption,
+	err error,
+) *graph.ResponseError {
+	if !assumedSuccess {
+		if err != nil {
+			// In case of expected errors the error must be a graph error
+			require.IsType(t, &graph.ResponseError{}, err)
+			return err.(*graph.ResponseError)
+		}
+		return nil
+	}
+	require.NoError(t, err)
+	return nil
 }

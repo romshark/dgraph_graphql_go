@@ -2,11 +2,12 @@ package setup
 
 import (
 	"context"
-	"encoding/base64"
 	"testing"
 	"time"
 
 	"github.com/romshark/dgraph_graphql_go/api"
+	trn "github.com/romshark/dgraph_graphql_go/api/transport"
+	thttp "github.com/romshark/dgraph_graphql_go/api/transport/http"
 )
 
 // TestContext represents a test context
@@ -17,12 +18,12 @@ type TestContext struct {
 
 // TestSetup represents the ArangoDB-based setup of an individual test
 type TestSetup struct {
-	t                 *testing.T
-	stats             *StatisticsRecorder
-	apiServer         api.Server
-	rootUsername      string
-	rootPassword      string
-	rootHTTPBasicAuth string
+	t               *testing.T
+	stats           *StatisticsRecorder
+	apiServer       api.Server
+	serverTransport trn.Server
+	rootUsername    string
+	rootPassword    string
 }
 
 // T returns the test reference
@@ -37,6 +38,8 @@ func New(t *testing.T, context TestContext) *TestSetup {
 	rootUsername := "test"
 	rootPassword := "test"
 
+	serverTransport := thttp.NewServer(thttp.ServerOptions{})
+
 	srvOpts := api.ServerOptions{
 		DBHost: context.DBHost,
 		RootUser: api.RootUserOptions{
@@ -45,22 +48,26 @@ func New(t *testing.T, context TestContext) *TestSetup {
 			Username: rootUsername,
 			Password: rootPassword,
 		},
+		Transport: []trn.Server{
+			serverTransport,
+		},
 	}
 
-	apiServer := api.NewServer(srvOpts)
+	apiServer, err := api.NewServer(srvOpts)
+	if err != nil {
+		t.Fatalf("API server init: %s", err)
+	}
 	if err := apiServer.Launch(); err != nil {
 		t.Fatalf("API server launch: %s", err)
 	}
 
 	testSetup := &TestSetup{
-		t:            t,
-		stats:        context.Stats,
-		apiServer:    apiServer,
-		rootUsername: rootUsername,
-		rootPassword: rootPassword,
-		rootHTTPBasicAuth: "Basic " + base64.StdEncoding.EncodeToString(
-			[]byte(rootUsername+":"+rootPassword),
-		),
+		t:               t,
+		stats:           context.Stats,
+		apiServer:       apiServer,
+		serverTransport: serverTransport,
+		rootUsername:    rootUsername,
+		rootPassword:    rootPassword,
 	}
 
 	// Record setup time

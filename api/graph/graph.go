@@ -2,7 +2,7 @@ package graph
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 
 	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
@@ -14,6 +14,30 @@ import (
 type Graph struct {
 	resolver *rsv.Resolver
 	schema   *graphql.Schema
+}
+
+// Query represents the graph query structure
+type Query struct {
+	Query         string
+	OperationName string
+	Variables     map[string]interface{}
+}
+
+// ResponseError represents a response error object
+type ResponseError struct {
+	Code    string
+	Message string
+}
+
+// Error implements the error interface
+func (err *ResponseError) Error() string {
+	return fmt.Sprintf("%s: %s", err.Code, err.Message)
+}
+
+// Response represents a response object
+type Response struct {
+	Data  []byte
+	Error *ResponseError
 }
 
 // New creates a new graph resolver instance
@@ -29,21 +53,13 @@ func New(str store.Store) *Graph {
 // Query executes a graph query and returns a JSON encoded result (or an error)
 func (graph *Graph) Query(
 	ctx context.Context,
-	query []byte,
+	query Query,
 ) (reply []byte, err error) {
-	var queryObject struct {
-		Query         string                 `json:"query"`
-		OperationName string                 `json:"operationName"`
-		Variables     map[string]interface{} `json:"variables"`
-	}
-	if err := json.Unmarshal(query, &queryObject); err != nil {
-		return nil, errors.New("invalid query object")
-	}
 	rep := graph.schema.Exec(
 		ctx,
-		queryObject.Query,
-		queryObject.OperationName,
-		queryObject.Variables,
+		query.Query,
+		query.OperationName,
+		query.Variables,
 	)
 
 	if rep.Errors != nil {
