@@ -3,18 +3,18 @@ package setup
 import (
 	"time"
 
-	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) createPost(
-	successAssumption successAssumption,
+	assumedSuccess successAssumption,
 	authorID store.ID,
 	title string,
 	contents string,
-) (*gqlmod.Post, *api.ResponseError) {
+) (*gqlmod.Post, *graph.ResponseError) {
 	t := h.c.t
 
 	var result struct {
@@ -51,9 +51,7 @@ func (h Helper) createPost(
 		&result,
 	)
 
-	if successAssumption {
-		require.Nil(t, err, 0)
-	} else if err != nil {
+	if err := checkErr(t, assumedSuccess, err); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +76,7 @@ func (h Helper) CreatePost(
 	authorID store.ID,
 	title string,
 	contents string,
-) (*gqlmod.Post, *api.ResponseError) {
+) (*gqlmod.Post, *graph.ResponseError) {
 	return h.createPost(potentialFailure, authorID, title, contents)
 }
 

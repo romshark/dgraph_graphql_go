@@ -3,7 +3,7 @@ package apitest
 import (
 	"testing"
 
-	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +12,7 @@ import (
 func verifyError(
 	t *testing.T,
 	expectedCode string,
-	err *api.ResponseError,
+	err *graph.ResponseError,
 ) {
 	require.NotNil(t, err)
 	require.Equal(t, expectedCode, err.Code)

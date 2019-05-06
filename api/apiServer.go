@@ -3,13 +3,11 @@ package api
 import (
 	"context"
 	"log"
-	"net"
-	"net/http"
-	"net/url"
 	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
+	"github.com/romshark/dgraph_graphql_go/api/transport"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
@@ -26,23 +24,19 @@ type Server interface {
 
 	// AwaitShutdown blocks until the server is shut down
 	AwaitShutdown()
-
-	// Addr returns the address the API server is serving on
-	Addr() url.URL
 }
 
 type server struct {
-	opts           ServerOptions
-	httpSrv        *http.Server
-	wg             *sync.WaitGroup
-	store          store.Store
-	addr           net.Addr
-	graph          *graph.Graph
-	rootSessionKey []byte
+	opts                 ServerOptions
+	store                store.Store
+	graph                *graph.Graph
+	rootSessionKey       []byte
+	transports           []transport.Server
+	shutdownAwaitBlocker *sync.WaitGroup
 }
 
 // NewServer creates a new API server instance
-func NewServer(opts ServerOptions) Server {
+func NewServer(opts ServerOptions) (Server, error) {
 	opts.SetDefaults()
 
 	// Initialize store instance
@@ -54,15 +48,21 @@ func NewServer(opts ServerOptions) Server {
 
 	// Initialize API server instance
 	newSrv := &server{
-		store: str,
-		opts:  opts,
-		wg:    &sync.WaitGroup{},
-		graph: graph.New(str),
+		store:                str,
+		opts:                 opts,
+		graph:                graph.New(str),
+		transports:           opts.Transport,
+		shutdownAwaitBlocker: &sync.WaitGroup{},
 	}
-	newSrv.wg.Add(1)
-	newSrv.httpSrv = &http.Server{
-		Addr:    opts.Host,
-		Handler: newSrv,
+
+	// Initialize transports
+	for _, transport := range opts.Transport {
+		if err := transport.Init(
+			newSrv.onGraphQuery,
+			newSrv.onRootAuth,
+		); err != nil {
+			return nil, err
+		}
 	}
 
 	// Generate the root session key if the root user is enabled
@@ -70,51 +70,57 @@ func NewServer(opts ServerOptions) Server {
 		newSrv.rootSessionKey = []byte(opts.SessionKeyGenerator.Generate())
 	}
 
-	return newSrv
+	return newSrv, nil
 }
 
 // Launch implements the Server interface
 func (srv *server) Launch() error {
+	// Prepare the store
 	if err := srv.store.Prepare(); err != nil {
 		return errors.Wrap(err, "store preparation")
 	}
 
-	addr := srv.httpSrv.Addr
-	if addr == "" {
-		addr = ":http"
+	// Launch all transports
+	srv.shutdownAwaitBlocker.Add(len(srv.transports))
+	for _, transport := range srv.transports {
+		t := transport
+		go func() {
+			if err := t.Run(); err != nil {
+				log.Printf("ERR: transport: %s", err)
+			}
+			srv.shutdownAwaitBlocker.Done()
+		}()
 	}
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		return errors.Wrap(err, "TCP listener setup")
-	}
-	srv.addr = listener.Addr()
-	go func() {
-		if err := srv.httpSrv.Serve(tcpKeepAliveListener{
-			TCPListener:       listener.(*net.TCPListener),
-			KeepAliveDuration: srv.opts.KeepAliveDuration,
-		}); err != http.ErrServerClosed {
-			log.Fatalf("http serve: %s", err)
-		}
-		srv.wg.Done()
-	}()
+
 	return nil
 }
 
 // AwaitShutdown implements the Server interface
 func (srv *server) AwaitShutdown() {
-	srv.wg.Wait()
+	srv.shutdownAwaitBlocker.Wait()
 }
 
 // Shutdown implements the Server interface
 func (srv *server) Shutdown(ctx context.Context) error {
-	return srv.httpSrv.Shutdown(ctx)
-}
+	wg := &sync.WaitGroup{}
+	wg.Add(len(srv.transports))
 
-// Addr implements the Server interface
-func (srv *server) Addr() url.URL {
-	return url.URL{
-		Scheme: "http",
-		Host:   srv.addr.String(),
-		Path:   "/",
+	shutdownErrs := make([]error, 0)
+	for _, transport := range srv.transports {
+		t := transport
+		go func() {
+			if err := t.Shutdown(ctx); err != nil {
+				shutdownErrs = append(
+					shutdownErrs,
+					errors.Wrap(err, "transport shutdown"),
+				)
+				log.Printf("ERR: transport shutdown: %s", err)
+			}
+			wg.Done()
+		}()
 	}
+	if len(shutdownErrs) < 1 {
+		return nil
+	}
+	return errors.Errorf("ERR: shutdown: %v", shutdownErrs)
 }

@@ -3,16 +3,16 @@ package setup
 import (
 	"time"
 
-	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) signIn(
-	successAssumption successAssumption,
+	assumedSuccess successAssumption,
 	email string,
 	password string,
-) (*gqlmod.Session, *api.ResponseError) {
+) (*gqlmod.Session, *graph.ResponseError) {
 	t := h.c.t
 
 	var result struct {
@@ -44,9 +44,7 @@ func (h Helper) signIn(
 		&result,
 	)
 
-	if successAssumption {
-		require.Nil(t, err, 0)
-	} else if err != nil {
+	if err := checkErr(t, assumedSuccess, err); err != nil {
 		return nil, err
 	}
 
@@ -68,7 +66,7 @@ func (h Helper) signIn(
 func (h Helper) SignIn(
 	email string,
 	password string,
-) (*gqlmod.Session, *api.ResponseError) {
+) (*gqlmod.Session, *graph.ResponseError) {
 	return h.signIn(potentialFailure, email, password)
 }
 

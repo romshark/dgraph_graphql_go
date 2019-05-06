@@ -1,4 +1,4 @@
-package api
+package http
 
 import (
 	"encoding/base64"
@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-// handleRoot handles an HTTP root signin request
-func (srv *server) handleRoot(
+// handleRootAuth handles a root authentication request
+func (t *Server) handleRootAuth(
 	resp http.ResponseWriter,
 	req *http.Request,
 ) {
@@ -18,10 +18,6 @@ func (srv *server) handleRoot(
 			http.StatusText(http.StatusForbidden),
 			http.StatusForbidden,
 		)
-	}
-
-	if srv.opts.RootUser.Status == RootUserDisabled {
-		unauthorized()
 	}
 
 	// Parse credentials
@@ -41,9 +37,8 @@ func (srv *server) handleRoot(
 		return
 	}
 
-	// Check root credentials
-	if pair[0] != srv.opts.RootUser.Username ||
-		pair[1] != srv.opts.RootUser.Password {
+	rootSessionKey, okay := t.onRootAuth(pair[0], pair[1])
+	if !okay {
 		unauthorized()
 		return
 	}
@@ -51,13 +46,13 @@ func (srv *server) handleRoot(
 	// Set the session key as cookie
 	http.SetCookie(resp, &http.Cookie{
 		Name:     "SID",
-		Value:    string(srv.rootSessionKey),
+		Value:    string(rootSessionKey),
 		HttpOnly: true,
 		Secure:   true,
 	})
 
 	// Return session key
-	if _, err := resp.Write(srv.rootSessionKey); err != nil {
-		log.Printf("writing /root response: %s", err)
+	if _, err := resp.Write(rootSessionKey); err != nil {
+		log.Printf("writing root auth response: %s", err)
 	}
 }
