@@ -43,7 +43,7 @@ func (h Helper) createPost(
 				}
 			}
 		}`,
-		map[string]string{
+		map[string]interface{}{
 			"author":   string(authorID),
 			"title":    title,
 			"contents": contents,

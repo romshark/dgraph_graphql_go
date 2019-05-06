@@ -122,7 +122,7 @@ func TestQuery(t *testing.T) {
 						email
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"userId": string(*expected.ID),
 				},
 				&query,
@@ -148,7 +148,7 @@ func TestQuery(t *testing.T) {
 					email
 				}
 			}`,
-			map[string]string{
+			map[string]interface{}{
 				"userId": string(store.NewID()),
 			},
 			&query,
@@ -173,7 +173,7 @@ func TestQuery(t *testing.T) {
 						contents
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"postId": string(*expected.ID),
 				},
 				&query,
@@ -199,7 +199,7 @@ func TestQuery(t *testing.T) {
 					contents
 				}
 			}`,
-			map[string]string{
+			map[string]interface{}{
 				"postId": string(store.NewID()),
 			},
 			&query,
@@ -224,7 +224,7 @@ func TestQuery(t *testing.T) {
 						message
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"reactionId": string(*expected.ID),
 				},
 				&query,
@@ -249,7 +249,7 @@ func TestQuery(t *testing.T) {
 					message
 				}
 			}`,
-			map[string]string{
+			map[string]interface{}{
 				"reactionId": string(store.NewID()),
 			},
 			&query,
@@ -276,7 +276,7 @@ func TestQuery(t *testing.T) {
 						}
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"userId": string(authorID),
 				},
 				&query,
@@ -312,7 +312,7 @@ func TestQuery(t *testing.T) {
 						}
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"postId": string(postID),
 				},
 				&query,
@@ -345,7 +345,7 @@ func TestQuery(t *testing.T) {
 						}
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"userId": string(*sess.User.ID),
 				},
 				&query,
@@ -390,7 +390,7 @@ func TestQuery(t *testing.T) {
 						}
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"userId": string(userID),
 				},
 				&query,
@@ -419,7 +419,7 @@ func TestQuery(t *testing.T) {
 						}
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"postId": string(postID),
 				},
 				&query,
@@ -455,7 +455,7 @@ func TestQuery(t *testing.T) {
 						}
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"authorId": string(authorID),
 				},
 				&query,
@@ -491,7 +491,7 @@ func TestQuery(t *testing.T) {
 						}
 					}
 				}`,
-				map[string]string{
+				map[string]interface{}{
 					"subjectReactionId": string(subjectReactionID),
 				},
 				&query,

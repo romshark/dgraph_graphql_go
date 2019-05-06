@@ -11,5 +11,9 @@ type Client interface {
 	Query(query string, result interface{}) error
 
 	// QueryVar performs a parameterized API query
-	QueryVar(query string, vars map[string]string, result interface{}) error
+	QueryVar(
+		query string,
+		vars map[string]interface{},
+		result interface{},
+	) error
 }

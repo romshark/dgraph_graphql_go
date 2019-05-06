@@ -39,6 +39,13 @@ type Mutation {
 		emotion: Emotion!
 		message: String!
 	): Reaction!
+
+	editPost(
+		post: Identifier!
+		editor: Identifier!
+		newTitle: String
+		newContents: String
+	): Post!
 }
 
 type Session {

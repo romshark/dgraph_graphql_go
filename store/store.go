@@ -68,6 +68,24 @@ type Transactions interface {
 		},
 		err error,
 	)
+
+	EditPost(
+		ctx context.Context,
+		post ID,
+		editor ID,
+		newTitle *string,
+		newContents *string,
+	) (
+		result struct {
+			UID          string
+			EditorUID    string
+			AuthorUID    string
+			CreationTime time.Time
+			Title        string
+			Contents     string
+		},
+		err error,
+	)
 }
 
 // Store interfaces a store implementation

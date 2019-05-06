@@ -33,7 +33,7 @@ func (tclt *Client) Query(
 // QueryVar performs a parameterized API query
 func (tclt *Client) QueryVar(
 	query string,
-	vars map[string]string,
+	vars map[string]interface{},
 	result interface{},
 ) error {
 	return tclt.apiClient.QueryVar(query, vars, result)
@@ -61,7 +61,7 @@ func (ts *TestSetup) Guest() *Client {
 
 	// Initialize helper
 	clt.Help = Helper{
-		c: clt,
+		c:                      clt,
 		creationTimeTollerance: time.Second * 3,
 	}
 	clt.Help.OK = AssumeSuccess{

@@ -39,7 +39,7 @@ func (h Helper) createUser(
 				}
 			}
 		}`,
-		map[string]string{
+		map[string]interface{}{
 			"displayName": displayName,
 			"email":       email,
 			"password":    password,

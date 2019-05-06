@@ -37,7 +37,7 @@ func (h Helper) signIn(
 				}
 			}
 		}`,
-		map[string]string{
+		map[string]interface{}{
 			"email":    email,
 			"password": password,
 		},

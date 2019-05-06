@@ -41,7 +41,7 @@ func (h Helper) createReaction(
 				emotion
 			}
 		}`,
-		map[string]string{
+		map[string]interface{}{
 			"author":  string(author),
 			"subject": string(subject),
 			"emotion": string(emotion),

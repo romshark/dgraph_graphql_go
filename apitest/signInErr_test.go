@@ -27,7 +27,7 @@ func TestSignInErr(t *testing.T) {
 					}
 				}
 			}`,
-			map[string]string{
+			map[string]interface{}{
 				"userId": string(*user.ID),
 			},
 			&query,

@@ -50,14 +50,14 @@ func (c *Client) Query(
 // QueryVar implements the transport.Client interface
 func (c *Client) QueryVar(
 	query string,
-	vars map[string]string,
+	vars map[string]interface{},
 	result interface{},
 ) error {
 	// Marshal form data
 	requestData := struct {
-		Query         string            `json:"query"`
-		OperationName string            `json:"operationName"`
-		Variables     map[string]string `json:"variables"`
+		Query         string                 `json:"query"`
+		OperationName string                 `json:"operationName"`
+		Variables     map[string]interface{} `json:"variables"`
 	}{
 		Query:     query,
 		Variables: vars,
