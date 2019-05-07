@@ -60,7 +60,7 @@ type ServerOptions struct {
 }
 
 // SetDefaults sets the default options
-func (opts *ServerOptions) SetDefaults() {
+func (opts *ServerOptions) SetDefaults() error {
 	// Use default non-production database port
 	if opts.DBHost == "" {
 		opts.DBHost = "localhost:6000"
@@ -78,8 +78,14 @@ func (opts *ServerOptions) SetDefaults() {
 
 	// Use HTTP as the default transport
 	if len(opts.Transport) < 1 {
+		httpTransport, err := thttp.NewServer(thttp.ServerOptions{})
+		if err != nil {
+			return err
+		}
 		opts.Transport = []transport.Server{
-			thttp.NewServer(thttp.ServerOptions{}),
+			httpTransport,
 		}
 	}
+
+	return nil
 }

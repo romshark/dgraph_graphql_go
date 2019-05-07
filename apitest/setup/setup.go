@@ -38,7 +38,10 @@ func New(t *testing.T, context TestContext) *TestSetup {
 	rootUsername := "test"
 	rootPassword := "test"
 
-	serverTransport := thttp.NewServer(thttp.ServerOptions{})
+	serverTransport, err := thttp.NewServer(thttp.ServerOptions{})
+	if err != nil {
+		t.Fatalf("API server transport init: %s", err)
+	}
 
 	srvOpts := api.ServerOptions{
 		DBHost: context.DBHost,

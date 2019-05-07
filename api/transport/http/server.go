@@ -16,6 +16,7 @@ type Server struct {
 	addrReadWait *sync.WaitGroup
 	opts         ServerOptions
 	httpSrv      *http.Server
+	tls          *ServerTLS
 	addr         net.Addr
 	onGraphQuery trn.OnGraphQuery
 	onRootAuth   trn.OnRootAuth
@@ -23,7 +24,11 @@ type Server struct {
 
 // NewServer creates a new unencrypted JSON based HTTP transport.
 // Use NewSecure to enable encryption instead
-func NewServer(opts ServerOptions) trn.Server {
+func NewServer(opts ServerOptions) (trn.Server, error) {
+	if err := opts.SetDefaults(); err != nil {
+		return nil, err
+	}
+
 	t := &Server{
 		addrReadWait: &sync.WaitGroup{},
 		opts:         opts,
@@ -32,15 +37,13 @@ func NewServer(opts ServerOptions) trn.Server {
 		Addr:    opts.Host,
 		Handler: t,
 	}
-	t.addrReadWait.Add(1)
-	return t
-}
 
-// NewSecureServer creates a new TLS protected JSON based HTTP transport
-func NewSecureServer(opts ServerOptions) trn.Server {
-	// TODO: add TLS support
-	t := NewServer(opts)
-	return t
+	if opts.TLS != nil {
+		t.httpSrv.TLSConfig = opts.TLS.Config
+	}
+
+	t.addrReadWait.Add(1)
+	return t, nil
 }
 
 // Init implements the transport.Transport interface
@@ -74,12 +77,25 @@ func (t *Server) Run() error {
 	// Address determined, readers must be unblocked
 	t.addrReadWait.Done()
 
-	if err := t.httpSrv.Serve(tcpKeepAliveListener{
+	tcpListener := tcpKeepAliveListener{
 		TCPListener:       listener.(*net.TCPListener),
 		KeepAliveDuration: t.opts.KeepAliveDuration,
-	}); err != http.ErrServerClosed {
-		return err
 	}
+
+	if t.opts.TLS != nil {
+		if err := t.httpSrv.ServeTLS(
+			tcpListener,
+			t.opts.TLS.CertificateFilePath,
+			t.opts.TLS.PrivateKeyFilePath,
+		); err != http.ErrServerClosed {
+			return err
+		}
+	} else {
+		if err := t.httpSrv.Serve(tcpListener); err != http.ErrServerClosed {
+			return err
+		}
+	}
+
 	return nil
 }
 
