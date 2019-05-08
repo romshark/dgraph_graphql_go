@@ -26,18 +26,6 @@ func (str *impl) CreatePost(
 	},
 	err error,
 ) {
-	// Validate input
-	err = store.ValidatePostTitle(title)
-	if err != nil {
-		err = strerr.Wrap(strerr.ErrInvalidInput, err)
-		return
-	}
-	err = store.ValidatePostContents(contents)
-	if err != nil {
-		err = strerr.Wrap(strerr.ErrInvalidInput, err)
-		return
-	}
-
 	// Prepare
 	result.ID = store.NewID()
 	result.CreationTime = time.Now()

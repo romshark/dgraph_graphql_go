@@ -29,22 +29,6 @@ func (str *impl) EditPost(
 	},
 	err error,
 ) {
-	// Validate input
-	if newTitle != nil {
-		err = store.ValidatePostTitle(*newTitle)
-		if err != nil {
-			err = strerr.Wrap(strerr.ErrInvalidInput, err)
-			return
-		}
-	}
-	if newContents != nil {
-		err = store.ValidatePostContents(*newContents)
-		if err != nil {
-			err = strerr.Wrap(strerr.ErrInvalidInput, err)
-			return
-		}
-	}
-
 	// Begin transaction
 	txn, close := str.txn(&err)
 	if err != nil {

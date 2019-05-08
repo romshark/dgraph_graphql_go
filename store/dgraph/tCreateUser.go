@@ -25,20 +25,6 @@ func (str *impl) CreateUser(
 	},
 	err error,
 ) {
-	// Validate inputs
-	if valerr := store.ValidateUserDisplayName(displayName); valerr != nil {
-		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
-		return
-	}
-	if valerr := store.ValidateEmail(email); valerr != nil {
-		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
-		return
-	}
-	if valerr := store.ValidatePassword(password); valerr != nil {
-		err = strerr.Wrap(strerr.ErrInvalidInput, valerr)
-		return
-	}
-
 	// Prepare
 	result.ID = store.NewID()
 	result.CreationTime = time.Now()

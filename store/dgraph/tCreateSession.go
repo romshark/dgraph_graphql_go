@@ -23,12 +23,6 @@ func (str *impl) CreateSession(
 	},
 	err error,
 ) {
-	// Validate inputs
-	if len(email) < 1 || len(password) < 1 {
-		err = strerr.New(strerr.ErrInvalidInput, "missing credentials")
-		return
-	}
-
 	// Prepare
 	result.Key = str.sessionKeyGenerator.Generate()
 	result.CreationTime = time.Now()

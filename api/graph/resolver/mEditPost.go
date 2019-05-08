@@ -17,10 +17,25 @@ func (rsv *Resolver) EditPost(
 		NewContents *string
 	},
 ) (*Post, error) {
+	// Validate input
 	if params.NewTitle == nil && params.NewContents == nil {
 		err := strerr.New(strerr.ErrInvalidInput, "no changes")
 		rsv.error(ctx, err)
 		return nil, err
+	}
+	if params.NewTitle != nil {
+		if err := store.ValidatePostTitle(*params.NewTitle); err != nil {
+			err = strerr.Wrap(strerr.ErrInvalidInput, err)
+			rsv.error(ctx, err)
+			return nil, err
+		}
+	}
+	if params.NewContents != nil {
+		if err := store.ValidatePostContents(*params.NewContents); err != nil {
+			err = strerr.Wrap(strerr.ErrInvalidInput, err)
+			rsv.error(ctx, err)
+			return nil, err
+		}
 	}
 
 	transactRes, err := rsv.str.EditPost(

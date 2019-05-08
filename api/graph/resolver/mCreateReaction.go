@@ -5,6 +5,7 @@ import (
 
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
+	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // CreateReaction resolves Mutation.createReaction
@@ -18,6 +19,18 @@ func (rsv *Resolver) CreateReaction(
 	},
 ) (*Reaction, error) {
 	emot := emotion.Emotion(params.Emotion)
+
+	// Validate input
+	if err := store.ValidateReactionMessage(params.Message); err != nil {
+		err = strerr.Wrap(strerr.ErrInvalidInput, err)
+		rsv.error(ctx, err)
+		return nil, err
+	}
+	if err := emotion.Validate(emot); err != nil {
+		err = strerr.Wrap(strerr.ErrInvalidInput, err)
+		rsv.error(ctx, err)
+		return nil, err
+	}
 
 	// Create new reaction entity
 	transactRes, err := rsv.str.CreateReaction(

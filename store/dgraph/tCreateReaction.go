@@ -29,18 +29,6 @@ func (str *impl) CreateReaction(
 	},
 	err error,
 ) {
-	// Validate input
-	err = store.ValidateReactionMessage(message)
-	if err != nil {
-		err = strerr.Wrap(strerr.ErrInvalidInput, err)
-		return
-	}
-	err = emo.Validate(emotion)
-	if err != nil {
-		err = strerr.Wrap(strerr.ErrInvalidInput, err)
-		return
-	}
-
 	// Prepare
 	result.ID = store.NewID()
 	result.CreationTime = time.Now()
