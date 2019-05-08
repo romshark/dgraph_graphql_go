@@ -26,7 +26,7 @@ func TestReactionSubjectUnMarshal(t *testing.T) {
 			Title:    "Test title",
 			Contents: "Test contents",
 		}
-		marshedPost, err := json.Marshal(dgraph.ReactionSubject{&post})
+		marshedPost, err := json.Marshal(dgraph.ReactionSubject{V: &post})
 		require.NoError(t, err)
 
 		var u dgraph.ReactionSubject
@@ -44,7 +44,9 @@ func TestReactionSubjectUnMarshal(t *testing.T) {
 			Emotion:  emotion.Excited,
 			Message:  "Test message",
 		}
-		marshedReaction, err := json.Marshal(dgraph.ReactionSubject{&reaction})
+		marshedReaction, err := json.Marshal(
+			dgraph.ReactionSubject{V: &reaction},
+		)
 		require.NoError(t, err)
 
 		var u dgraph.ReactionSubject
@@ -56,7 +58,7 @@ func TestReactionSubjectUnMarshal(t *testing.T) {
 	// Invalid type <-> JSON
 	t.Run("JSON_invalid", func(t *testing.T) {
 		require.Panics(t, func() {
-			json.Marshal(dgraph.ReactionSubject{"invalid_union_type"})
+			json.Marshal(dgraph.ReactionSubject{V: "invalid_union_type"})
 		})
 		invalidJson := []byte(`{"Foo": "bar", "Baz": 42}`)
 		var u dgraph.ReactionSubject
