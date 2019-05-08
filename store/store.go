@@ -7,8 +7,8 @@ import (
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
 )
 
-// Transactions interfaces a transactional store
-type Transactions interface {
+// MutableStore interfaces a transactional store
+type MutableStore interface {
 	CreateSession(
 		ctx context.Context,
 		email string,
@@ -92,7 +92,7 @@ type Transactions interface {
 type Store interface {
 	Prepare() error
 
-	Transactions
+	MutableStore
 
 	Query(
 		ctx context.Context,
