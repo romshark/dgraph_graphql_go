@@ -32,14 +32,14 @@ func (t *Server) auth(req *http.Request) *http.Request {
 	}
 
 	if tokens[0] == "Bearer" {
-		// Treat the authorization header as Session-key bearer token
+		// Treat the authorization header as session key bearer token
 		userID, sessionCreationTime := t.onAuth(req.Context(), tokens[1])
 		session.UserID = userID
 		session.Creation = sessionCreationTime
-	} else if tokens[0] == "Root" {
-		// Treat the authorization header as Root-session-key bearer token
-		if t.onRootAuth(req.Context(), tokens[1]) {
-			session.IsRoot = true
+	} else if tokens[0] == "Debug" {
+		// Treat the authorization header as debug session key bearer token
+		if t.onDebugAuth(req.Context(), tokens[1]) {
+			session.IsDebug = true
 		}
 	}
 

@@ -47,12 +47,12 @@ func newQueryTestSetup(
 	s.reactionsByPost = make(map[id]map[id]reaction)
 	s.subReaction = make(map[id]map[id]reaction)
 
-	root := ts.Root()
+	debug := ts.Debug()
 
 	// Entities: users
 
 	// User: first
-	userA := root.Help.OK.CreateUser(
+	userA := debug.Help.OK.CreateUser(
 		"first",
 		"1@test.test",
 		"testpass",
@@ -60,7 +60,7 @@ func newQueryTestSetup(
 	s.users[*userA.ID] = userA
 
 	// User: second
-	userB := root.Help.OK.CreateUser(
+	userB := debug.Help.OK.CreateUser(
 		"second",
 		"2@test.test",
 		"testpass",
@@ -68,7 +68,7 @@ func newQueryTestSetup(
 	s.users[*userB.ID] = userB
 
 	// User: third
-	userC := root.Help.OK.CreateUser(
+	userC := debug.Help.OK.CreateUser(
 		"third",
 		"3@test.test",
 		"testpass",
@@ -78,7 +78,7 @@ func newQueryTestSetup(
 	// Entities: posts
 
 	// Post: A1
-	postA1 := root.Help.OK.CreatePost(
+	postA1 := debug.Help.OK.CreatePost(
 		*userA.ID,
 		"Post A1",
 		"Post A1 contents",
@@ -86,7 +86,7 @@ func newQueryTestSetup(
 	s.posts[*postA1.ID] = postA1
 
 	// Post: A2
-	postA2 := root.Help.OK.CreatePost(
+	postA2 := debug.Help.OK.CreatePost(
 		*userA.ID,
 		"Post A2",
 		"Post A2 contents",
@@ -94,7 +94,7 @@ func newQueryTestSetup(
 	s.posts[*postA2.ID] = postA2
 
 	// Post: B1
-	postB1 := root.Help.OK.CreatePost(
+	postB1 := debug.Help.OK.CreatePost(
 		*userB.ID,
 		"Post B1",
 		"Post B1 contents",
@@ -104,7 +104,7 @@ func newQueryTestSetup(
 	// Entities: reactions
 
 	// UserB --ReactionB1-> PostA1
-	reactionB1 := root.Help.OK.CreateReaction(
+	reactionB1 := debug.Help.OK.CreateReaction(
 		*userB.ID,
 		*postA1.ID,
 		emotion.Happy,
@@ -113,7 +113,7 @@ func newQueryTestSetup(
 	s.reactions[*reactionB1.ID] = reactionB1
 
 	// UserB --ReactionB2-> PostA2
-	reactionB2 := root.Help.OK.CreateReaction(
+	reactionB2 := debug.Help.OK.CreateReaction(
 		*userB.ID,
 		*postA2.ID,
 		emotion.Excited,
@@ -122,7 +122,7 @@ func newQueryTestSetup(
 	s.reactions[*reactionB2.ID] = reactionB2
 
 	// UserC --ReactionC1-> PostA1
-	reactionC1 := root.Help.OK.CreateReaction(
+	reactionC1 := debug.Help.OK.CreateReaction(
 		*userC.ID,
 		*postA1.ID,
 		emotion.Thoughtful,
@@ -131,7 +131,7 @@ func newQueryTestSetup(
 	s.reactions[*reactionC1.ID] = reactionC1
 
 	// UserC --ReactionC2-> ReactionB2
-	reactionC2 := root.Help.OK.CreateReaction(
+	reactionC2 := debug.Help.OK.CreateReaction(
 		*userC.ID,
 		*reactionB2.ID,
 		emotion.Thoughtful,

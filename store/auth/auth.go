@@ -16,7 +16,7 @@ const CtxSession CtxKey = 1
 
 // RequestSession represents a client session
 type RequestSession struct {
-	IsRoot   bool
+	IsDebug  bool
 	UserID   store.ID
 	Creation time.Time
 }
@@ -35,8 +35,8 @@ func Authorize(
 	// Extract the session
 	session, isSession := ctx.Value(CtxSession).(*RequestSession)
 
-	// Pass root without further authorization
-	if isSession && session.IsRoot {
+	// Pass debug clients without further authorization
+	if isSession && session.IsDebug {
 		return nil
 	}
 

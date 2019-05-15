@@ -13,13 +13,13 @@ import (
 func TestSignInErr(t *testing.T) {
 	ensureNoSession := func(
 		t *testing.T,
-		root *setup.Client,
+		debug *setup.Client,
 		user *gqlmod.User,
 	) {
 		var query struct {
 			User *gqlmod.User `json:"user"`
 		}
-		root.QueryVar(
+		debug.QueryVar(
 			`query($userId: Identifier!) {
 				user(id: $userId) {
 					sessions {
@@ -40,71 +40,71 @@ func TestSignInErr(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		root := ts.Root()
+		debug := ts.Debug()
 
-		user := root.Help.OK.CreateUser(
+		user := debug.Help.OK.CreateUser(
 			"fooBarowich",
 			"foo@bar.buz",
 			"testpass",
 		)
-		session, err := root.Help.SignIn("foo@fooo.foo", "testpass")
+		session, err := debug.Help.SignIn("foo@fooo.foo", "testpass")
 		require.Nil(t, session)
 		verifyError(t, "WrongCreds", err)
 
-		ensureNoSession(t, root, user)
+		ensureNoSession(t, debug, user)
 	})
 
 	t.Run("wrongPassword", func(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		root := ts.Root()
+		debug := ts.Debug()
 
-		user := root.Help.OK.CreateUser(
+		user := debug.Help.OK.CreateUser(
 			"fooBarowich",
 			"foo@bar.buz",
 			"testpass",
 		)
-		session, err := root.Help.SignIn("foo@bar.buz", "wronpass")
+		session, err := debug.Help.SignIn("foo@bar.buz", "wronpass")
 		require.Nil(t, session)
 		verifyError(t, "WrongCreds", err)
 
-		ensureNoSession(t, root, user)
+		ensureNoSession(t, debug, user)
 	})
 
 	t.Run("missingEmail", func(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		root := ts.Root()
+		debug := ts.Debug()
 
-		user := root.Help.OK.CreateUser(
+		user := debug.Help.OK.CreateUser(
 			"fooBarowich",
 			"foo@bar.buz",
 			"testpass",
 		)
-		session, err := root.Help.SignIn("", "wronpass")
+		session, err := debug.Help.SignIn("", "wronpass")
 		require.Nil(t, session)
 		verifyError(t, "InvalidInput", err)
 
-		ensureNoSession(t, root, user)
+		ensureNoSession(t, debug, user)
 	})
 
 	t.Run("missingPassword", func(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		root := ts.Root()
+		debug := ts.Debug()
 
-		user := root.Help.OK.CreateUser(
+		user := debug.Help.OK.CreateUser(
 			"fooBarowich",
 			"foo@bar.buz",
 			"testpass",
 		)
-		session, err := root.Help.SignIn("foo@bar.buz", "")
+		session, err := debug.Help.SignIn("foo@bar.buz", "")
 		require.Nil(t, session)
 		verifyError(t, "InvalidInput", err)
 
-		ensureNoSession(t, root, user)
+		ensureNoSession(t, debug, user)
 	})
 }

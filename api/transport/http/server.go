@@ -20,8 +20,8 @@ type Server struct {
 	addr         net.Addr
 	onGraphQuery trn.OnGraphQuery
 	onAuth       trn.OnAuth
-	onRootAuth   trn.OnRootAuth
-	onRootSess   trn.OnRootSess
+	onDebugAuth  trn.OnDebugAuth
+	onDebugSess  trn.OnDebugSess
 }
 
 // NewServer creates a new unencrypted JSON based HTTP transport.
@@ -52,8 +52,8 @@ func NewServer(opts ServerOptions) (trn.Server, error) {
 func (t *Server) Init(
 	onGraphQuery trn.OnGraphQuery,
 	onAuth trn.OnAuth,
-	onRootAuth trn.OnRootAuth,
-	onRootSess trn.OnRootSess,
+	onDebugAuth trn.OnDebugAuth,
+	onDebugSess trn.OnDebugSess,
 ) error {
 	if onGraphQuery == nil {
 		panic("missing onGraphQuery callback")
@@ -61,16 +61,16 @@ func (t *Server) Init(
 	if onAuth == nil {
 		panic("missing onAuth callback")
 	}
-	if onRootAuth == nil {
-		panic("missing onRootAuth callback")
+	if onDebugAuth == nil {
+		panic("missing onDebugAuth callback")
 	}
-	if onRootSess == nil {
-		panic("missing onRootSess callback")
+	if onDebugSess == nil {
+		panic("missing onDebugSess callback")
 	}
 	t.onGraphQuery = onGraphQuery
 	t.onAuth = onAuth
-	t.onRootAuth = onRootAuth
-	t.onRootSess = onRootSess
+	t.onDebugAuth = onDebugAuth
+	t.onDebugSess = onDebugSess
 	return nil
 }
 
@@ -127,8 +127,8 @@ func (t *Server) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		switch req.URL.Path {
 		case "/g":
 			t.handleGraphQuery(resp, req)
-		case "/root":
-			t.handleRootAuth(resp, req)
+		case "/debug":
+			t.handleDebugAuth(resp, req)
 		default:
 			// Unsupported path
 			http.Error(

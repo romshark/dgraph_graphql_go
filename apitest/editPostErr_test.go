@@ -13,19 +13,19 @@ import (
 func TestEditPostErr(t *testing.T) {
 	testSetup := func(t *testing.T) (
 		ts *setup.TestSetup,
-		root *setup.Client,
+		debug *setup.Client,
 		post *gqlmod.Post,
 		author *gqlmod.User,
 	) {
 		ts = setup.New(t, tcx)
-		root = ts.Root()
+		debug = ts.Debug()
 
-		author = root.Help.OK.CreateUser(
+		author = debug.Help.OK.CreateUser(
 			"fooBarowich",
 			"foo@bar.buz",
 			"testpass",
 		)
-		post = root.Help.OK.CreatePost(
+		post = debug.Help.OK.CreatePost(
 			*author.ID,
 			"valid title",
 			"test contents",
@@ -44,10 +44,10 @@ func TestEditPostErr(t *testing.T) {
 
 		for tName, invalidTitle := range invalidTitles {
 			t.Run(tName, func(t *testing.T) {
-				ts, root, post, author := testSetup(t)
+				ts, debug, post, author := testSetup(t)
 				defer ts.Teardown()
 
-				res, err := root.Help.EditPost(
+				res, err := debug.Help.EditPost(
 					*post.ID,
 					*author.ID,
 					&invalidTitle,
@@ -75,10 +75,10 @@ func TestEditPostErr(t *testing.T) {
 
 		for tName, invalidContent := range invalidContents {
 			t.Run(tName, func(t *testing.T) {
-				ts, root, post, author := testSetup(t)
+				ts, debug, post, author := testSetup(t)
 				defer ts.Teardown()
 
-				res, err := root.Help.EditPost(
+				res, err := debug.Help.EditPost(
 					*post.ID,
 					*author.ID,
 					post.Title,
@@ -91,10 +91,10 @@ func TestEditPostErr(t *testing.T) {
 	})
 
 	t.Run("inexistentPost", func(t *testing.T) {
-		ts, root, post, _ := testSetup(t)
+		ts, debug, post, _ := testSetup(t)
 		defer ts.Teardown()
 
-		res, err := root.Help.EditPost(
+		res, err := debug.Help.EditPost(
 			*post.ID,
 			store.NewID(),
 			post.Title,
@@ -106,10 +106,10 @@ func TestEditPostErr(t *testing.T) {
 
 	// Test inexistent editor
 	t.Run("inexistentEditor", func(t *testing.T) {
-		ts, root, post, _ := testSetup(t)
+		ts, debug, post, _ := testSetup(t)
 		defer ts.Teardown()
 
-		res, err := root.Help.EditPost(
+		res, err := debug.Help.EditPost(
 			*post.ID,
 			store.NewID(),
 			post.Title,
@@ -120,10 +120,10 @@ func TestEditPostErr(t *testing.T) {
 	})
 
 	t.Run("noChanges", func(t *testing.T) {
-		ts, root, post, _ := testSetup(t)
+		ts, debug, post, _ := testSetup(t)
 		defer ts.Teardown()
 
-		res, err := root.Help.EditPost(
+		res, err := debug.Help.EditPost(
 			*post.ID,
 			*post.ID,
 			nil,

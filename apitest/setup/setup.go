@@ -22,8 +22,8 @@ type TestSetup struct {
 	stats           *StatisticsRecorder
 	apiServer       api.Server
 	serverTransport trn.Server
-	rootUsername    string
-	rootPassword    string
+	debugUsername   string
+	debugPassword   string
 }
 
 // T returns the test reference
@@ -35,8 +35,8 @@ func (ts *TestSetup) T() *testing.T {
 func New(t *testing.T, context TestContext) *TestSetup {
 	start := time.Now()
 
-	rootUsername := "test"
-	rootPassword := "test"
+	debugUsername := "test"
+	debugPassword := "test"
 
 	serverTransport, err := thttp.NewServer(thttp.ServerOptions{})
 	if err != nil {
@@ -45,11 +45,11 @@ func New(t *testing.T, context TestContext) *TestSetup {
 
 	srvOpts := api.ServerOptions{
 		DBHost: context.DBHost,
-		RootUser: api.RootUserOptions{
-			// Enable the root user in read-write mode
-			Status:   api.RootUserRW,
-			Username: rootUsername,
-			Password: rootPassword,
+		DebugUser: api.DebugUserOptions{
+			// Enable the debug user in read-write mode
+			Status:   api.DebugUserRW,
+			Username: debugUsername,
+			Password: debugPassword,
 		},
 		Transport: []trn.Server{
 			serverTransport,
@@ -69,8 +69,8 @@ func New(t *testing.T, context TestContext) *TestSetup {
 		stats:           context.Stats,
 		apiServer:       apiServer,
 		serverTransport: serverTransport,
-		rootUsername:    rootUsername,
-		rootPassword:    rootPassword,
+		debugUsername:   debugUsername,
+		debugPassword:   debugPassword,
 	}
 
 	// Record setup time

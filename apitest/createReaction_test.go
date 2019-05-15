@@ -12,21 +12,21 @@ func TestCreateReaction(t *testing.T) {
 	ts := setup.New(t, tcx)
 	defer ts.Teardown()
 
-	root := ts.Root()
+	debug := ts.Debug()
 
 	// User 1
-	firstP := root.Help.OK.CreateUser("first", "1@test.test", "testpass")
+	firstP := debug.Help.OK.CreateUser("first", "1@test.test", "testpass")
 
 	// User 2
-	secondP := root.Help.OK.CreateUser("second", "2@test.test", "testpass")
+	secondP := debug.Help.OK.CreateUser("second", "2@test.test", "testpass")
 	second, _ := ts.Client("2@test.test", "testpass")
 
 	// User 3
-	thirdP := root.Help.OK.CreateUser("third", "3@test.test", "testpass")
+	thirdP := debug.Help.OK.CreateUser("third", "3@test.test", "testpass")
 	third, _ := ts.Client("3@test.test", "testpass")
 
 	// Post
-	post := root.Help.OK.CreatePost(*firstP.ID, "test post", "test content")
+	post := debug.Help.OK.CreatePost(*firstP.ID, "test post", "test content")
 
 	// Reaction -> Post
 	reaction1 := second.Help.OK.CreateReaction(

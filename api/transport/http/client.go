@@ -19,7 +19,7 @@ import (
 type Client struct {
 	host       url.URL
 	httpClt    *http.Client
-	isRoot     bool
+	isDebug    bool
 	sessionKey string
 }
 
@@ -87,8 +87,8 @@ func (c *Client) QueryVar(
 
 	// Set authorization headers if authentication
 	if c.sessionKey != "" {
-		if c.isRoot {
-			req.Header.Set("Authorization", "Root "+c.sessionKey)
+		if c.isDebug {
+			req.Header.Set("Authorization", "Debug "+c.sessionKey)
 		} else {
 			req.Header.Set("Authorization", "Bearer "+c.sessionKey)
 		}
@@ -163,15 +163,15 @@ func (c *Client) Auth(email, password string) (*gqlmod.Session, error) {
 	return &result.SignIn, nil
 }
 
-// AuthRoot implements the transport.Client interface
-func (c *Client) AuthRoot(username, password string) error {
-	// Sign in as root
+// AuthDebug implements the transport.Client interface
+func (c *Client) AuthDebug(username, password string) error {
+	// Sign in as debug
 	// Initialize request
 	u := c.host
-	u.Path = "/root"
+	u.Path = "/debug"
 	req, err := http.NewRequest("POST", u.String(), nil)
 	if err != nil {
-		return errors.Wrap(err, "POST /root request creation")
+		return errors.Wrap(err, "POST /debug request creation")
 	}
 
 	// Set authentication header
@@ -185,23 +185,23 @@ func (c *Client) AuthRoot(username, password string) error {
 	// Perform request
 	resp, err := c.httpClt.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "POST /root request")
+		return errors.Wrap(err, "POST /debug request")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return errors.Errorf(
-			"root signin bad response code: %d",
+			"debug signin bad response code: %d",
 			resp.StatusCode,
 		)
 	}
 
-	rootSessionKey, err := ioutil.ReadAll(resp.Body)
+	debugSessionKey, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return errors.Wrap(err, "read POST /root response")
+		return errors.Wrap(err, "read POST /debug response")
 	}
-	c.isRoot = true
-	c.sessionKey = string(rootSessionKey)
+	c.isDebug = true
+	c.sessionKey = string(debugSessionKey)
 
 	return nil
 }

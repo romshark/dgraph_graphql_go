@@ -11,7 +11,5 @@ func TestCreateUser(t *testing.T) {
 	ts := setup.New(t, tcx)
 	defer ts.Teardown()
 
-	clt := ts.Root()
-
-	clt.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
+	ts.Debug().Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
 }

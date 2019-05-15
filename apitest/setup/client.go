@@ -72,14 +72,14 @@ func (ts *TestSetup) Guest() *Client {
 	return clt
 }
 
-// Root creates a new authenticated API root client
-func (ts *TestSetup) Root() *Client {
+// Debug creates a new authenticated API debug client
+func (ts *TestSetup) Debug() *Client {
 	clt := ts.Guest()
 
-	// Sign in as root
-	require.NoError(ts.t, clt.apiClient.AuthRoot(
-		ts.rootUsername,
-		ts.rootPassword,
+	// Sign in as debug user
+	require.NoError(ts.t, clt.apiClient.AuthDebug(
+		ts.debugUsername,
+		ts.debugPassword,
 	))
 
 	return clt

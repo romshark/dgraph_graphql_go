@@ -17,18 +17,18 @@ func TestEditPostAuth(t *testing.T) {
 		post *gqlmod.Post,
 	) {
 		ts = setup.New(t, tcx)
-		root := ts.Root()
+		debug := ts.Debug()
 
 		authorEmail := "author@tst.tst"
 		authorPass := "testpass"
-		author = root.Help.OK.CreateUser(
+		author = debug.Help.OK.CreateUser(
 			"fooBarowich",
 			authorEmail,
 			authorPass,
 		)
 		authorClt, _ = ts.Client(authorEmail, authorPass)
 
-		post = root.Help.OK.CreatePost(
+		post = debug.Help.OK.CreatePost(
 			*author.ID,
 			"example title",
 			"example contents",
@@ -59,7 +59,7 @@ func TestEditPostAuth(t *testing.T) {
 		ts, _, authorClt, post := setupTest(t)
 		defer ts.Teardown()
 
-		other := ts.Root().Help.OK.CreateUser("other", "2@tst.tst", "testpass")
+		other := ts.Debug().Help.OK.CreateUser("other", "2@tst.tst", "testpass")
 
 		newTitle := "new test post"
 		newContents := "new test content"
@@ -78,7 +78,7 @@ func TestEditPostAuth(t *testing.T) {
 		ts, _, _, post := setupTest(t)
 		defer ts.Teardown()
 
-		other := ts.Root().Help.OK.CreateUser("other", "2@tst.tst", "testpass")
+		other := ts.Debug().Help.OK.CreateUser("other", "2@tst.tst", "testpass")
 		otherClt, _ := ts.Client("2@tst.tst", "testpass")
 
 		newTitle := "new test post"

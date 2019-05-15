@@ -18,15 +18,15 @@ func TestCreateReactionAuth(t *testing.T) {
 		commenterClt *setup.Client,
 	) {
 		ts = setup.New(t, tcx)
-		root := ts.Root()
+		debug := ts.Debug()
 
-		author := root.Help.OK.CreateUser("author", "t@tst.tst", "testpass")
-		post = root.Help.OK.CreatePost(
+		author := debug.Help.OK.CreateUser("author", "t@tst.tst", "testpass")
+		post = debug.Help.OK.CreatePost(
 			*author.ID,
 			"test post",
 			"test content",
 		)
-		commenter = root.Help.OK.CreateUser(
+		commenter = debug.Help.OK.CreateUser(
 			"commenter",
 			"c@tst.tst",
 			"testpass",
@@ -55,7 +55,7 @@ func TestCreateReactionAuth(t *testing.T) {
 		ts, post, _, cmtClt := setupTest(t)
 		defer ts.Teardown()
 
-		other := ts.Root().Help.OK.CreateUser("other", "t2@tst.tst", "testpass")
+		other := ts.Debug().Help.OK.CreateUser("other", "t2@tst.tst", "testpass")
 		reaction, err := cmtClt.Help.CreateReaction(
 			*other.ID, // Different reaction author ID
 			*post.ID,

@@ -10,8 +10,8 @@ import (
 type Client interface {
 	Auth(email, password string) (*gqlmod.Session, error)
 
-	// Authenticates as root user
-	AuthRoot(username, password string) error
+	// Authenticates as debug user
+	AuthDebug(username, password string) error
 
 	// Query performs an API query
 	Query(query string, result interface{}) error

@@ -7,45 +7,45 @@ import (
 	thttp "github.com/romshark/dgraph_graphql_go/api/transport/http"
 )
 
-// RootUserStatus defines the root user status option
-type RootUserStatus byte
+// DebugUserStatus defines the debug user status option
+type DebugUserStatus byte
 
 const (
-	// RootUserUnset represents the default unset option value
-	RootUserUnset RootUserStatus = 0
+	// DebugUserUnset represents the default unset option value
+	DebugUserUnset DebugUserStatus = 0
 
-	// RootUserDisabled disables the root user
-	RootUserDisabled
+	// DebugUserDisabled disables the debug user
+	DebugUserDisabled
 
-	// RootUserReadOnly enables the root user in a read-only mode
-	RootUserReadOnly RootUserStatus = 2
+	// DebugUserReadOnly enables the debug user in a read-only mode
+	DebugUserReadOnly DebugUserStatus = 2
 
-	// RootUserRW enables the root user in a read-write mode
-	RootUserRW RootUserStatus = 3
+	// DebugUserRW enables the debug user in a read-write mode
+	DebugUserRW DebugUserStatus = 3
 )
 
-// RootUserOptions defines the API root user options
-type RootUserOptions struct {
-	Status   RootUserStatus
+// DebugUserOptions defines the API debug user options
+type DebugUserOptions struct {
+	Status   DebugUserStatus
 	Username string
 	Password string
 }
 
 // SetDefaults sets the default options
-func (opts *RootUserOptions) SetDefaults() {
-	// Disable the root user by default
-	if opts.Status == RootUserUnset {
-		opts.Status = RootUserDisabled
+func (opts *DebugUserOptions) SetDefaults() {
+	// Disable the debug user by default
+	if opts.Status == DebugUserUnset {
+		opts.Status = DebugUserDisabled
 	}
 
-	// Use "root" as the default root username
+	// Use "debug" as the default debug username
 	if opts.Username == "" {
-		opts.Username = "root"
+		opts.Username = "debug"
 	}
 
-	// Use "root" as the default root password
+	// Use "debug" as the default debug password
 	if opts.Password == "" {
-		opts.Password = "root"
+		opts.Password = "debug"
 	}
 }
 
@@ -55,7 +55,7 @@ type ServerOptions struct {
 	DBHost              string
 	SessionKeyGenerator sesskeygen.SessionKeyGenerator
 	PasswordHasher      passhash.PasswordHasher
-	RootUser            RootUserOptions
+	DebugUser           DebugUserOptions
 	Transport           []transport.Server
 }
 

@@ -16,11 +16,11 @@ func TestCreatePostAuth(t *testing.T) {
 		authorClt *setup.Client,
 	) {
 		ts = setup.New(t, tcx)
-		root := ts.Root()
+		debug := ts.Debug()
 
 		authorEmail := "t1@te.te"
 		authorPass := "testpass"
-		author = root.Help.OK.CreateUser(
+		author = debug.Help.OK.CreateUser(
 			"fooBarowich",
 			authorEmail,
 			authorPass,
@@ -48,7 +48,11 @@ func TestCreatePostAuth(t *testing.T) {
 		ts, _, clt := setupTest(t)
 		defer ts.Teardown()
 
-		other := ts.Root().Help.OK.CreateUser("other", "t2@tst.tst", "testpass")
+		other := ts.Debug().Help.OK.CreateUser(
+			"other",
+			"t2@tst.tst",
+			"testpass",
+		)
 		post, err := clt.Help.CreatePost(*other.ID, "test post", "test content")
 		require.Nil(t, post)
 		verifyError(t, "Unauthorized", err)

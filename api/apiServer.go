@@ -30,7 +30,7 @@ type server struct {
 	opts                 ServerOptions
 	store                store.Store
 	graph                *graph.Graph
-	rootSessionKey       []byte
+	debugSessionKey      []byte
 	transports           []transport.Server
 	shutdownAwaitBlocker *sync.WaitGroup
 }
@@ -60,16 +60,16 @@ func NewServer(opts ServerOptions) (Server, error) {
 		if err := transport.Init(
 			newSrv.onGraphQuery,
 			newSrv.onAuth,
-			newSrv.onRootAuth,
-			newSrv.onRootSess,
+			newSrv.onDebugAuth,
+			newSrv.onDebugSess,
 		); err != nil {
 			return nil, err
 		}
 	}
 
-	// Generate the root session key if the root user is enabled
-	if opts.RootUser.Status != RootUserDisabled {
-		newSrv.rootSessionKey = []byte(opts.SessionKeyGenerator.Generate())
+	// Generate the debug user session key if the debug user is enabled
+	if opts.DebugUser.Status != DebugUserDisabled {
+		newSrv.debugSessionKey = []byte(opts.SessionKeyGenerator.Generate())
 	}
 
 	return newSrv, nil

@@ -15,13 +15,13 @@ func TestCreateReactionErr(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		root := ts.Root()
+		debug := ts.Debug()
 
 		// User 1
-		firstP := root.Help.OK.CreateUser("first", "1@test.test", "testpass")
-		post := root.Help.OK.CreatePost(*firstP.ID, "Test", "test")
+		firstP := debug.Help.OK.CreateUser("first", "1@test.test", "testpass")
+		post := debug.Help.OK.CreatePost(*firstP.ID, "Test", "test")
 
-		res, err := root.Help.CreateReaction(
+		res, err := debug.Help.CreateReaction(
 			store.NewID(), // inexistent author
 			*post.ID,
 			emotion.Excited,
@@ -35,12 +35,12 @@ func TestCreateReactionErr(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		root := ts.Root()
+		debug := ts.Debug()
 
 		// User 1
-		firstP := root.Help.OK.CreateUser("first", "1@test.test", "testpass")
+		firstP := debug.Help.OK.CreateUser("first", "1@test.test", "testpass")
 
-		res, err := root.Help.CreateReaction(
+		res, err := debug.Help.CreateReaction(
 			*firstP.ID,
 			store.NewID(), // inexistent post
 			emotion.Excited,
@@ -69,22 +69,22 @@ func TestCreateReactionErr(t *testing.T) {
 				ts := setup.New(t, tcx)
 				defer ts.Teardown()
 
-				root := ts.Root()
+				debug := ts.Debug()
 
 				// User 1
-				firstP := root.Help.OK.CreateUser(
+				firstP := debug.Help.OK.CreateUser(
 					"first",
 					"1@test.test",
 					"testpass",
 				)
-				post := root.Help.OK.CreatePost(*firstP.ID, "Test", "test")
-				secondP := root.Help.OK.CreateUser(
+				post := debug.Help.OK.CreatePost(*firstP.ID, "Test", "test")
+				secondP := debug.Help.OK.CreateUser(
 					"second",
 					"2@test.test",
 					"testpass",
 				)
 
-				res, err := root.Help.CreateReaction(
+				res, err := debug.Help.CreateReaction(
 					*secondP.ID,
 					*post.ID,
 					emotion.Excited,

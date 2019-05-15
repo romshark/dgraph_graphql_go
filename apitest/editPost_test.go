@@ -12,10 +12,10 @@ func TestEditPost(t *testing.T) {
 	defer ts.Teardown()
 
 	// Prepare
-	root := ts.Root()
-	author := root.Help.OK.CreateUser("author", "1@tst.tst", "testpass")
+	debug := ts.Debug()
+	author := debug.Help.OK.CreateUser("author", "1@tst.tst", "testpass")
 	authorClt, _ := ts.Client("1@tst.tst", "testpass")
-	post := root.Help.OK.CreatePost(*author.ID, "test post", "test contents")
+	post := debug.Help.OK.CreatePost(*author.ID, "test post", "test contents")
 
 	// Test edit
 	newTitle := "new test post"

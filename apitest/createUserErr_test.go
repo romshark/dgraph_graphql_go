@@ -14,10 +14,10 @@ func TestCreateUserErr(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		clt := ts.Root()
+		debug := ts.Debug()
 
-		clt.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
-		res, err := clt.Help.CreateUser(
+		debug.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
+		res, err := debug.Help.CreateUser(
 			"bazBuzowich",
 			"foo@bar.buz",
 			"testpass",
@@ -31,10 +31,10 @@ func TestCreateUserErr(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		clt := ts.Root()
+		debug := ts.Debug()
 
-		clt.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
-		res, err := clt.Help.CreateUser(
+		debug.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
+		res, err := debug.Help.CreateUser(
 			"fooBarowich",
 			"baz@buzowich.buz",
 			"testpass",
@@ -58,9 +58,7 @@ func TestCreateUserErr(t *testing.T) {
 				ts := setup.New(t, tcx)
 				defer ts.Teardown()
 
-				clt := ts.Root()
-
-				res, err := clt.Help.CreateUser(
+				res, err := ts.Debug().Help.CreateUser(
 					invalidDisplayName,
 					"test@test.test",
 					"foobar",
@@ -88,9 +86,7 @@ func TestCreateUserErr(t *testing.T) {
 				ts := setup.New(t, tcx)
 				defer ts.Teardown()
 
-				clt := ts.Root()
-
-				res, err := clt.Help.CreateUser(
+				res, err := ts.Debug().Help.CreateUser(
 					"testDisplayName",
 					invalidEmail,
 					"testpass",
