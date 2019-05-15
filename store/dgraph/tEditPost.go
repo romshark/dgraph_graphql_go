@@ -50,7 +50,10 @@ func (str *impl) EditPost(
 		) {
 			post(func: eq(Post.id, $id)) {
 				uid
-				Post.author { uid }
+				Post.author {
+					uid
+					User.id
+				}
 				Post.creation
 				Post.title
 				Post.contents
