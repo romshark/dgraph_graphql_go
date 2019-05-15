@@ -11,15 +11,16 @@ func TestEditPost(t *testing.T) {
 	ts := setup.New(t, tcx)
 	defer ts.Teardown()
 
-	clt := ts.Root()
+	// Prepare
+	root := ts.Root()
+	author := root.Help.OK.CreateUser("author", "1@tst.tst", "testpass")
+	authorClt, _ := ts.Client("1@tst.tst", "testpass")
+	post := root.Help.OK.CreatePost(*author.ID, "test post", "test contents")
 
-	author := clt.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
-	post := clt.Help.OK.CreatePost(*author.ID, "test post", "test contents")
-
+	// Test edit
 	newTitle := "new test post"
 	newContents := "new test contents"
-
-	clt.Help.OK.EditPost(
+	authorClt.Help.OK.EditPost(
 		*post.ID,
 		*author.ID,
 		&newTitle,
