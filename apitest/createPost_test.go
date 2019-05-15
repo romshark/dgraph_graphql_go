@@ -11,8 +11,8 @@ func TestCreatePost(t *testing.T) {
 	ts := setup.New(t, tcx)
 	defer ts.Teardown()
 
-	root := ts.Root()
+	author := ts.Root().Help.OK.CreateUser("usr1", "t@tst.tst", "testpass")
+	authorClt, _ := ts.Client("t@tst.tst", "testpass")
 
-	author := root.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
-	root.Help.OK.CreatePost(*author.ID, "test post", "test content")
+	authorClt.Help.OK.CreatePost(*author.ID, "test post", "test content")
 }

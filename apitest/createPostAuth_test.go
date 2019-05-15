@@ -29,14 +29,6 @@ func TestCreatePostAuth(t *testing.T) {
 		return
 	}
 
-	// Test successful authorization
-	t.Run("auth", func(t *testing.T) {
-		ts, author, clt := setupTest(t)
-		defer ts.Teardown()
-
-		clt.Help.OK.CreatePost(*author.ID, "test post", "test content")
-	})
-
 	// Test creating posts as a guest
 	t.Run("guest (noauth)", func(t *testing.T) {
 		ts, author, _ := setupTest(t)
@@ -56,7 +48,7 @@ func TestCreatePostAuth(t *testing.T) {
 		ts, _, clt := setupTest(t)
 		defer ts.Teardown()
 
-		other := ts.Root().Help.OK.CreateUser("other", "t2@te.te", "testpass")
+		other := ts.Root().Help.OK.CreateUser("other", "t2@tst.tst", "testpass")
 		post, err := clt.Help.CreatePost(*other.ID, "test post", "test content")
 		require.Nil(t, post)
 		verifyError(t, "Unauthorized", err)
