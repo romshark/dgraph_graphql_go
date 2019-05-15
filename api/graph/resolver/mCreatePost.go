@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/auth"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
@@ -16,6 +17,13 @@ func (rsv *Resolver) CreatePost(
 		Contents string
 	},
 ) (*Post, error) {
+	if err := auth.Authorize(ctx, auth.IsOwner{
+		Owner: store.ID(params.Author),
+	}); err != nil {
+		rsv.error(ctx, err)
+		return nil, err
+	}
+
 	// Validate input
 	if err := store.ValidatePostTitle(params.Title); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)

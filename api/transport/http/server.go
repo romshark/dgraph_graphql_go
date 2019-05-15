@@ -19,7 +19,9 @@ type Server struct {
 	tls          *ServerTLS
 	addr         net.Addr
 	onGraphQuery trn.OnGraphQuery
+	onAuth       trn.OnAuth
 	onRootAuth   trn.OnRootAuth
+	onRootSess   trn.OnRootSess
 }
 
 // NewServer creates a new unencrypted JSON based HTTP transport.
@@ -49,16 +51,26 @@ func NewServer(opts ServerOptions) (trn.Server, error) {
 // Init implements the transport.Transport interface
 func (t *Server) Init(
 	onGraphQuery trn.OnGraphQuery,
+	onAuth trn.OnAuth,
 	onRootAuth trn.OnRootAuth,
+	onRootSess trn.OnRootSess,
 ) error {
 	if onGraphQuery == nil {
 		panic("missing onGraphQuery callback")
 	}
+	if onAuth == nil {
+		panic("missing onAuth callback")
+	}
 	if onRootAuth == nil {
 		panic("missing onRootAuth callback")
 	}
+	if onRootSess == nil {
+		panic("missing onRootSess callback")
+	}
 	t.onGraphQuery = onGraphQuery
+	t.onAuth = onAuth
 	t.onRootAuth = onRootAuth
+	t.onRootSess = onRootSess
 	return nil
 }
 
@@ -106,6 +118,10 @@ func (t *Server) Shutdown(ctx context.Context) error {
 
 // ServeHTTP implements the http.Handler interface
 func (t *Server) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	// Authenticate the client by passing the session in the context
+	// of the request
+	req = t.auth(req)
+
 	switch req.Method {
 	case "POST":
 		switch req.URL.Path {

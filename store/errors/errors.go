@@ -6,6 +6,10 @@ import "fmt"
 type Code string
 
 const (
+	// ErrUnauthorized is thrown when the API user is unauthorized to perform
+	// the request
+	ErrUnauthorized Code = "Unauthorized"
+
 	// ErrInvalidInput is thrown when the API user input is invalid
 	ErrInvalidInput Code = "InvalidInput"
 
@@ -24,6 +28,8 @@ type Error struct {
 // filterCode turns unknown error codes to empty strings
 func filterCode(code Code) string {
 	switch code {
+	case ErrUnauthorized:
+		return string(code)
 	case ErrInvalidInput:
 		return string(code)
 	case ErrWrongCreds:

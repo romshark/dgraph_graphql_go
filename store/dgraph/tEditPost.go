@@ -8,6 +8,7 @@ import (
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/auth"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
@@ -72,6 +73,13 @@ func (str *impl) EditPost(
 	}
 	if len(res.Editor) < 1 {
 		err = strerr.Newf(strerr.ErrInvalidInput, "editor not found")
+		return
+	}
+
+	// Check permission
+	if err = auth.Authorize(ctx, auth.IsOwner{
+		Owner: store.ID(res.Post[0].Author[0].ID),
+	}); err != nil {
 		return
 	}
 

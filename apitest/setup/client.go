@@ -14,10 +14,10 @@ import (
 
 // Client represents an API client
 type Client struct {
-	t              *testing.T
-	ts             *TestSetup
-	apiClient      trn.Client
-	rootSessionKey []byte
+	t          *testing.T
+	ts         *TestSetup
+	apiClient  trn.Client
+	sessionKey []byte
 
 	Help Helper
 }
@@ -72,6 +72,19 @@ func (ts *TestSetup) Guest() *Client {
 	return clt
 }
 
+// Root creates a new authenticated API root client
+func (ts *TestSetup) Root() *Client {
+	clt := ts.Guest()
+
+	// Sign in as root
+	require.NoError(ts.t, clt.apiClient.AuthRoot(
+		ts.rootUsername,
+		ts.rootPassword,
+	))
+
+	return clt
+}
+
 // Client creates a new authenticated API client
 func (ts *TestSetup) Client(
 	email,
@@ -79,7 +92,7 @@ func (ts *TestSetup) Client(
 ) (*Client, *gqlmod.Session) {
 	clt := ts.Guest()
 
-	sess, err := clt.Help.SignIn(email, password)
+	sess, err := clt.apiClient.Auth(email, password)
 	require.Nil(ts.t, err)
 
 	return clt, sess

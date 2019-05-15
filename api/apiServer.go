@@ -59,7 +59,9 @@ func NewServer(opts ServerOptions) (Server, error) {
 	for _, transport := range opts.Transport {
 		if err := transport.Init(
 			newSrv.onGraphQuery,
+			newSrv.onAuth,
 			newSrv.onRootAuth,
+			newSrv.onRootSess,
 		); err != nil {
 			return nil, err
 		}

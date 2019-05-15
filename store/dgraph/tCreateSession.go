@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/romshark/dgraph_graphql_go/store"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
@@ -19,6 +20,7 @@ func (str *impl) CreateSession(
 		UID          string
 		Key          string
 		CreationTime time.Time
+		UserID       store.ID
 		UserUID      string
 	},
 	err error,
@@ -38,6 +40,7 @@ func (str *impl) CreateSession(
 	var res struct {
 		ByEmail []struct {
 			UID      string `json:"uid"`
+			ID       string `json:"User.id"`
 			Password string `json:"User.password"`
 		} `json:"byEmail"`
 	}
@@ -48,6 +51,7 @@ func (str *impl) CreateSession(
 		) {
 			byEmail(func: eq(User.email, $email)) {
 				uid
+				User.id
 				User.password
 			}
 		}`,
@@ -69,6 +73,7 @@ func (str *impl) CreateSession(
 		return
 	}
 
+	result.UserID = store.ID(res.ByEmail[0].ID)
 	result.UserUID = res.ByEmail[0].UID
 
 	// Create new session

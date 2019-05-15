@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 
+	"github.com/romshark/dgraph_graphql_go/store/auth"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
@@ -29,6 +30,14 @@ func (rsv *Resolver) SignIn(
 	if err != nil {
 		rsv.error(ctx, err)
 		return nil, err
+	}
+
+	// Dynamically update the session on successful sign-in
+	if session, isSession := ctx.Value(
+		auth.CtxSession,
+	).(*auth.RequestSession); isSession {
+		session.Creation = transactRes.CreationTime
+		session.UserID = transactRes.UserID
 	}
 
 	return &Session{

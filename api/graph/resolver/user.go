@@ -6,6 +6,7 @@ import (
 
 	"github.com/graph-gophers/graphql-go"
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/auth"
 	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
 
@@ -32,8 +33,16 @@ func (rsv *User) Creation() graphql.Time {
 }
 
 // Email resolves User.email
-func (rsv *User) Email() string {
-	return rsv.email
+func (rsv *User) Email(ctx context.Context) (string, error) {
+	// Check permissions
+	if err := auth.Authorize(ctx, auth.IsOwner{
+		Owner: store.ID(rsv.id),
+	}); err != nil {
+		rsv.root.error(ctx, err)
+		return "", err
+	}
+
+	return rsv.email, nil
 }
 
 // DisplayName resolves User.displayName
@@ -95,6 +104,14 @@ func (rsv *User) Posts(
 func (rsv *User) Sessions(
 	ctx context.Context,
 ) ([]*Session, error) {
+	// Check permissions
+	if err := auth.Authorize(ctx, auth.IsOwner{
+		Owner: store.ID(rsv.id),
+	}); err != nil {
+		rsv.root.error(ctx, err)
+		return nil, err
+	}
+
 	var query struct {
 		Users []dgraph.User `json:"users"`
 	}

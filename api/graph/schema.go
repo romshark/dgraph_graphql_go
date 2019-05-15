@@ -57,10 +57,14 @@ type Session {
 type User {
 	id: Identifier!
 	creation: Time!
-	email: String!
 	displayName: String!
 	posts: [Post!]!
+
+	# The list of active sessions can only be accessed by the profile owner
 	sessions: [Session!]!
+
+	# The email address can only be accessed by the profile owner
+	email: String!
 
 	# publishedReactions lists all reactions published by the user
 	publishedReactions: [Reaction!]!

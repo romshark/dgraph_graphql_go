@@ -18,6 +18,7 @@ type MutableStore interface {
 			UID          string
 			Key          string
 			CreationTime time.Time
+			UserID       ID
 			UserUID      string
 		},
 		err error,

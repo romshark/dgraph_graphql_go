@@ -37,8 +37,8 @@ func (t *Server) handleRootAuth(
 		return
 	}
 
-	rootSessionKey, okay := t.onRootAuth(pair[0], pair[1])
-	if !okay {
+	rootSessionKey := t.onRootSess(req.Context(), pair[0], pair[1])
+	if rootSessionKey == nil {
 		unauthorized()
 		return
 	}

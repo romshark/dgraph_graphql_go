@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/auth"
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
@@ -18,6 +19,13 @@ func (rsv *Resolver) CreateReaction(
 		Message string
 	},
 ) (*Reaction, error) {
+	if err := auth.Authorize(ctx, auth.IsOwner{
+		Owner: store.ID(params.Author),
+	}); err != nil {
+		rsv.error(ctx, err)
+		return nil, err
+	}
+
 	emot := emotion.Emotion(params.Emotion)
 
 	// Validate input

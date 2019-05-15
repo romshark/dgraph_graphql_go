@@ -11,14 +11,16 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
+	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	trn "github.com/romshark/dgraph_graphql_go/api/transport"
 )
 
 // Client represents an HTTP client implementation
 type Client struct {
-	host           url.URL
-	httpClt        *http.Client
-	rootSessionKey []byte
+	host       url.URL
+	httpClt    *http.Client
+	isRoot     bool
+	sessionKey string
 }
 
 // NewClient creates a new API client instance
@@ -83,6 +85,15 @@ func (c *Client) QueryVar(
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
 
+	// Set authorization headers if authentication
+	if c.sessionKey != "" {
+		if c.isRoot {
+			req.Header.Set("Authorization", "Root "+c.sessionKey)
+		} else {
+			req.Header.Set("Authorization", "Bearer "+c.sessionKey)
+		}
+	}
+
 	// Perform request
 	resp, err := c.httpClt.Do(req)
 	if err != nil {
@@ -115,6 +126,41 @@ func (c *Client) QueryVar(
 	}
 
 	return nil
+}
+
+// Auth implements the transport.Client interface
+func (c *Client) Auth(email, password string) (*gqlmod.Session, error) {
+	var result struct {
+		SignIn gqlmod.Session `json:"signIn"`
+	}
+	if err := c.QueryVar(
+		`mutation(
+			$email: String!
+			$password: String!
+		) {
+			signIn(
+				email: $email
+				password: $password
+			) {
+				key
+				user {
+					id
+				}
+				creation
+			}
+		}`,
+		map[string]interface{}{
+			"email":    email,
+			"password": password,
+		},
+		&result,
+	); err != nil {
+		return nil, err
+	}
+
+	c.sessionKey = *result.SignIn.Key
+
+	return &result.SignIn, nil
 }
 
 // AuthRoot implements the transport.Client interface
@@ -154,7 +200,8 @@ func (c *Client) AuthRoot(username, password string) error {
 	if err != nil {
 		return errors.Wrap(err, "read POST /root response")
 	}
-	c.rootSessionKey = rootSessionKey
+	c.isRoot = true
+	c.sessionKey = string(rootSessionKey)
 
 	return nil
 }

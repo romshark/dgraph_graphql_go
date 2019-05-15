@@ -12,7 +12,8 @@ func TestSignIn(t *testing.T) {
 	defer ts.Teardown()
 
 	root := ts.Root()
-
 	root.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
-	root.Help.OK.SignIn("foo@bar.buz", "testpass")
+
+	guest := ts.Guest()
+	guest.Help.OK.SignIn("foo@bar.buz", "testpass")
 }

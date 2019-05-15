@@ -40,6 +40,7 @@ func (t *Server) handleGraphQuery(
 			http.StatusText(http.StatusInternalServerError),
 			http.StatusInternalServerError,
 		)
+		log.Printf("ERR: %s", err)
 		if logErr {
 			log.Printf("ERR: %s", err)
 		}
