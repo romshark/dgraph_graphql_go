@@ -37,7 +37,7 @@ func TestEditPostAuth(t *testing.T) {
 		return
 	}
 
-	// Test creating posts as a guest
+	// Test editing posts as a guest
 	t.Run("guest (noauth)", func(t *testing.T) {
 		ts, author, _, post := setupTest(t)
 		defer ts.Teardown()
@@ -54,18 +54,38 @@ func TestEditPostAuth(t *testing.T) {
 		verifyError(t, "Unauthorized", err)
 	})
 
-	// Test creating posts on behalf of other users
+	// Test editing posts on behalf of other users
 	t.Run("non-author (noauth)", func(t *testing.T) {
-		ts, _, _, post := setupTest(t)
+		ts, _, authorClt, post := setupTest(t)
 		defer ts.Teardown()
 
 		other := ts.Root().Help.OK.CreateUser("other", "2@tst.tst", "testpass")
 
 		newTitle := "new test post"
 		newContents := "new test content"
-		post, err := ts.Guest().Help.EditPost(
+		post, err := authorClt.Help.EditPost(
 			*post.ID,
-			*other.ID,
+			*other.ID, // Different editor ID
+			&newTitle,
+			&newContents,
+		)
+		require.Nil(t, post)
+		verifyError(t, "Unauthorized", err)
+	})
+
+	// Test editing posts of other users
+	t.Run("non-author (noauth)", func(t *testing.T) {
+		ts, _, _, post := setupTest(t)
+		defer ts.Teardown()
+
+		other := ts.Root().Help.OK.CreateUser("other", "2@tst.tst", "testpass")
+		otherClt, _ := ts.Client("2@tst.tst", "testpass")
+
+		newTitle := "new test post"
+		newContents := "new test content"
+		post, err := otherClt.Help.EditPost(
+			*post.ID,
+			*other.ID, // Different editor ID
 			&newTitle,
 			&newContents,
 		)
