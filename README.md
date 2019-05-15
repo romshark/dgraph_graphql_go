@@ -5,4 +5,4 @@
 - Transactional data store based on the [Dgraph graph database](https://dgraph.io/)
 - API tests based on [Go testing](https://golang.org/pkg/testing/) and [stretchr/testify](https://github.com/stretchr/testify)
 - Session-based authentication
-- Authorization (WiP)
+- Authorization (permission system)
