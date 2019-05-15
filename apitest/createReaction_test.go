@@ -16,7 +16,6 @@ func TestCreateReaction(t *testing.T) {
 
 	// User 1
 	firstP := root.Help.OK.CreateUser("first", "1@test.test", "testpass")
-	first, _ := ts.Client("1@test.test", "testpass")
 
 	// User 2
 	secondP := root.Help.OK.CreateUser("second", "2@test.test", "testpass")
@@ -27,7 +26,7 @@ func TestCreateReaction(t *testing.T) {
 	third, _ := ts.Client("3@test.test", "testpass")
 
 	// Post
-	post := first.Help.OK.CreatePost(*firstP.ID, "test post", "test content")
+	post := root.Help.OK.CreatePost(*firstP.ID, "test post", "test content")
 
 	// Reaction -> Post
 	reaction1 := second.Help.OK.CreateReaction(
