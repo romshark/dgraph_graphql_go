@@ -7,32 +7,27 @@ import (
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
-	"github.com/romshark/dgraph_graphql_go/api/passhash"
-	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"google.golang.org/grpc"
 )
 
 // impl represents the service store
 type impl struct {
-	host                string
-	sessionKeyGenerator sesskeygen.SessionKeyGenerator
-	passwordHasher      passhash.PasswordHasher
-	db                  *dgo.Dgraph
-	onClose             func()
+	host            string
+	db              *dgo.Dgraph
+	comparePassword func(hash, password string) bool
+	onClose         func()
 }
 
 // NewStore creates a new disconnected database client instance
 func NewStore(
 	host string,
-	sessionKeyGenerator sesskeygen.SessionKeyGenerator,
-	passwordHasher passhash.PasswordHasher,
+	comparePassword func(hash, password string) bool,
 ) store.Store {
 	return &impl{
-		host:                host,
-		sessionKeyGenerator: sessionKeyGenerator,
-		passwordHasher:      passwordHasher,
-		db:                  nil,
+		host:            host,
+		db:              nil,
+		comparePassword: comparePassword,
 	}
 }
 
@@ -40,17 +35,6 @@ func NewStore(
 func (str *impl) Prepare() error {
 	if str.db != nil {
 		return nil
-	}
-
-	if str.sessionKeyGenerator == nil {
-		return errors.Errorf(
-			"missing session key generator during store initialization",
-		)
-	}
-	if str.passwordHasher == nil {
-		return errors.Errorf(
-			"missing password hasher during store initialization",
-		)
 	}
 
 	conn, err := grpc.Dial(str.host, grpc.WithInsecure())

@@ -42,15 +42,27 @@ func NewServer(opts ServerOptions) (Server, error) {
 	// Initialize store instance
 	str := dgraph.NewStore(
 		opts.DBHost,
+
+		// Compare password
+		func(hash, password string) bool {
+			return opts.PasswordHasher.Compare([]byte(hash), []byte(password))
+		},
+	)
+
+	graph, err := graph.New(
+		str,
 		opts.SessionKeyGenerator,
 		opts.PasswordHasher,
 	)
+	if err != nil {
+		return nil, errors.Wrap(err, "graph init")
+	}
 
 	// Initialize API server instance
 	newSrv := &server{
 		store:                str,
 		opts:                 opts,
-		graph:                graph.New(str),
+		graph:                graph,
 		transports:           opts.Transport,
 		shutdownAwaitBlocker: &sync.WaitGroup{},
 	}

@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	"time"
 
 	"github.com/romshark/dgraph_graphql_go/store"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
@@ -33,11 +34,20 @@ func (rsv *Resolver) CreateUser(
 		return nil, err
 	}
 
+	// Create password hash
+	passwordHash, err := rsv.passwordHasher.Hash([]byte(params.Password))
+	if err != nil {
+		return nil, err
+	}
+
+	creationTime := time.Now()
+
 	transactRes, err := rsv.str.CreateUser(
 		ctx,
+		creationTime,
 		params.Email,
 		params.DisplayName,
-		params.Password,
+		string(passwordHash),
 	)
 	if err != nil {
 		rsv.error(ctx, err)
@@ -48,7 +58,7 @@ func (rsv *Resolver) CreateUser(
 		root:        rsv,
 		uid:         transactRes.UID,
 		id:          transactRes.ID,
-		creation:    transactRes.CreationTime,
+		creation:    creationTime,
 		displayName: params.DisplayName,
 		email:       params.Email,
 	}, nil

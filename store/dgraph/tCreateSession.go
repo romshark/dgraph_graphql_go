@@ -13,22 +13,18 @@ import (
 // CreateSession creates a new session and updates the indexes
 func (str *impl) CreateSession(
 	ctx context.Context,
+	key string,
+	creation time.Time,
 	email string,
 	password string,
 ) (
 	result struct {
-		UID          string
-		Key          string
-		CreationTime time.Time
-		UserID       store.ID
-		UserUID      string
+		UID     string
+		UserID  store.ID
+		UserUID string
 	},
 	err error,
 ) {
-	// Prepare
-	result.Key = str.sessionKeyGenerator.Generate()
-	result.CreationTime = time.Now()
-
 	// Begin transaction
 	txn, close := str.txn(&err)
 	if err != nil {
@@ -65,9 +61,9 @@ func (str *impl) CreateSession(
 	}
 
 	// Ensure the user exists and the password is correct
-	if len(res.ByEmail) < 1 || !str.passwordHasher.Compare(
-		[]byte(password),
-		[]byte(res.ByEmail[0].Password),
+	if len(res.ByEmail) < 1 || !str.comparePassword(
+		password,
+		res.ByEmail[0].Password,
 	) {
 		err = strerr.New(strerr.ErrWrongCreds, "wrong credentials")
 		return
@@ -83,8 +79,8 @@ func (str *impl) CreateSession(
 		Creation time.Time `json:"Session.creation"`
 		User     UID       `json:"Session.user"`
 	}{
-		Key:      result.Key,
-		Creation: result.CreationTime,
+		Key:      key,
+		Creation: creation,
 		User:     UID{NodeID: result.UserUID},
 	})
 	if err != nil {

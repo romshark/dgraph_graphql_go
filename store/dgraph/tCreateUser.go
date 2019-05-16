@@ -14,27 +14,19 @@ import (
 // CreateUser creates a new user account and adds it to the global index
 func (str *impl) CreateUser(
 	ctx context.Context,
+	creationTime time.Time,
 	email string,
 	displayName string,
-	password string,
+	passwordHash string,
 ) (
 	result struct {
-		UID          string
-		ID           store.ID
-		CreationTime time.Time
+		UID string
+		ID  store.ID
 	},
 	err error,
 ) {
 	// Prepare
 	result.ID = store.NewID()
-	result.CreationTime = time.Now()
-
-	// Create password hash
-	var passwordHash []byte
-	passwordHash, err = str.passwordHasher.Hash([]byte(password))
-	if err != nil {
-		return
-	}
 
 	// Begin transaction
 	txn, close := str.txn(&err)
@@ -109,7 +101,7 @@ func (str *impl) CreateUser(
 		ID:          string(result.ID),
 		Email:       email,
 		DisplayName: displayName,
-		Creation:    result.CreationTime,
+		Creation:    creationTime,
 		Password:    string(passwordHash),
 	})
 	if err != nil {

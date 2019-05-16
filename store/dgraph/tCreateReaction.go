@@ -15,23 +15,22 @@ import (
 // CreateReaction creates a new post
 func (str *impl) CreateReaction(
 	ctx context.Context,
+	creationTime time.Time,
 	authorID store.ID,
 	subjectID store.ID,
 	emotion emo.Emotion,
 	message string,
 ) (
 	result struct {
-		UID          string
-		ID           store.ID
-		SubjectUID   string
-		AuthorUID    string
-		CreationTime time.Time
+		UID        string
+		ID         store.ID
+		SubjectUID string
+		AuthorUID  string
 	},
 	err error,
 ) {
 	// Prepare
 	result.ID = store.NewID()
-	result.CreationTime = time.Now()
 
 	// Begin transaction
 	txn, close := str.txn(&err)
@@ -113,7 +112,7 @@ func (str *impl) CreateReaction(
 		Subject:  UID{NodeID: result.SubjectUID},
 		Emotion:  string(emotion),
 		Message:  message,
-		Creation: result.CreationTime,
+		Creation: creationTime,
 	})
 	if err != nil {
 		return

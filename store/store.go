@@ -11,61 +11,61 @@ import (
 type MutableStore interface {
 	CreateSession(
 		ctx context.Context,
+		key string,
+		creationTime time.Time,
 		email string,
 		password string,
 	) (
 		result struct {
-			UID          string
-			Key          string
-			CreationTime time.Time
-			UserID       ID
-			UserUID      string
+			UID     string
+			UserID  ID
+			UserUID string
 		},
 		err error,
 	)
 
 	CreatePost(
 		ctx context.Context,
+		creationTime time.Time,
 		author ID,
 		title string,
 		contents string,
 	) (
 		result struct {
-			UID          string
-			ID           ID
-			AuthorUID    string
-			CreationTime time.Time
+			UID       string
+			ID        ID
+			AuthorUID string
 		},
 		err error,
 	)
 
 	CreateReaction(
 		ctx context.Context,
+		creationTime time.Time,
 		author ID,
 		subject ID,
 		emotion emotion.Emotion,
 		message string,
 	) (
 		result struct {
-			UID          string
-			ID           ID
-			SubjectUID   string
-			AuthorUID    string
-			CreationTime time.Time
+			UID        string
+			ID         ID
+			SubjectUID string
+			AuthorUID  string
 		},
 		err error,
 	)
 
 	CreateUser(
 		ctx context.Context,
+		creationTime time.Time,
 		email string,
 		displayName string,
-		password string,
+		passwordHash string,
 	) (
 		result struct {
-			UID          string
-			ID           ID
-			CreationTime time.Time
+			UID string
+			ID  ID
 		},
 		err error,
 	)

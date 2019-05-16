@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	"time"
 
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/auth"
@@ -40,9 +41,12 @@ func (rsv *Resolver) CreateReaction(
 		return nil, err
 	}
 
+	creationTime := time.Now()
+
 	// Create new reaction entity
 	transactRes, err := rsv.str.CreateReaction(
 		ctx,
+		creationTime,
 		store.ID(params.Author),
 		store.ID(params.Subject),
 		emot,
@@ -57,7 +61,7 @@ func (rsv *Resolver) CreateReaction(
 		root:       rsv,
 		uid:        transactRes.UID,
 		id:         transactRes.ID,
-		creation:   transactRes.CreationTime,
+		creation:   creationTime,
 		authorUID:  transactRes.AuthorUID,
 		subjectUID: transactRes.SubjectUID,
 		emotion:    emot,

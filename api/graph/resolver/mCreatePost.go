@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	"time"
 
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/auth"
@@ -36,8 +37,11 @@ func (rsv *Resolver) CreatePost(
 		return nil, err
 	}
 
+	creationTime := time.Now()
+
 	transactRes, err := rsv.str.CreatePost(
 		ctx,
+		creationTime,
 		store.ID(params.Author),
 		params.Title,
 		params.Contents,
@@ -51,7 +55,7 @@ func (rsv *Resolver) CreatePost(
 		root:      rsv,
 		uid:       transactRes.UID,
 		id:        transactRes.ID,
-		creation:  transactRes.CreationTime,
+		creation:  creationTime,
 		title:     params.Title,
 		contents:  params.Contents,
 		authorUID: transactRes.AuthorUID,

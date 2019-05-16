@@ -7,6 +7,8 @@ import (
 	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
 	rsv "github.com/romshark/dgraph_graphql_go/api/graph/resolver"
+	"github.com/romshark/dgraph_graphql_go/api/passhash"
+	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
 	"github.com/romshark/dgraph_graphql_go/store"
 )
 
@@ -41,13 +43,24 @@ type Response struct {
 }
 
 // New creates a new graph resolver instance
-func New(str store.Store) *Graph {
-	rsv := rsv.New(str)
+func New(
+	str store.Store,
+	sessionKeyGenerator sesskeygen.SessionKeyGenerator,
+	passwordHasher passhash.PasswordHasher,
+) (*Graph, error) {
+	rsv, err := rsv.New(
+		str,
+		sessionKeyGenerator,
+		passwordHasher,
+	)
+	if err != nil {
+		return nil, err
+	}
 	shm := graphql.MustParseSchema(schema, rsv)
 	return &Graph{
 		resolver: rsv,
 		schema:   shm,
-	}
+	}, nil
 }
 
 // Query executes a graph query and returns a JSON encoded result (or an error)

@@ -14,21 +14,20 @@ import (
 // CreatePost creates a new post
 func (str *impl) CreatePost(
 	ctx context.Context,
+	creationTime time.Time,
 	authorID store.ID,
 	title string,
 	contents string,
 ) (
 	result struct {
-		UID          string
-		ID           store.ID
-		AuthorUID    string
-		CreationTime time.Time
+		UID       string
+		ID        store.ID
+		AuthorUID string
 	},
 	err error,
 ) {
 	// Prepare
 	result.ID = store.NewID()
-	result.CreationTime = time.Now()
 
 	// Begin transaction
 	txn, close := str.txn(&err)
@@ -88,7 +87,7 @@ func (str *impl) CreatePost(
 		ID:       string(result.ID),
 		Title:    title,
 		Contents: contents,
-		Creation: result.CreationTime,
+		Creation: creationTime,
 	})
 	if err != nil {
 		return

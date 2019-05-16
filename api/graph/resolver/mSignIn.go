@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	"time"
 
 	"github.com/romshark/dgraph_graphql_go/store/auth"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
@@ -22,8 +23,14 @@ func (rsv *Resolver) SignIn(
 		return nil, err
 	}
 
+	// Generate session key
+	key := rsv.sessionKeyGenerator.Generate()
+	creationTime := time.Now()
+
 	transactRes, err := rsv.str.CreateSession(
 		ctx,
+		key,
+		creationTime,
 		params.Email,
 		params.Password,
 	)
@@ -36,15 +43,15 @@ func (rsv *Resolver) SignIn(
 	if session, isSession := ctx.Value(
 		auth.CtxSession,
 	).(*auth.RequestSession); isSession {
-		session.Creation = transactRes.CreationTime
+		session.Creation = creationTime
 		session.UserID = transactRes.UserID
 	}
 
 	return &Session{
 		root:     rsv,
 		uid:      transactRes.UID,
-		key:      transactRes.Key,
-		creation: transactRes.CreationTime,
+		key:      key,
+		creation: creationTime,
 		userUID:  transactRes.UserUID,
 	}, nil
 }

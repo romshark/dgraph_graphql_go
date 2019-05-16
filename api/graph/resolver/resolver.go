@@ -3,6 +3,9 @@ package resolver
 import (
 	"context"
 
+	"github.com/pkg/errors"
+	"github.com/romshark/dgraph_graphql_go/api/passhash"
+	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
@@ -15,14 +18,33 @@ const CtxErrorRef CtxKey = 1
 
 // Resolver represents the root Graph resolver
 type Resolver struct {
-	str store.Store
+	str                 store.Store
+	sessionKeyGenerator sesskeygen.SessionKeyGenerator
+	passwordHasher      passhash.PasswordHasher
 }
 
 // New creates a new graph resolver instance
-func New(str store.Store) *Resolver {
-	return &Resolver{
-		str: str,
+func New(
+	str store.Store,
+	sessionKeyGenerator sesskeygen.SessionKeyGenerator,
+	passwordHasher passhash.PasswordHasher,
+) (*Resolver, error) {
+	if sessionKeyGenerator == nil {
+		return nil, errors.Errorf(
+			"missing session key generator during resolver initialization",
+		)
 	}
+	if passwordHasher == nil {
+		return nil, errors.Errorf(
+			"missing password hasher during resolver initialization",
+		)
+	}
+
+	return &Resolver{
+		str:                 str,
+		sessionKeyGenerator: sessionKeyGenerator,
+		passwordHasher:      passwordHasher,
+	}, nil
 }
 
 // Users resolves Query.users
