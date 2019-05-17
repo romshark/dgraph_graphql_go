@@ -3,8 +3,8 @@ package resolver
 import (
 	"context"
 
+	"github.com/romshark/dgraph_graphql_go/api/graph/auth"
 	"github.com/romshark/dgraph_graphql_go/store"
-	"github.com/romshark/dgraph_graphql_go/store/auth"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 

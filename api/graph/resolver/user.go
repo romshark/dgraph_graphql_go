@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/graph-gophers/graphql-go"
+	"github.com/romshark/dgraph_graphql_go/api/graph/auth"
 	"github.com/romshark/dgraph_graphql_go/store"
-	"github.com/romshark/dgraph_graphql_go/store/auth"
 	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
 

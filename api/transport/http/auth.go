@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/romshark/dgraph_graphql_go/store/auth"
+	"github.com/romshark/dgraph_graphql_go/api/graph/auth"
 )
 
 // auth reads the session key from the authorization header, approaches the API
