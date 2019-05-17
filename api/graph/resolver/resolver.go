@@ -3,6 +3,8 @@ package resolver
 import (
 	"context"
 
+	"github.com/romshark/dgraph_graphql_go/api/graph/validator"
+
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/passhash"
 	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
@@ -19,6 +21,7 @@ const CtxErrorRef CtxKey = 1
 // Resolver represents the root Graph resolver
 type Resolver struct {
 	str                 store.Store
+	validator           validator.Validator
 	sessionKeyGenerator sesskeygen.SessionKeyGenerator
 	passwordHasher      passhash.PasswordHasher
 }
@@ -26,6 +29,7 @@ type Resolver struct {
 // New creates a new graph resolver instance
 func New(
 	str store.Store,
+	validator validator.Validator,
 	sessionKeyGenerator sesskeygen.SessionKeyGenerator,
 	passwordHasher passhash.PasswordHasher,
 ) (*Resolver, error) {
@@ -42,6 +46,7 @@ func New(
 
 	return &Resolver{
 		str:                 str,
+		validator:           validator,
 		sessionKeyGenerator: sessionKeyGenerator,
 		passwordHasher:      passwordHasher,
 	}, nil

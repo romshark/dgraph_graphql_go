@@ -26,12 +26,12 @@ func (rsv *Resolver) CreatePost(
 	}
 
 	// Validate input
-	if err := store.ValidatePostTitle(params.Title); err != nil {
+	if err := rsv.validator.PostTitle(params.Title); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
 		return nil, err
 	}
-	if err := store.ValidatePostContents(params.Contents); err != nil {
+	if err := rsv.validator.PostContents(params.Contents); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
 		return nil, err

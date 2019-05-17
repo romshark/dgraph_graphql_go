@@ -30,7 +30,7 @@ func (rsv *Resolver) CreateReaction(
 	emot := emotion.Emotion(params.Emotion)
 
 	// Validate input
-	if err := store.ValidateReactionMessage(params.Message); err != nil {
+	if err := rsv.validator.ReactionMessage(params.Message); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
 		return nil, err

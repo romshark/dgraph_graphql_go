@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/romshark/dgraph_graphql_go/store"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
@@ -18,17 +17,17 @@ func (rsv *Resolver) CreateUser(
 	},
 ) (*User, error) {
 	// Validate inputs
-	if err := store.ValidateUserDisplayName(params.DisplayName); err != nil {
+	if err := rsv.validator.UserDisplayName(params.DisplayName); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
 		return nil, err
 	}
-	if err := store.ValidateEmail(params.Email); err != nil {
+	if err := rsv.validator.Email(params.Email); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
 		return nil, err
 	}
-	if err := store.ValidatePassword(params.Password); err != nil {
+	if err := rsv.validator.Password(params.Password); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
 		return nil, err

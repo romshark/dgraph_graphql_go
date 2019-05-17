@@ -32,14 +32,14 @@ func (rsv *Resolver) EditPost(
 		return nil, err
 	}
 	if params.NewTitle != nil {
-		if err := store.ValidatePostTitle(*params.NewTitle); err != nil {
+		if err := rsv.validator.PostTitle(*params.NewTitle); err != nil {
 			err = strerr.Wrap(strerr.ErrInvalidInput, err)
 			rsv.error(ctx, err)
 			return nil, err
 		}
 	}
 	if params.NewContents != nil {
-		if err := store.ValidatePostContents(*params.NewContents); err != nil {
+		if err := rsv.validator.PostContents(*params.NewContents); err != nil {
 			err = strerr.Wrap(strerr.ErrInvalidInput, err)
 			rsv.error(ctx, err)
 			return nil, err

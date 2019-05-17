@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/romshark/dgraph_graphql_go/api/graph/validator"
+
 	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
 	rsv "github.com/romshark/dgraph_graphql_go/api/graph/resolver"
@@ -45,11 +47,13 @@ type Response struct {
 // New creates a new graph resolver instance
 func New(
 	str store.Store,
+	validator validator.Validator,
 	sessionKeyGenerator sesskeygen.SessionKeyGenerator,
 	passwordHasher passhash.PasswordHasher,
 ) (*Graph, error) {
 	rsv, err := rsv.New(
 		str,
+		validator,
 		sessionKeyGenerator,
 		passwordHasher,
 	)

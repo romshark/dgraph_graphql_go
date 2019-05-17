@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
+	"github.com/romshark/dgraph_graphql_go/api/graph/validator"
 	"github.com/romshark/dgraph_graphql_go/api/transport"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/dgraph"
@@ -39,8 +40,23 @@ type server struct {
 func NewServer(opts ServerOptions) (Server, error) {
 	opts.SetDefaults()
 
+	// Initialize validator
+	validator := validator.NewValidator(validator.Options{
+		PasswordLenMin:        6,
+		PasswordLenMax:        256,
+		EmailLenMax:           96,
+		PostContentsLenMin:    1,
+		PostContentsLenMax:    256,
+		PostTitleLenMin:       2,
+		PostTitleLenMax:       64,
+		ReactionMessageLenMin: 1,
+		ReactionMessageLenMax: 256,
+		UserDisplayNameLenMin: 2,
+		UserDisplayNameLenMax: 64,
+	})
+
 	// Initialize store instance
-	str := dgraph.NewStore(
+	store := dgraph.NewStore(
 		opts.DBHost,
 
 		// Compare password
@@ -50,7 +66,8 @@ func NewServer(opts ServerOptions) (Server, error) {
 	)
 
 	graph, err := graph.New(
-		str,
+		store,
+		validator,
 		opts.SessionKeyGenerator,
 		opts.PasswordHasher,
 	)
@@ -60,7 +77,7 @@ func NewServer(opts ServerOptions) (Server, error) {
 
 	// Initialize API server instance
 	newSrv := &server{
-		store:                str,
+		store:                store,
 		opts:                 opts,
 		graph:                graph,
 		transports:           opts.Transport,
