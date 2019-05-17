@@ -46,6 +46,13 @@ type Mutation {
 		newTitle: String
 		newContents: String
 	): Post!
+
+	editUser(
+		user: Identifier!
+		editor: Identifier!
+		newEmail: String
+		newPassword: String
+	): User!
 }
 
 type Session {

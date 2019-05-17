@@ -68,6 +68,21 @@ type MutableStore interface {
 		},
 		err error,
 	)
+
+	EditUser(
+		ctx context.Context,
+		user ID,
+		editor ID,
+		newEmail *string,
+		newPassword *string,
+	) (
+		result User,
+		changes struct {
+			Email    bool
+			Password bool
+		},
+		err error,
+	)
 }
 
 // Store interfaces a store implementation
