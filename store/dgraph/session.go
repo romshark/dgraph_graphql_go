@@ -2,7 +2,7 @@ package dgraph
 
 import "time"
 
-// Session defines the Session type query object
+// Session represents a database model for the Session entity
 type Session struct {
 	UID      string    `json:"uid"`
 	Key      string    `json:"Session.key"`

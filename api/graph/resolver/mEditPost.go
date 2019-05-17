@@ -46,7 +46,7 @@ func (rsv *Resolver) EditPost(
 		}
 	}
 
-	transactRes, err := rsv.str.EditPost(
+	mutatedPost, _, err := rsv.str.EditPost(
 		ctx,
 		store.ID(params.Post),
 		store.ID(params.Editor),
@@ -60,11 +60,11 @@ func (rsv *Resolver) EditPost(
 
 	return &Post{
 		root:      rsv,
-		uid:       transactRes.UID,
+		uid:       mutatedPost.UID,
 		id:        store.ID(params.Post),
-		creation:  transactRes.CreationTime,
-		title:     transactRes.Title,
-		contents:  transactRes.Contents,
-		authorUID: transactRes.AuthorUID,
+		creation:  mutatedPost.Creation,
+		title:     mutatedPost.Title,
+		contents:  mutatedPost.Contents,
+		authorUID: mutatedPost.Author.UID,
 	}, nil
 }

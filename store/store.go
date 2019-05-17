@@ -16,11 +16,7 @@ type MutableStore interface {
 		email string,
 		password string,
 	) (
-		result struct {
-			UID     string
-			UserID  ID
-			UserUID string
-		},
+		result Session,
 		err error,
 	)
 
@@ -31,11 +27,7 @@ type MutableStore interface {
 		title string,
 		contents string,
 	) (
-		result struct {
-			UID       string
-			ID        ID
-			AuthorUID string
-		},
+		result Post,
 		err error,
 	)
 
@@ -47,12 +39,7 @@ type MutableStore interface {
 		emotion emotion.Emotion,
 		message string,
 	) (
-		result struct {
-			UID        string
-			ID         ID
-			SubjectUID string
-			AuthorUID  string
-		},
+		result Reaction,
 		err error,
 	)
 
@@ -63,10 +50,7 @@ type MutableStore interface {
 		displayName string,
 		passwordHash string,
 	) (
-		result struct {
-			UID string
-			ID  ID
-		},
+		result User,
 		err error,
 	)
 
@@ -77,13 +61,10 @@ type MutableStore interface {
 		newTitle *string,
 		newContents *string,
 	) (
-		result struct {
-			UID          string
-			EditorUID    string
-			AuthorUID    string
-			CreationTime time.Time
-			Title        string
-			Contents     string
+		result Post,
+		changes struct {
+			Title    bool
+			Contents bool
 		},
 		err error,
 	)

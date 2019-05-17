@@ -39,7 +39,7 @@ func (rsv *Resolver) CreatePost(
 
 	creationTime := time.Now()
 
-	transactRes, err := rsv.str.CreatePost(
+	newPost, err := rsv.str.CreatePost(
 		ctx,
 		creationTime,
 		store.ID(params.Author),
@@ -53,11 +53,11 @@ func (rsv *Resolver) CreatePost(
 
 	return &Post{
 		root:      rsv,
-		uid:       transactRes.UID,
-		id:        transactRes.ID,
+		uid:       newPost.UID,
+		id:        newPost.ID,
 		creation:  creationTime,
 		title:     params.Title,
 		contents:  params.Contents,
-		authorUID: transactRes.AuthorUID,
+		authorUID: newPost.Author.UID,
 	}, nil
 }

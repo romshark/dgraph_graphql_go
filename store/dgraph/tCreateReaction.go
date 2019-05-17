@@ -21,14 +21,13 @@ func (str *impl) CreateReaction(
 	emotion emo.Emotion,
 	message string,
 ) (
-	result struct {
-		UID        string
-		ID         store.ID
-		SubjectUID string
-		AuthorUID  string
-	},
+	result store.Reaction,
 	err error,
 ) {
+	result.Creation = creationTime
+	result.Emotion = emotion
+	result.Message = message
+
 	// Prepare
 	result.ID = store.NewID()
 
@@ -40,7 +39,7 @@ func (str *impl) CreateReaction(
 	defer close()
 
 	// Ensure author and subject exist
-	var res struct {
+	var qr struct {
 		ByID            []UID `json:"byId"`
 		Author          []UID `json:"author"`
 		PostSubject     []UID `json:"postSubject"`
@@ -63,17 +62,17 @@ func (str *impl) CreateReaction(
 			"$authorId":  string(authorID),
 			"$subjectId": string(subjectID),
 		},
-		&res,
+		&qr,
 	)
 	if err != nil {
 		return
 	}
 
-	if len(res.ByID) > 0 {
+	if len(qr.ByID) > 0 {
 		err = errors.Errorf("duplicate Reaction.id: %s", result.ID)
 		return
 	}
-	if len(res.Author) < 1 {
+	if len(qr.Author) < 1 {
 		err = strerr.Newf(
 			strerr.ErrInvalidInput,
 			"author not found",
@@ -82,11 +81,19 @@ func (str *impl) CreateReaction(
 	}
 	// subjectType: "p" for post, "r" for reaction
 	subjectType := "p"
-	if len(res.PostSubject) > 0 {
-		result.SubjectUID = res.PostSubject[0].NodeID
-	} else if len(res.ReactionSubject) > 0 {
+	if len(qr.PostSubject) > 0 {
+		result.Subject = store.Post{
+			GraphNode: store.GraphNode{
+				UID: qr.PostSubject[0].NodeID,
+			},
+		}
+	} else if len(qr.ReactionSubject) > 0 {
 		subjectType = "r"
-		result.SubjectUID = res.ReactionSubject[0].NodeID
+		result.Subject = store.Reaction{
+			GraphNode: store.GraphNode{
+				UID: qr.ReactionSubject[0].NodeID,
+			},
+		}
 	} else {
 		err = strerr.Newf(
 			strerr.ErrInvalidInput,
@@ -95,7 +102,11 @@ func (str *impl) CreateReaction(
 		return
 	}
 
-	result.AuthorUID = res.Author[0].NodeID
+	result.Author = &store.User{
+		GraphNode: store.GraphNode{
+			UID: qr.Author[0].NodeID,
+		},
+	}
 
 	// Create new reaction
 	var newReactionJSON []byte
@@ -108,8 +119,8 @@ func (str *impl) CreateReaction(
 		Creation time.Time `json:"Reaction.creation"`
 	}{
 		ID:       string(result.ID),
-		Author:   UID{NodeID: result.AuthorUID},
-		Subject:  UID{NodeID: result.SubjectUID},
+		Author:   UID{NodeID: result.Author.UID},
+		Subject:  UID{NodeID: result.Subject.NodeID()},
 		Emotion:  string(emotion),
 		Message:  message,
 		Creation: creationTime,
@@ -132,7 +143,7 @@ func (str *impl) CreateReaction(
 		UID                string `json:"uid"`
 		PublishedReactions UID    `json:"User.publishedReactions"`
 	}{
-		UID:                result.AuthorUID,
+		UID:                result.Author.UID,
 		PublishedReactions: UID{NodeID: result.UID},
 	})
 	if err != nil {
@@ -154,7 +165,7 @@ func (str *impl) CreateReaction(
 			UID       string `json:"uid"`
 			Reactions UID    `json:"Post.reactions"`
 		}{
-			UID:       result.SubjectUID,
+			UID:       result.Subject.NodeID(),
 			Reactions: UID{NodeID: result.UID},
 		})
 	} else {
@@ -163,7 +174,7 @@ func (str *impl) CreateReaction(
 			UID       string `json:"uid"`
 			Reactions UID    `json:"Reaction.reactions"`
 		}{
-			UID:       result.SubjectUID,
+			UID:       result.Subject.NodeID(),
 			Reactions: UID{NodeID: result.UID},
 		})
 	}

@@ -19,12 +19,14 @@ func (str *impl) CreateUser(
 	displayName string,
 	passwordHash string,
 ) (
-	result struct {
-		UID string
-		ID  store.ID
-	},
+	result store.User,
 	err error,
 ) {
+	result.Creation = creationTime
+	result.Email = email
+	result.DisplayName = displayName
+	result.Password = passwordHash
+
 	// Prepare
 	result.ID = store.NewID()
 
@@ -36,7 +38,7 @@ func (str *impl) CreateUser(
 	defer close()
 
 	// Ensure no users with a similar email already exist
-	var res struct {
+	var qr struct {
 		ByID []struct {
 			UID string `json:"uid"`
 		} `json:"byId"`
@@ -62,29 +64,29 @@ func (str *impl) CreateUser(
 			"$email":       email,
 			"$displayName": displayName,
 		},
-		&res,
+		&qr,
 	)
 	if err != nil {
 		return
 	}
 
-	if len(res.ByID) > 0 {
+	if len(qr.ByID) > 0 {
 		err = errors.Errorf("duplicate User.id: %s", result.ID)
 		return
 	}
-	if len(res.ByEmail) > 0 {
+	if len(qr.ByEmail) > 0 {
 		err = strerr.Newf(
 			strerr.ErrInvalidInput,
 			"%d users with a similar email already exist",
-			len(res.ByEmail),
+			len(qr.ByEmail),
 		)
 		return
 	}
-	if len(res.ByDisplayName) > 0 {
+	if len(qr.ByDisplayName) > 0 {
 		err = strerr.Newf(
 			strerr.ErrInvalidInput,
 			"%d users with a similar displayName already exist",
-			len(res.ByDisplayName),
+			len(qr.ByDisplayName),
 		)
 		return
 	}

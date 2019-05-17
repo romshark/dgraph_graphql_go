@@ -19,13 +19,13 @@ func (str *impl) CreatePost(
 	title string,
 	contents string,
 ) (
-	result struct {
-		UID       string
-		ID        store.ID
-		AuthorUID string
-	},
+	result store.Post,
 	err error,
 ) {
+	result.Title = title
+	result.Contents = contents
+	result.Creation = creationTime
+
 	// Prepare
 	result.ID = store.NewID()
 
@@ -37,7 +37,7 @@ func (str *impl) CreatePost(
 	defer close()
 
 	// Ensure author exists
-	var res struct {
+	var qr struct {
 		ByID   []UID `json:"byId"`
 		Author []UID `json:"author"`
 	}
@@ -54,17 +54,17 @@ func (str *impl) CreatePost(
 			"$id":       string(result.ID),
 			"$authorId": string(authorID),
 		},
-		&res,
+		&qr,
 	)
 	if err != nil {
 		return
 	}
 
-	if len(res.ByID) > 0 {
+	if len(qr.ByID) > 0 {
 		err = errors.Errorf("duplicate Post.id: %s", result.ID)
 		return
 	}
-	if len(res.Author) < 1 {
+	if len(qr.Author) < 1 {
 		err = strerr.Newf(
 			strerr.ErrInvalidInput,
 			"author not found",
@@ -72,7 +72,11 @@ func (str *impl) CreatePost(
 		return
 	}
 
-	result.AuthorUID = res.Author[0].NodeID
+	result.Author = &store.User{
+		GraphNode: store.GraphNode{
+			UID: qr.Author[0].NodeID,
+		},
+	}
 
 	// Create new post
 	var newPostJSON []byte
@@ -83,7 +87,7 @@ func (str *impl) CreatePost(
 		Contents string    `json:"Post.contents"`
 		Creation time.Time `json:"Post.creation"`
 	}{
-		Author:   UID{NodeID: result.AuthorUID},
+		Author:   UID{NodeID: result.Author.UID},
 		ID:       string(result.ID),
 		Title:    title,
 		Contents: contents,
@@ -107,7 +111,7 @@ func (str *impl) CreatePost(
 		UID   string `json:"uid"`
 		Posts UID    `json:"User.posts"`
 	}{
-		UID:   result.AuthorUID,
+		UID:   result.Author.UID,
 		Posts: UID{NodeID: result.UID},
 	})
 	if err != nil {

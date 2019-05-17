@@ -27,7 +27,7 @@ func (rsv *Resolver) SignIn(
 	key := rsv.sessionKeyGenerator.Generate()
 	creationTime := time.Now()
 
-	transactRes, err := rsv.str.CreateSession(
+	newSession, err := rsv.str.CreateSession(
 		ctx,
 		key,
 		creationTime,
@@ -44,14 +44,14 @@ func (rsv *Resolver) SignIn(
 		auth.CtxSession,
 	).(*auth.RequestSession); isSession {
 		session.Creation = creationTime
-		session.UserID = transactRes.UserID
+		session.UserID = newSession.User.ID
 	}
 
 	return &Session{
 		root:     rsv,
-		uid:      transactRes.UID,
+		uid:      newSession.UID,
 		key:      key,
 		creation: creationTime,
-		userUID:  transactRes.UserUID,
+		userUID:  newSession.User.UID,
 	}, nil
 }

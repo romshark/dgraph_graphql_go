@@ -3,7 +3,6 @@ package dgraph
 import (
 	"context"
 	"encoding/json"
-	"time"
 
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
@@ -20,16 +19,15 @@ func (str *impl) EditPost(
 	newTitle *string,
 	newContents *string,
 ) (
-	result struct {
-		UID          string
-		EditorUID    string
-		AuthorUID    string
-		CreationTime time.Time
-		Title        string
-		Contents     string
+	result store.Post,
+	changes struct {
+		Title    bool
+		Contents bool
 	},
 	err error,
 ) {
+	result.ID = post
+
 	// Begin transaction
 	txn, close := str.txn(&err)
 	if err != nil {
@@ -38,7 +36,7 @@ func (str *impl) EditPost(
 	defer close()
 
 	// Ensure post and editor exist
-	var res struct {
+	var qr struct {
 		Post   []Post `json:"post"`
 		Editor []User `json:"editor"`
 	}
@@ -64,49 +62,56 @@ func (str *impl) EditPost(
 			"$id":       string(post),
 			"$editorId": string(editor),
 		},
-		&res,
+		&qr,
 	)
 	if err != nil {
 		return
 	}
 
-	if len(res.Post) < 1 {
+	if len(qr.Post) < 1 {
 		err = errors.New("post not found")
 		return
 	}
-	if len(res.Editor) < 1 {
+	if len(qr.Editor) < 1 {
 		err = strerr.Newf(strerr.ErrInvalidInput, "editor not found")
 		return
 	}
 
 	// Check permission
 	if err = auth.Authorize(ctx, auth.IsOwner{
-		Owner: store.ID(res.Post[0].Author[0].ID),
+		Owner: store.ID(qr.Post[0].Author[0].ID),
 	}); err != nil {
 		return
 	}
 
 	if newTitle != nil {
 		result.Title = *newTitle
-		if res.Post[0].Title == *newTitle {
+		if qr.Post[0].Title == *newTitle {
 			newTitle = nil
+		} else {
+			changes.Title = true
 		}
 	} else {
-		result.Title = res.Post[0].Title
+		result.Title = qr.Post[0].Title
 	}
 	if newContents != nil {
 		result.Contents = *newContents
-		if res.Post[0].Contents == *newContents {
+		if qr.Post[0].Contents == *newContents {
 			newContents = nil
+		} else {
+			changes.Contents = true
 		}
 	} else {
-		result.Contents = res.Post[0].Contents
+		result.Contents = qr.Post[0].Contents
 	}
 
-	result.UID = res.Post[0].UID
-	result.CreationTime = res.Post[0].Creation
-	result.AuthorUID = res.Post[0].Author[0].UID
-	result.EditorUID = res.Editor[0].UID
+	result.UID = qr.Post[0].UID
+	result.Creation = qr.Post[0].Creation
+	result.Author = &store.User{
+		GraphNode: store.GraphNode{
+			UID: qr.Post[0].Author[0].UID,
+		},
+	}
 
 	// Edit the post
 	var mutatedPostJSON []byte

@@ -6,7 +6,7 @@ import (
 	"github.com/romshark/dgraph_graphql_go/store"
 )
 
-// Post defines the Post type query object
+// Post represents a database model for the Post entity
 type Post struct {
 	UID       string     `json:"uid"`
 	ID        store.ID   `json:"Post.id"`

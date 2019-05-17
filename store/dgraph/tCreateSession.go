@@ -18,11 +18,7 @@ func (str *impl) CreateSession(
 	email string,
 	password string,
 ) (
-	result struct {
-		UID     string
-		UserID  store.ID
-		UserUID string
-	},
+	result store.Session,
 	err error,
 ) {
 	// Begin transaction
@@ -33,7 +29,7 @@ func (str *impl) CreateSession(
 	defer close()
 
 	// Ensure user exists
-	var res struct {
+	var qr struct {
 		ByEmail []struct {
 			UID      string `json:"uid"`
 			ID       string `json:"User.id"`
@@ -54,23 +50,27 @@ func (str *impl) CreateSession(
 		map[string]string{
 			"$email": email,
 		},
-		&res,
+		&qr,
 	)
 	if err != nil {
 		return
 	}
 
 	// Ensure the user exists and the password is correct
-	if len(res.ByEmail) < 1 || !str.comparePassword(
+	if len(qr.ByEmail) < 1 || !str.comparePassword(
 		password,
-		res.ByEmail[0].Password,
+		qr.ByEmail[0].Password,
 	) {
 		err = strerr.New(strerr.ErrWrongCreds, "wrong credentials")
 		return
 	}
 
-	result.UserID = store.ID(res.ByEmail[0].ID)
-	result.UserUID = res.ByEmail[0].UID
+	result.User = &store.User{
+		GraphNode: store.GraphNode{
+			UID: qr.ByEmail[0].UID,
+		},
+		ID: store.ID(qr.ByEmail[0].ID),
+	}
 
 	// Create new session
 	var newSessionJSON []byte
@@ -81,7 +81,7 @@ func (str *impl) CreateSession(
 	}{
 		Key:      key,
 		Creation: creation,
-		User:     UID{NodeID: result.UserUID},
+		User:     UID{NodeID: result.User.UID},
 	})
 	if err != nil {
 		return
@@ -102,7 +102,7 @@ func (str *impl) CreateSession(
 		UID      string `json:"uid"`
 		Sessions UID    `json:"User.sessions"`
 	}{
-		UID:      result.UserUID,
+		UID:      result.User.UID,
 		Sessions: UID{NodeID: result.UID},
 	})
 	if err != nil {

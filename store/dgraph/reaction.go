@@ -7,7 +7,7 @@ import (
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
 )
 
-// Reaction defines the Reaction type query object
+// Reaction represents a database model for the Reaction entity
 type Reaction struct {
 	UID       string            `json:"uid"`
 	ID        store.ID          `json:"Reaction.id"`

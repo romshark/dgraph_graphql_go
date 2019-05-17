@@ -44,7 +44,7 @@ func (rsv *Resolver) CreateReaction(
 	creationTime := time.Now()
 
 	// Create new reaction entity
-	transactRes, err := rsv.str.CreateReaction(
+	newReaction, err := rsv.str.CreateReaction(
 		ctx,
 		creationTime,
 		store.ID(params.Author),
@@ -59,11 +59,11 @@ func (rsv *Resolver) CreateReaction(
 
 	return &Reaction{
 		root:       rsv,
-		uid:        transactRes.UID,
-		id:         transactRes.ID,
+		uid:        newReaction.UID,
+		id:         newReaction.ID,
 		creation:   creationTime,
-		authorUID:  transactRes.AuthorUID,
-		subjectUID: transactRes.SubjectUID,
+		authorUID:  newReaction.Author.UID,
+		subjectUID: newReaction.Subject.NodeID(),
 		emotion:    emot,
 		message:    params.Message,
 	}, nil
