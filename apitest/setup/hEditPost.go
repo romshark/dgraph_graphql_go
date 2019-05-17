@@ -87,7 +87,7 @@ func (h Helper) editPost(
 	return result.EditPost, nil
 }
 
-// EditPost helps creating a user
+// EditPost helps edit a post
 func (h Helper) EditPost(
 	postID store.ID,
 	editorID store.ID,
@@ -103,7 +103,7 @@ func (h Helper) EditPost(
 	)
 }
 
-// EditPost helps creating a user and assumes success
+// EditPost helps edit a post and assumes success
 func (ok AssumeSuccess) EditPost(
 	postID store.ID,
 	editorID store.ID,
