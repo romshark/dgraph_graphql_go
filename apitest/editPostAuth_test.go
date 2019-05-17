@@ -55,7 +55,7 @@ func TestEditPostAuth(t *testing.T) {
 	})
 
 	// Test editing posts on behalf of other users
-	t.Run("non-author (noauth)", func(t *testing.T) {
+	t.Run("non-editor (noauth)", func(t *testing.T) {
 		ts, _, authorClt, post := setupTest(t)
 		defer ts.Teardown()
 
