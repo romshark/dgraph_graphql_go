@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 
 	"github.com/dgraph-io/dgo/protos/api"
-	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph/auth"
 	"github.com/romshark/dgraph_graphql_go/store"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
@@ -69,7 +68,7 @@ func (str *impl) EditPost(
 	}
 
 	if len(qr.Post) < 1 {
-		err = errors.New("post not found")
+		err = strerr.New(strerr.ErrInvalidInput, "post not found")
 		return
 	}
 	if len(qr.Editor) < 1 {
