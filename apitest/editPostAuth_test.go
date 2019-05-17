@@ -84,8 +84,8 @@ func TestEditPostAuth(t *testing.T) {
 		newTitle := "new test post"
 		newContents := "new test content"
 		post, err := otherClt.Help.EditPost(
-			*post.ID,
-			*other.ID, // Different editor ID
+			*post.ID, // Someone else's post
+			*other.ID,
 			&newTitle,
 			&newContents,
 		)
