@@ -6,7 +6,7 @@ import (
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestCreateReactionAuth tests reaction creation authorization
@@ -40,14 +40,13 @@ func TestCreateReactionAuth(t *testing.T) {
 		ts, post, cmt, _ := setupTest(t)
 		defer ts.Teardown()
 
-		reaction, err := ts.Guest().Help.CreateReaction(
+		ts.Guest().Help.ERR.CreateReaction(
+			errors.ErrUnauthorized,
 			*cmt.ID,
 			*post.ID,
 			emotion.Excited,
 			"test comment",
 		)
-		require.Nil(t, reaction)
-		verifyError(t, "Unauthorized", err)
 	})
 
 	// Test creating reactions on behalf of other users
@@ -56,13 +55,12 @@ func TestCreateReactionAuth(t *testing.T) {
 		defer ts.Teardown()
 
 		other := ts.Debug().Help.OK.CreateUser("other", "t2@tst.tst", "testpass")
-		reaction, err := cmtClt.Help.CreateReaction(
+		cmtClt.Help.ERR.CreateReaction(
+			errors.ErrUnauthorized,
 			*other.ID, // Different reaction author ID
 			*post.ID,
 			emotion.Excited,
 			"test comment",
 		)
-		require.Nil(t, reaction)
-		verifyError(t, "Unauthorized", err)
 	})
 }

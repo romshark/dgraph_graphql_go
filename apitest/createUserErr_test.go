@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestCreateUserErr tests all possible user account creation errors
@@ -17,13 +17,12 @@ func TestCreateUserErr(t *testing.T) {
 		debug := ts.Debug()
 
 		debug.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
-		res, err := debug.Help.CreateUser(
+		debug.Help.ERR.CreateUser(
+			errors.ErrInvalidInput,
 			"bazBuzowich",
 			"foo@bar.buz",
 			"testpass",
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 
 	// Test reserved displayName on creation
@@ -34,13 +33,12 @@ func TestCreateUserErr(t *testing.T) {
 		debug := ts.Debug()
 
 		debug.Help.OK.CreateUser("fooBarowich", "foo@bar.buz", "testpass")
-		res, err := debug.Help.CreateUser(
+		debug.Help.ERR.CreateUser(
+			errors.ErrInvalidInput,
 			"fooBarowich",
 			"baz@buzowich.buz",
 			"testpass",
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 
 	// Test reserved displayName on creation
@@ -58,13 +56,12 @@ func TestCreateUserErr(t *testing.T) {
 				ts := setup.New(t, tcx)
 				defer ts.Teardown()
 
-				res, err := ts.Debug().Help.CreateUser(
+				ts.Debug().Help.ERR.CreateUser(
+					errors.ErrInvalidInput,
 					invalidDisplayName,
 					"test@test.test",
 					"foobar",
 				)
-				require.Nil(t, res)
-				verifyError(t, "InvalidInput", err)
 			})
 		}
 	})
@@ -86,13 +83,12 @@ func TestCreateUserErr(t *testing.T) {
 				ts := setup.New(t, tcx)
 				defer ts.Teardown()
 
-				res, err := ts.Debug().Help.CreateUser(
+				ts.Debug().Help.ERR.CreateUser(
+					errors.ErrInvalidInput,
 					"testDisplayName",
 					invalidEmail,
 					"testpass",
 				)
-				require.Nil(t, res)
-				verifyError(t, "InvalidInput", err)
 			})
 		}
 	})

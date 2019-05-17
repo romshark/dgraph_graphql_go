@@ -1,19 +1,19 @@
 package setup
 
 import (
-	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) editUser(
-	assumedSuccess successAssumption,
+	expectedErrorCode errors.Code,
 	userID store.ID,
 	editorID store.ID,
 	newEmail *string,
 	newPassword *string,
-) (*gqlmod.User, *graph.ResponseError) {
+) *gqlmod.User {
 	t := h.c.t
 
 	var old struct {
@@ -37,7 +37,7 @@ func (h Helper) editUser(
 	var result struct {
 		EditUser *gqlmod.User `json:"editUser"`
 	}
-	err := h.c.QueryVar(
+	checkErr(t, expectedErrorCode, h.c.QueryVar(
 		`mutation (
 			$user: Identifier!
 			$editor: Identifier!
@@ -63,10 +63,10 @@ func (h Helper) editUser(
 			"newPassword": newPassword,
 		},
 		&result,
-	)
+	))
 
-	if err := checkErr(t, assumedSuccess, err); err != nil {
-		return nil, err
+	if expectedErrorCode != "" {
+		return nil
 	}
 
 	require.NotNil(t, result.EditUser)
@@ -81,23 +81,7 @@ func (h Helper) editUser(
 		require.Equal(t, *old.User.Creation, *result.EditUser.Creation)
 	}
 
-	return result.EditUser, nil
-}
-
-// EditUser helps editing a user
-func (h Helper) EditUser(
-	userID store.ID,
-	editorID store.ID,
-	newEmail *string,
-	newPassword *string,
-) (*gqlmod.User, *graph.ResponseError) {
-	return h.editUser(
-		potentialFailure,
-		userID,
-		editorID,
-		newEmail,
-		newPassword,
-	)
+	return result.EditUser
 }
 
 // EditUser helps editing a user and assumes success
@@ -107,12 +91,29 @@ func (ok AssumeSuccess) EditUser(
 	newEmail *string,
 	newPassword *string,
 ) *gqlmod.User {
-	result, _ := ok.h.editUser(
-		success,
+	return ok.h.editUser(
+		"",
 		userID,
 		editorID,
 		newEmail,
 		newPassword,
 	)
-	return result
+}
+
+// EditUser helps editing a user
+func (notOk AssumeFailure) EditUser(
+	expectedErrorCode errors.Code,
+	userID store.ID,
+	editorID store.ID,
+	newEmail *string,
+	newPassword *string,
+) {
+	notOk.checkErrCode(expectedErrorCode)
+	notOk.h.editUser(
+		expectedErrorCode,
+		userID,
+		editorID,
+		newEmail,
+		newPassword,
+	)
 }

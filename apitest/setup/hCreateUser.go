@@ -3,23 +3,23 @@ package setup
 import (
 	"time"
 
-	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) createUser(
-	assumedSuccess successAssumption,
+	expectedErrorCode errors.Code,
 	displayName,
 	email,
 	password string,
-) (*gqlmod.User, *graph.ResponseError) {
+) *gqlmod.User {
 	t := h.c.t
 
 	var result struct {
 		CreateUser *gqlmod.User `json:"createUser"`
 	}
-	err := h.c.QueryVar(
+	checkErr(t, expectedErrorCode, h.c.QueryVar(
 		`mutation (
 			$email: String!
 			$displayName: String!
@@ -45,10 +45,10 @@ func (h Helper) createUser(
 			"password":    password,
 		},
 		&result,
-	)
+	))
 
-	if err := checkErr(t, assumedSuccess, err); err != nil {
-		return nil, err
+	if expectedErrorCode != "" {
+		return nil
 	}
 
 	require.NotNil(t, result.CreateUser)
@@ -63,16 +63,7 @@ func (h Helper) createUser(
 		h.creationTimeTollerance,
 	)
 
-	return result.CreateUser, nil
-}
-
-// CreateUser helps creating a user
-func (h Helper) CreateUser(
-	displayName,
-	email,
-	password string,
-) (*gqlmod.User, *graph.ResponseError) {
-	return h.createUser(potentialFailure, displayName, email, password)
+	return result.CreateUser
 }
 
 // CreateUser helps creating a user and assumes success
@@ -81,6 +72,16 @@ func (ok AssumeSuccess) CreateUser(
 	email,
 	password string,
 ) *gqlmod.User {
-	result, _ := ok.h.createUser(success, displayName, email, password)
-	return result
+	return ok.h.createUser("", displayName, email, password)
+}
+
+// CreateUser helps creating a user
+func (notOkay AssumeFailure) CreateUser(
+	expectedErrorCode errors.Code,
+	displayName,
+	email,
+	password string,
+) {
+	notOkay.checkErrCode(expectedErrorCode)
+	notOkay.h.createUser(expectedErrorCode, displayName, email, password)
 }

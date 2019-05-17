@@ -6,7 +6,7 @@ import (
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestCreateReactionErr tests all possible reaction creation errors
@@ -21,14 +21,13 @@ func TestCreateReactionErr(t *testing.T) {
 		firstP := debug.Help.OK.CreateUser("first", "1@test.test", "testpass")
 		post := debug.Help.OK.CreatePost(*firstP.ID, "Test", "test")
 
-		res, err := debug.Help.CreateReaction(
+		debug.Help.ERR.CreateReaction(
+			errors.ErrInvalidInput,
 			store.NewID(), // inexistent author
 			*post.ID,
 			emotion.Excited,
 			"test message",
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 
 	t.Run("inexistentPost", func(t *testing.T) {
@@ -40,14 +39,13 @@ func TestCreateReactionErr(t *testing.T) {
 		// User 1
 		firstP := debug.Help.OK.CreateUser("first", "1@test.test", "testpass")
 
-		res, err := debug.Help.CreateReaction(
+		debug.Help.ERR.CreateReaction(
+			errors.ErrInvalidInput,
 			*firstP.ID,
 			store.NewID(), // inexistent post
 			emotion.Excited,
 			"test message",
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 
 	t.Run("invalidMessage", func(t *testing.T) {
@@ -84,14 +82,13 @@ func TestCreateReactionErr(t *testing.T) {
 					"testpass",
 				)
 
-				res, err := debug.Help.CreateReaction(
+				debug.Help.ERR.CreateReaction(
+					errors.ErrInvalidInput,
 					*secondP.ID,
 					*post.ID,
 					emotion.Excited,
 					invalidMessage,
 				)
-				require.Nil(t, res)
-				verifyError(t, "InvalidInput", err)
 			})
 		}
 	})

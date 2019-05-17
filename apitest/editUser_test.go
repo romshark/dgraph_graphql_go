@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestEditUser tests user profile editing
@@ -30,9 +30,7 @@ func TestEditUser(t *testing.T) {
 		)
 
 		// Test signing in using the old email
-		session, err := ts.Guest().Help.SignIn(oldEmail, password)
-		require.Nil(t, session)
-		verifyError(t, "WrongCreds", err)
+		ts.Guest().Help.ERR.SignIn(errors.ErrWrongCreds, oldEmail, password)
 
 		// Test signing in using the new email
 		ts.Guest().Help.OK.SignIn(newEmail, password)
@@ -60,9 +58,7 @@ func TestEditUser(t *testing.T) {
 		)
 
 		// Test signing in using the old password
-		session, err := ts.Guest().Help.SignIn(email, oldPassword)
-		require.Nil(t, session)
-		verifyError(t, "WrongCreds", err)
+		ts.Guest().Help.ERR.SignIn(errors.ErrWrongCreds, email, oldPassword)
 
 		// Test signing in using the new password
 		ts.Guest().Help.OK.SignIn(email, newPassword)

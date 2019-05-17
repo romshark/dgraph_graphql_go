@@ -6,7 +6,7 @@ import (
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
 	"github.com/romshark/dgraph_graphql_go/store"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestEditPostErr tests all possible post editing errors
@@ -47,14 +47,13 @@ func TestEditPostErr(t *testing.T) {
 				ts, debug, post, author := testSetup(t)
 				defer ts.Teardown()
 
-				res, err := debug.Help.EditPost(
+				debug.Help.ERR.EditPost(
+					errors.ErrInvalidInput,
 					*post.ID,
 					*author.ID,
 					&invalidTitle,
 					post.Contents,
 				)
-				require.Nil(t, res)
-				verifyError(t, "InvalidInput", err)
 			})
 		}
 	})
@@ -78,14 +77,13 @@ func TestEditPostErr(t *testing.T) {
 				ts, debug, post, author := testSetup(t)
 				defer ts.Teardown()
 
-				res, err := debug.Help.EditPost(
+				debug.Help.ERR.EditPost(
+					errors.ErrInvalidInput,
 					*post.ID,
 					*author.ID,
 					post.Title,
 					&invalidContent,
 				)
-				require.Nil(t, res)
-				verifyError(t, "InvalidInput", err)
 			})
 		}
 	})
@@ -94,14 +92,13 @@ func TestEditPostErr(t *testing.T) {
 		ts, debug, post, _ := testSetup(t)
 		defer ts.Teardown()
 
-		res, err := debug.Help.EditPost(
+		debug.Help.ERR.EditPost(
+			errors.ErrInvalidInput,
 			store.NewID(), // Inexistent post
 			*post.ID,
 			post.Title,
 			post.Contents,
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 
 	// Test inexistent editor
@@ -109,27 +106,25 @@ func TestEditPostErr(t *testing.T) {
 		ts, debug, post, _ := testSetup(t)
 		defer ts.Teardown()
 
-		res, err := debug.Help.EditPost(
+		debug.Help.ERR.EditPost(
+			errors.ErrInvalidInput,
 			*post.ID,
 			store.NewID(), // Inexistent editor
 			post.Title,
 			post.Contents,
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 
 	t.Run("noChanges", func(t *testing.T) {
 		ts, debug, post, _ := testSetup(t)
 		defer ts.Teardown()
 
-		res, err := debug.Help.EditPost(
+		debug.Help.ERR.EditPost(
+			errors.ErrInvalidInput,
 			*post.ID,
 			*post.ID,
 			nil,
 			nil,
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 }

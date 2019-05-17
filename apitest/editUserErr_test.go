@@ -6,7 +6,7 @@ import (
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
 	"github.com/romshark/dgraph_graphql_go/store"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestEditUserErr tests all possible user profile editing errors
@@ -42,14 +42,13 @@ func TestEditUserErr(t *testing.T) {
 				ts, debug, user := testSetup(t)
 				defer ts.Teardown()
 
-				res, err := debug.Help.EditUser(
+				debug.Help.ERR.EditUser(
+					errors.ErrInvalidInput,
 					*user.ID,
 					*user.ID,
 					&invalidEmail,
 					nil,
 				)
-				require.Nil(t, res)
-				verifyError(t, "InvalidInput", err)
 			})
 		}
 	})
@@ -74,14 +73,13 @@ func TestEditUserErr(t *testing.T) {
 				ts, debug, user := testSetup(t)
 				defer ts.Teardown()
 
-				res, err := debug.Help.EditUser(
+				debug.Help.ERR.EditUser(
+					errors.ErrInvalidInput,
 					*user.ID,
 					*user.ID,
 					nil,
 					&invalidPassword,
 				)
-				require.Nil(t, res)
-				verifyError(t, "InvalidInput", err)
 			})
 		}
 	})
@@ -91,14 +89,13 @@ func TestEditUserErr(t *testing.T) {
 		defer ts.Teardown()
 
 		newEmail := "new@email.test"
-		res, err := debug.Help.EditUser(
+		debug.Help.ERR.EditUser(
+			errors.ErrInvalidInput,
 			store.NewID(), // Inexistent profile
 			*user.ID,
 			&newEmail,
 			nil,
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 
 	t.Run("inexistentEditor", func(t *testing.T) {
@@ -106,27 +103,25 @@ func TestEditUserErr(t *testing.T) {
 		defer ts.Teardown()
 
 		newEmail := "new@email.test"
-		res, err := debug.Help.EditUser(
+		debug.Help.ERR.EditUser(
+			errors.ErrInvalidInput,
 			*user.ID,
 			store.NewID(), // Inexistent editor
 			&newEmail,
 			nil,
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 
 	t.Run("noChanges", func(t *testing.T) {
 		ts, debug, user := testSetup(t)
 		defer ts.Teardown()
 
-		res, err := debug.Help.EditUser(
+		debug.Help.ERR.EditUser(
+			errors.ErrInvalidInput,
 			*user.ID,
 			*user.ID,
 			nil,
 			nil,
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 }

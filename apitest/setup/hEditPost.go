@@ -1,19 +1,19 @@
 package setup
 
 import (
-	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) editPost(
-	assumedSuccess successAssumption,
+	expectedErrorCode errors.Code,
 	postID store.ID,
 	editorID store.ID,
 	newTitle *string,
 	newContents *string,
-) (*gqlmod.Post, *graph.ResponseError) {
+) *gqlmod.Post {
 	t := h.c.t
 
 	var old struct {
@@ -40,7 +40,7 @@ func (h Helper) editPost(
 	var result struct {
 		EditPost *gqlmod.Post `json:"editPost"`
 	}
-	err := h.c.QueryVar(
+	checkErr(t, expectedErrorCode, h.c.QueryVar(
 		`mutation (
 			$post: Identifier!
 			$editor: Identifier!
@@ -69,10 +69,10 @@ func (h Helper) editPost(
 			"newContents": newContents,
 		},
 		&result,
-	)
+	))
 
-	if err := checkErr(t, assumedSuccess, err); err != nil {
-		return nil, err
+	if expectedErrorCode != "" {
+		return nil
 	}
 
 	require.NotNil(t, result.EditPost)
@@ -92,23 +92,7 @@ func (h Helper) editPost(
 		require.Equal(t, *old.Post.Creation, *result.EditPost.Creation)
 	}
 
-	return result.EditPost, nil
-}
-
-// EditPost helps edit a post
-func (h Helper) EditPost(
-	postID store.ID,
-	editorID store.ID,
-	newTitle *string,
-	newContents *string,
-) (*gqlmod.Post, *graph.ResponseError) {
-	return h.editPost(
-		potentialFailure,
-		postID,
-		editorID,
-		newTitle,
-		newContents,
-	)
+	return result.EditPost
 }
 
 // EditPost helps edit a post and assumes success
@@ -118,12 +102,29 @@ func (ok AssumeSuccess) EditPost(
 	newTitle *string,
 	newContents *string,
 ) *gqlmod.Post {
-	result, _ := ok.h.editPost(
-		success,
+	return ok.h.editPost(
+		"",
 		postID,
 		editorID,
 		newTitle,
 		newContents,
 	)
-	return result
+}
+
+// EditPost helps edit a post
+func (notOk AssumeFailure) EditPost(
+	expectedErrorCode errors.Code,
+	postID store.ID,
+	editorID store.ID,
+	newTitle *string,
+	newContents *string,
+) {
+	notOk.checkErrCode(expectedErrorCode)
+	notOk.h.editPost(
+		expectedErrorCode,
+		postID,
+		editorID,
+		newTitle,
+		newContents,
+	)
 }

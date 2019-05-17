@@ -9,6 +9,7 @@ import (
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	trn "github.com/romshark/dgraph_graphql_go/api/transport"
 	thttp "github.com/romshark/dgraph_graphql_go/api/transport/http"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -69,6 +70,10 @@ func (ts *TestSetup) Guest() *Client {
 		h: &clt.Help,
 		t: ts.t,
 	}
+	clt.Help.ERR = AssumeFailure{
+		h: &clt.Help,
+		t: ts.t,
+	}
 
 	return clt
 }
@@ -99,19 +104,22 @@ func (ts *TestSetup) Client(
 	return clt, sess
 }
 
+// checkErr ensures the response error is as expected
 func checkErr(
 	t *testing.T,
-	assumedSuccess successAssumption,
+	expectedErrorCode errors.Code,
 	err error,
-) *graph.ResponseError {
-	if !assumedSuccess {
-		if err != nil {
-			// In case of expected errors the error must be a graph error
-			require.IsType(t, &graph.ResponseError{}, err)
-			return err.(*graph.ResponseError)
-		}
-		return nil
+) {
+	if expectedErrorCode != "" {
+		require.NotNil(t, err)
+		require.IsType(t, &graph.ResponseError{}, err)
+		require.Equal(
+			t,
+			string(expectedErrorCode),
+			err.(*graph.ResponseError).Code,
+		)
+		require.True(t, len(err.(*graph.ResponseError).Message) > 0)
+	} else {
+		require.Nil(t, err)
 	}
-	require.NoError(t, err)
-	return nil
 }

@@ -3,22 +3,22 @@ package setup
 import (
 	"time"
 
-	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) signIn(
-	assumedSuccess successAssumption,
+	expectedErrorCode errors.Code,
 	email string,
 	password string,
-) (*gqlmod.Session, *graph.ResponseError) {
+) *gqlmod.Session {
 	t := h.c.t
 
 	var result struct {
 		SignIn *gqlmod.Session `json:"signIn"`
 	}
-	err := h.c.QueryVar(
+	checkErr(t, expectedErrorCode, h.c.QueryVar(
 		`mutation (
 			$email: String!
 			$password: String!
@@ -42,10 +42,10 @@ func (h Helper) signIn(
 			"password": password,
 		},
 		&result,
-	)
+	))
 
-	if err := checkErr(t, assumedSuccess, err); err != nil {
-		return nil, err
+	if expectedErrorCode != "" {
+		return nil
 	}
 
 	require.NotNil(t, result.SignIn)
@@ -59,15 +59,7 @@ func (h Helper) signIn(
 		h.creationTimeTollerance,
 	)
 
-	return result.SignIn, nil
-}
-
-// SignIn helps signing in
-func (h Helper) SignIn(
-	email string,
-	password string,
-) (*gqlmod.Session, *graph.ResponseError) {
-	return h.signIn(potentialFailure, email, password)
+	return result.SignIn
 }
 
 // SignIn helps signing in and assumes success
@@ -75,6 +67,15 @@ func (ok AssumeSuccess) SignIn(
 	email string,
 	password string,
 ) *gqlmod.Session {
-	result, _ := ok.h.signIn(success, email, password)
-	return result
+	return ok.h.signIn("", email, password)
+}
+
+// SignIn helps signing in
+func (notOkay AssumeFailure) SignIn(
+	expectedErrorCode errors.Code,
+	email string,
+	password string,
+) {
+	notOkay.checkErrCode(expectedErrorCode)
+	notOkay.h.signIn(expectedErrorCode, email, password)
 }

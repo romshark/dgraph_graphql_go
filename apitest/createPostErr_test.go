@@ -5,7 +5,7 @@ import (
 
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
 	"github.com/romshark/dgraph_graphql_go/store"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestCreatePostErr tests all possible post creation errors
@@ -32,13 +32,12 @@ func TestCreatePostErr(t *testing.T) {
 					"foo@bar.buz",
 					"testpass",
 				)
-				res, err := debug.Help.CreatePost(
+				debug.Help.ERR.CreatePost(
+					errors.ErrInvalidInput,
 					*author.ID,
 					invalidTitle,
 					"test contents",
 				)
-				require.Nil(t, res)
-				verifyError(t, "InvalidInput", err)
 			})
 		}
 	})
@@ -70,13 +69,12 @@ func TestCreatePostErr(t *testing.T) {
 					"foo@bar.buz",
 					"testpass",
 				)
-				res, err := debug.Help.CreatePost(
+				debug.Help.ERR.CreatePost(
+					errors.ErrInvalidInput,
 					*author.ID,
 					"test title",
 					invalidContent,
 				)
-				require.Nil(t, res)
-				verifyError(t, "InvalidInput", err)
 			})
 		}
 	})
@@ -86,12 +84,11 @@ func TestCreatePostErr(t *testing.T) {
 		ts := setup.New(t, tcx)
 		defer ts.Teardown()
 
-		res, err := ts.Debug().Help.CreatePost(
+		ts.Debug().Help.ERR.CreatePost(
+			errors.ErrInvalidInput,
 			store.NewID(),
 			"test title",
 			"test contents",
 		)
-		require.Nil(t, res)
-		verifyError(t, "InvalidInput", err)
 	})
 }

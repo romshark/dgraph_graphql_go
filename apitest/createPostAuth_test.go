@@ -5,7 +5,7 @@ import (
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestCreatePostAuth tests post creation authorization
@@ -34,13 +34,12 @@ func TestCreatePostAuth(t *testing.T) {
 		ts, author, _ := setupTest(t)
 		defer ts.Teardown()
 
-		post, err := ts.Guest().Help.CreatePost(
+		ts.Guest().Help.ERR.CreatePost(
+			errors.ErrUnauthorized,
 			*author.ID,
 			"test post",
 			"test content",
 		)
-		require.Nil(t, post)
-		verifyError(t, "Unauthorized", err)
 	})
 
 	// Test creating posts on behalf of other users
@@ -53,8 +52,11 @@ func TestCreatePostAuth(t *testing.T) {
 			"t2@tst.tst",
 			"testpass",
 		)
-		post, err := clt.Help.CreatePost(*other.ID, "test post", "test content")
-		require.Nil(t, post)
-		verifyError(t, "Unauthorized", err)
+		clt.Help.ERR.CreatePost(
+			errors.ErrUnauthorized,
+			*other.ID,
+			"test post",
+			"test content",
+		)
 	})
 }

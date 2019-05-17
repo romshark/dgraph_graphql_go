@@ -3,24 +3,24 @@ package setup
 import (
 	"time"
 
-	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/store"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) createPost(
-	assumedSuccess successAssumption,
+	expectedErrorCode errors.Code,
 	authorID store.ID,
 	title string,
 	contents string,
-) (*gqlmod.Post, *graph.ResponseError) {
+) *gqlmod.Post {
 	t := h.c.t
 
 	var result struct {
 		CreatePost *gqlmod.Post `json:"createPost"`
 	}
-	err := h.c.QueryVar(
+	checkErr(t, expectedErrorCode, h.c.QueryVar(
 		`mutation (
 			$author: Identifier!
 			$title: String!
@@ -49,10 +49,10 @@ func (h Helper) createPost(
 			"contents": contents,
 		},
 		&result,
-	)
+	))
 
-	if err := checkErr(t, assumedSuccess, err); err != nil {
-		return nil, err
+	if expectedErrorCode != "" {
+		return nil
 	}
 
 	require.NotNil(t, result.CreatePost)
@@ -68,16 +68,7 @@ func (h Helper) createPost(
 		h.creationTimeTollerance,
 	)
 
-	return result.CreatePost, nil
-}
-
-// CreatePost helps creating a user
-func (h Helper) CreatePost(
-	authorID store.ID,
-	title string,
-	contents string,
-) (*gqlmod.Post, *graph.ResponseError) {
-	return h.createPost(potentialFailure, authorID, title, contents)
+	return result.CreatePost
 }
 
 // CreatePost helps creating a user and assumes success
@@ -86,6 +77,16 @@ func (ok AssumeSuccess) CreatePost(
 	title string,
 	contents string,
 ) *gqlmod.Post {
-	result, _ := ok.h.createPost(success, authorID, title, contents)
-	return result
+	return ok.h.createPost("", authorID, title, contents)
+}
+
+// CreatePost helps creating a user
+func (notOk AssumeFailure) CreatePost(
+	expectedErrorCode errors.Code,
+	authorID store.ID,
+	title string,
+	contents string,
+) {
+	notOk.checkErrCode(expectedErrorCode)
+	notOk.h.createPost(expectedErrorCode, authorID, title, contents)
 }

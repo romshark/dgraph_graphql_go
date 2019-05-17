@@ -5,7 +5,7 @@ import (
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestEditUserAuth tests user profile editing authorization
@@ -36,14 +36,13 @@ func TestEditUserAuth(t *testing.T) {
 
 		newEmail := "new@email.test"
 		newPassword := "newpassword"
-		mutated, err := ts.Guest().Help.EditUser(
+		ts.Guest().Help.ERR.EditUser(
+			errors.ErrUnauthorized,
 			*user.ID,
 			*user.ID,
 			&newEmail,
 			&newPassword,
 		)
-		require.Nil(t, mutated)
-		verifyError(t, "Unauthorized", err)
 	})
 
 	// Test editing profiles on behalf of other users
@@ -55,14 +54,13 @@ func TestEditUserAuth(t *testing.T) {
 
 		newEmail := "new@email.test"
 		newPassword := "newpassword"
-		mutated, err := userClt.Help.EditUser(
+		userClt.Help.ERR.EditUser(
+			errors.ErrUnauthorized,
 			*user.ID,
 			*other.ID, // Different editor ID
 			&newEmail,
 			&newPassword,
 		)
-		require.Nil(t, mutated)
-		verifyError(t, "Unauthorized", err)
 	})
 
 	// Test editing profiles of other users
@@ -75,13 +73,12 @@ func TestEditUserAuth(t *testing.T) {
 
 		newEmail := "new@email.test"
 		newPassword := "newpassword"
-		mutated, err := otherClt.Help.EditUser(
+		otherClt.Help.ERR.EditUser(
+			errors.ErrUnauthorized,
 			*user.ID, // Someone else's profile
 			*other.ID,
 			&newEmail,
 			&newPassword,
 		)
-		require.Nil(t, mutated)
-		verifyError(t, "Unauthorized", err)
 	})
 }

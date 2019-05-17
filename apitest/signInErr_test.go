@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
 	"github.com/stretchr/testify/require"
@@ -47,9 +48,7 @@ func TestSignInErr(t *testing.T) {
 			"foo@bar.buz",
 			"testpass",
 		)
-		session, err := debug.Help.SignIn("foo@fooo.foo", "testpass")
-		require.Nil(t, session)
-		verifyError(t, "WrongCreds", err)
+		debug.Help.ERR.SignIn(errors.ErrWrongCreds, "foo@fooo.foo", "testpass")
 
 		ensureNoSession(t, debug, user)
 	})
@@ -65,9 +64,7 @@ func TestSignInErr(t *testing.T) {
 			"foo@bar.buz",
 			"testpass",
 		)
-		session, err := debug.Help.SignIn("foo@bar.buz", "wronpass")
-		require.Nil(t, session)
-		verifyError(t, "WrongCreds", err)
+		debug.Help.ERR.SignIn(errors.ErrWrongCreds, "foo@bar.buz", "wronpass")
 
 		ensureNoSession(t, debug, user)
 	})
@@ -83,9 +80,7 @@ func TestSignInErr(t *testing.T) {
 			"foo@bar.buz",
 			"testpass",
 		)
-		session, err := debug.Help.SignIn("", "wronpass")
-		require.Nil(t, session)
-		verifyError(t, "InvalidInput", err)
+		debug.Help.ERR.SignIn(errors.ErrInvalidInput, "", "wronpass")
 
 		ensureNoSession(t, debug, user)
 	})
@@ -101,9 +96,7 @@ func TestSignInErr(t *testing.T) {
 			"foo@bar.buz",
 			"testpass",
 		)
-		session, err := debug.Help.SignIn("foo@bar.buz", "")
-		require.Nil(t, session)
-		verifyError(t, "InvalidInput", err)
+		debug.Help.ERR.SignIn(errors.ErrInvalidInput, "foo@bar.buz", "")
 
 		ensureNoSession(t, debug, user)
 	})

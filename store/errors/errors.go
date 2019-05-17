@@ -25,8 +25,8 @@ type Error struct {
 	err     error
 }
 
-// filterCode turns unknown error codes to empty strings
-func filterCode(code Code) string {
+// FilterCode turns unknown error codes to empty strings
+func FilterCode(code Code) string {
 	switch code {
 	case ErrUnauthorized:
 		return string(code)
@@ -41,7 +41,7 @@ func filterCode(code Code) string {
 // New creates a new store error
 func New(code Code, message string) Error {
 	return Error{
-		Code:    filterCode(code),
+		Code:    FilterCode(code),
 		Message: message,
 	}
 }
@@ -49,7 +49,7 @@ func New(code Code, message string) Error {
 // Newf creates a new store error
 func Newf(code Code, format string, v ...interface{}) Error {
 	return Error{
-		Code:    filterCode(code),
+		Code:    FilterCode(code),
 		Message: fmt.Sprintf(format, v...),
 	}
 }
@@ -57,7 +57,7 @@ func Newf(code Code, format string, v ...interface{}) Error {
 // Wrap wraps an error into a new store error
 func Wrap(code Code, err error) Error {
 	return Error{
-		Code:    filterCode(code),
+		Code:    FilterCode(code),
 		Message: err.Error(),
 	}
 }

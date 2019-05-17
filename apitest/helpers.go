@@ -3,21 +3,9 @@ package apitest
 import (
 	"testing"
 
-	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/stretchr/testify/require"
 )
-
-// verifyError helps verifying an API error
-func verifyError(
-	t *testing.T,
-	expectedCode string,
-	err *graph.ResponseError,
-) {
-	require.NotNil(t, err)
-	require.Equal(t, expectedCode, err.Code)
-	require.True(t, len(err.Message) > 0)
-}
 
 func compareUsers(
 	t *testing.T,

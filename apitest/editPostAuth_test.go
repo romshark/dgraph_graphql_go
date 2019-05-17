@@ -5,7 +5,7 @@ import (
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
-	"github.com/stretchr/testify/require"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // TestEditPostAuth tests post editing authorization
@@ -44,14 +44,13 @@ func TestEditPostAuth(t *testing.T) {
 
 		newTitle := "new test post"
 		newContents := "new test content"
-		post, err := ts.Guest().Help.EditPost(
+		ts.Guest().Help.ERR.EditPost(
+			errors.ErrUnauthorized,
 			*post.ID,
 			*author.ID,
 			&newTitle,
 			&newContents,
 		)
-		require.Nil(t, post)
-		verifyError(t, "Unauthorized", err)
 	})
 
 	// Test editing posts on behalf of other users
@@ -63,14 +62,13 @@ func TestEditPostAuth(t *testing.T) {
 
 		newTitle := "new test post"
 		newContents := "new test content"
-		post, err := authorClt.Help.EditPost(
+		authorClt.Help.ERR.EditPost(
+			errors.ErrUnauthorized,
 			*post.ID,
 			*other.ID, // Different editor ID
 			&newTitle,
 			&newContents,
 		)
-		require.Nil(t, post)
-		verifyError(t, "Unauthorized", err)
 	})
 
 	// Test editing posts of other users
@@ -83,13 +81,12 @@ func TestEditPostAuth(t *testing.T) {
 
 		newTitle := "new test post"
 		newContents := "new test content"
-		post, err := otherClt.Help.EditPost(
+		otherClt.Help.ERR.EditPost(
+			errors.ErrUnauthorized,
 			*post.ID, // Someone else's post
 			*other.ID,
 			&newTitle,
 			&newContents,
 		)
-		require.Nil(t, post)
-		verifyError(t, "Unauthorized", err)
 	})
 }

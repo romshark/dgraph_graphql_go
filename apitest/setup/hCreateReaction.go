@@ -3,26 +3,26 @@ package setup
 import (
 	"time"
 
-	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/enum/emotion"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 	"github.com/stretchr/testify/require"
 )
 
 func (h Helper) createReaction(
-	assumedSuccess successAssumption,
+	expectedErrorCode errors.Code,
 	author store.ID,
 	subject store.ID,
 	emotion emotion.Emotion,
 	message string,
-) (*gqlmod.Reaction, *graph.ResponseError) {
+) *gqlmod.Reaction {
 	t := h.c.t
 
 	var result struct {
 		CreateReaction *gqlmod.Reaction `json:"createReaction"`
 	}
-	err := h.c.QueryVar(
+	checkErr(t, expectedErrorCode, h.c.QueryVar(
 		`mutation (
 			$author: Identifier!
 			$subject: Identifier!
@@ -48,10 +48,10 @@ func (h Helper) createReaction(
 			"message": message,
 		},
 		&result,
-	)
+	))
 
-	if err := checkErr(t, assumedSuccess, err); err != nil {
-		return nil, err
+	if expectedErrorCode != "" {
+		return nil
 	}
 
 	require.NotNil(t, result.CreateReaction)
@@ -65,23 +65,7 @@ func (h Helper) createReaction(
 		h.creationTimeTollerance,
 	)
 
-	return result.CreateReaction, nil
-}
-
-// CreateReaction helps creating a reaction
-func (h Helper) CreateReaction(
-	author store.ID,
-	subject store.ID,
-	emotion emotion.Emotion,
-	message string,
-) (*gqlmod.Reaction, *graph.ResponseError) {
-	return h.createReaction(
-		potentialFailure,
-		author,
-		subject,
-		emotion,
-		message,
-	)
+	return result.CreateReaction
 }
 
 // CreateReaction helps creating a reaction and assumes success
@@ -91,12 +75,29 @@ func (ok AssumeSuccess) CreateReaction(
 	emotion emotion.Emotion,
 	message string,
 ) *gqlmod.Reaction {
-	result, _ := ok.h.createReaction(
-		success,
+	return ok.h.createReaction(
+		"",
 		author,
 		subject,
 		emotion,
 		message,
 	)
-	return result
+}
+
+// CreateReaction helps creating a reaction
+func (notOk AssumeFailure) CreateReaction(
+	expectedErrorCode errors.Code,
+	author store.ID,
+	subject store.ID,
+	emotion emotion.Emotion,
+	message string,
+) {
+	notOk.checkErrCode(expectedErrorCode)
+	notOk.h.createReaction(
+		expectedErrorCode,
+		author,
+		subject,
+		emotion,
+		message,
+	)
 }
