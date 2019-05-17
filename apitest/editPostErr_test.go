@@ -95,8 +95,8 @@ func TestEditPostErr(t *testing.T) {
 		defer ts.Teardown()
 
 		res, err := debug.Help.EditPost(
+			store.NewID(), // Inexistent post
 			*post.ID,
-			store.NewID(),
 			post.Title,
 			post.Contents,
 		)
@@ -111,7 +111,7 @@ func TestEditPostErr(t *testing.T) {
 
 		res, err := debug.Help.EditPost(
 			*post.ID,
-			store.NewID(),
+			store.NewID(), // Inexistent editor
 			post.Title,
 			post.Contents,
 		)
