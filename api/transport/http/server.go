@@ -137,6 +137,18 @@ func (t *Server) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 				http.StatusNotFound,
 			)
 		}
+	case "GET":
+		switch req.URL.Path {
+		case "/playground":
+			t.servePlayground(resp, req)
+		default:
+			// Unsupported path
+			http.Error(
+				resp,
+				http.StatusText(http.StatusNotFound),
+				http.StatusNotFound,
+			)
+		}
 	default:
 		http.Error(resp, "unsupported method", http.StatusMethodNotAllowed)
 	}

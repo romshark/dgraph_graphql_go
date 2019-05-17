@@ -53,8 +53,9 @@ func main() {
 
 	// Use HTTP as transport
 	transportHTTP, err := thttp.NewServer(thttp.ServerOptions{
-		Host: *host,
-		TLS:  tlsConf,
+		Host:       *host,
+		TLS:        tlsConf,
+		Playground: true,
 	})
 	if err != nil {
 		log.Fatalf("API server HTTP(S) transport init: %s", err)

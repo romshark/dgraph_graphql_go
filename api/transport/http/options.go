@@ -18,6 +18,7 @@ type ServerOptions struct {
 	Host              string
 	KeepAliveDuration time.Duration
 	TLS               *ServerTLS
+	Playground        bool
 }
 
 // SetDefaults sets the default options
