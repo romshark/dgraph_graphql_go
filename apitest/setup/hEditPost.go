@@ -19,7 +19,7 @@ func (h Helper) editPost(
 	var old struct {
 		Post *gqlmod.Post `json:"post"`
 	}
-	err := h.ts.Debug().QueryVar(
+	require.NoError(t, h.ts.Debug().QueryVar(
 		`query($postId: Identifier!) {
 			post(id: $postId) {
 				id
@@ -35,14 +35,12 @@ func (h Helper) editPost(
 			"postId": string(postID),
 		},
 		&old,
-	)
-	require.NoError(t, err)
-	require.NotNil(t, old.Post)
+	))
 
 	var result struct {
 		EditPost *gqlmod.Post `json:"editPost"`
 	}
-	err = h.c.QueryVar(
+	err := h.c.QueryVar(
 		`mutation (
 			$post: Identifier!
 			$editor: Identifier!
@@ -78,11 +76,21 @@ func (h Helper) editPost(
 	}
 
 	require.NotNil(t, result.EditPost)
-	require.Equal(t, *old.Post.ID, *result.EditPost.ID)
-	require.Equal(t, *newTitle, *result.EditPost.Title)
-	require.Equal(t, *newContents, *result.EditPost.Contents)
-	require.Equal(t, *old.Post.Author.ID, *result.EditPost.Author.ID)
-	require.Equal(t, *old.Post.Creation, *result.EditPost.Creation)
+	if old.Post != nil {
+		require.Equal(t, *old.Post.ID, *result.EditPost.ID)
+		if newTitle != nil {
+			require.Equal(t, *newTitle, *result.EditPost.Title)
+		} else {
+			require.Equal(t, *old.Post.Title, *result.EditPost.Title)
+		}
+		if newContents != nil {
+			require.Equal(t, *newContents, *result.EditPost.Contents)
+		} else {
+			require.Equal(t, *old.Post.Contents, *result.EditPost.Contents)
+		}
+		require.Equal(t, *old.Post.Author.ID, *result.EditPost.Author.ID)
+		require.Equal(t, *old.Post.Creation, *result.EditPost.Creation)
+	}
 
 	return result.EditPost, nil
 }
