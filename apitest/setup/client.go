@@ -61,6 +61,7 @@ func (ts *TestSetup) Guest() *Client {
 
 	// Initialize helper
 	clt.Help = Helper{
+		ts:                     ts,
 		c:                      clt,
 		creationTimeTollerance: time.Second * 3,
 	}

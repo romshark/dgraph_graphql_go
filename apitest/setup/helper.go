@@ -14,6 +14,7 @@ const (
 
 // Helper represents a test helper
 type Helper struct {
+	ts                     *TestSetup
 	c                      *Client
 	creationTimeTollerance time.Duration
 	OK                     AssumeSuccess

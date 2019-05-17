@@ -19,7 +19,7 @@ func (h Helper) editPost(
 	var old struct {
 		Post *gqlmod.Post `json:"post"`
 	}
-	err := h.c.QueryVar(
+	err := h.ts.Debug().QueryVar(
 		`query($postId: Identifier!) {
 			post(id: $postId) {
 				id
