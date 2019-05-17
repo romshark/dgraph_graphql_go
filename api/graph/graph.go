@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/romshark/dgraph_graphql_go/api/graph/validator"
-
 	"github.com/graph-gophers/graphql-go"
 	"github.com/pkg/errors"
 	rsv "github.com/romshark/dgraph_graphql_go/api/graph/resolver"
 	"github.com/romshark/dgraph_graphql_go/api/passhash"
 	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
+	"github.com/romshark/dgraph_graphql_go/api/validator"
 	"github.com/romshark/dgraph_graphql_go/store"
 )
 

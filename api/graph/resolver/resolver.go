@@ -3,11 +3,10 @@ package resolver
 import (
 	"context"
 
-	"github.com/romshark/dgraph_graphql_go/api/graph/validator"
-
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/passhash"
 	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
+	"github.com/romshark/dgraph_graphql_go/api/validator"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )

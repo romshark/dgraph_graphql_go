@@ -7,8 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
-	"github.com/romshark/dgraph_graphql_go/api/graph/validator"
 	"github.com/romshark/dgraph_graphql_go/api/transport"
+	"github.com/romshark/dgraph_graphql_go/api/validator"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"github.com/romshark/dgraph_graphql_go/store/dgraph"
 )
