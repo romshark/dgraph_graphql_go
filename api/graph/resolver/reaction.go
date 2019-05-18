@@ -39,31 +39,29 @@ func (rsv *Reaction) Creation() graphql.Time {
 // Subject resolves Reaction.subject
 func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 	var query struct {
-		Reactions []dgraph.Reaction `json:"reactions"`
+		Subject []dgraph.ReactionSubject `json:"subject"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
 		`query ReactionSubject($nodeId: string) {
-			reaction(func: uid($nodeId)) {
-				Reaction.subject {
+			subject(func: uid($nodeId)) {
+				uid
+
+				Post.id
+				Post.creation
+				Post.author {
 					uid
-
-					Post.id
-					Post.creation
-					Post.author {
-						uid
-					}
-					Post.title
-					Post.contents
-
-					Reaction.id
-					Reaction.creation
-					Reaction.author {
-						uid
-					}
-					Reaction.message
-					Reaction.emotion
 				}
+				Post.title
+				Post.contents
+
+				Reaction.id
+				Reaction.creation
+				Reaction.author {
+					uid
+				}
+				Reaction.message
+				Reaction.emotion
 			}
 		}`,
 		map[string]string{
@@ -75,7 +73,7 @@ func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 		return nil, err
 	}
 
-	subject := query.Reactions[0].Subject[0]
+	subject := query.Subject[0]
 
 	switch v := subject.V.(type) {
 	case *dgraph.Post:
@@ -111,19 +109,17 @@ func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 // Author resolves Reaction.author
 func (rsv *Reaction) Author(ctx context.Context) (*User, error) {
 	var query struct {
-		Reaction []dgraph.Reaction `json:"reaction"`
+		Author []dgraph.User `json:"author"`
 	}
 	if err := rsv.root.str.QueryVars(
 		ctx,
-		`query Author($nodeId: string) {
-			reaction(func: uid($nodeId)) {
-				Reaction.author {
-					uid
-					User.id
-					User.creation
-					User.email
-					User.displayName
-				}
+		`query ReactionAuthor($nodeId: string) {
+			author(func: uid($nodeId)) {
+				uid
+				User.id
+				User.creation
+				User.email
+				User.displayName
 			}
 		}`,
 		map[string]string{
@@ -135,7 +131,7 @@ func (rsv *Reaction) Author(ctx context.Context) (*User, error) {
 		return nil, err
 	}
 
-	author := query.Reaction[0].Author[0]
+	author := query.Author[0]
 	return &User{
 		root:        rsv.root,
 		uid:         author.UID,
