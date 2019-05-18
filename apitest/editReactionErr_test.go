@@ -42,16 +42,8 @@ func TestEditReactionErr(t *testing.T) {
 
 	t.Run("invalidMessage", func(t *testing.T) {
 		invalidMessages := map[string]string{
-			"empty": "",
-			"tooLong": "11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"2",
+			"empty":   "",
+			"tooLong": randomString(257, nil),
 		}
 
 		for tName, invalidMessage := range invalidMessages {

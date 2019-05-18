@@ -37,9 +37,7 @@ func TestEditPostErr(t *testing.T) {
 		invalidTitles := map[string]string{
 			"empty":    "",
 			"tooShort": "f",
-			"tooLong": "11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"2",
+			"tooLong":  randomString(65, nil),
 		}
 
 		for tName, invalidTitle := range invalidTitles {
@@ -60,16 +58,8 @@ func TestEditPostErr(t *testing.T) {
 
 	t.Run("invalidContents", func(t *testing.T) {
 		invalidContents := map[string]string{
-			"empty": "",
-			"tooLong": "11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"2",
+			"empty":   "",
+			"tooLong": randomString(257, nil),
 		}
 
 		for tName, invalidContent := range invalidContents {

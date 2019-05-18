@@ -31,10 +31,7 @@ func TestEditUserErr(t *testing.T) {
 		invalidEmails := map[string]string{
 			"empty":   "",
 			"invalid": "fooooo@baaaaaar",
-			"tooLong": "11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"2",
+			"tooLong": randomString(97, nil),
 		}
 
 		for tName, invalidEmail := range invalidEmails {
@@ -57,15 +54,7 @@ func TestEditUserErr(t *testing.T) {
 		invalidPasswords := map[string]string{
 			"empty":    "",
 			"tooShort": "12345",
-			"tooLong": "11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"2",
+			"tooLong":  randomString(257, nil),
 		}
 
 		for tName, invalidPassword := range invalidPasswords {

@@ -1,11 +1,28 @@
 package apitest
 
 import (
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func randomString(length int, runes []rune) string {
+	if runes == nil {
+		runes = []rune("a")
+	}
+	b := make([]rune, length)
+	for i := range b {
+		b[i] = runes[rand.Intn(len(runes))]
+	}
+	return string(b)
+}
 
 func compareUsers(
 	t *testing.T,

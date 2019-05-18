@@ -46,9 +46,7 @@ func TestCreateUserErr(t *testing.T) {
 		invalidDisplayNames := map[string]string{
 			"empty":    "",
 			"tooShort": "t",
-			"tooLong": "11111111000000001111111100000000" +
-				"11111111000000001111111100000000" +
-				"2",
+			"tooLong":  randomString(65, nil),
 		}
 
 		for tName, invalidDisplayName := range invalidDisplayNames {
