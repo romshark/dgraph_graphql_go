@@ -53,6 +53,12 @@ type Mutation {
 		newEmail: String
 		newPassword: String
 	): User!
+
+	editReaction(
+		reaction: Identifier!
+		editor: Identifier!
+		newMessage: String!
+	): Reaction!
 }
 
 type Session {

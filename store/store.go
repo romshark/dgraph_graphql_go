@@ -83,6 +83,19 @@ type MutableStore interface {
 		},
 		err error,
 	)
+
+	EditReaction(
+		ctx context.Context,
+		reaction ID,
+		editor ID,
+		newMessage string,
+	) (
+		result Reaction,
+		changes struct {
+			Message bool
+		},
+		err error,
+	)
 }
 
 // Store interfaces a store implementation
