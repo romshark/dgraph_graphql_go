@@ -16,7 +16,7 @@ type Query {
 }
 
 type Mutation {
-	signIn(
+	createSession(
 		email: String!
 		password: String!
 	): Session!

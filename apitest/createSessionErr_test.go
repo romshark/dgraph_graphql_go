@@ -4,14 +4,13 @@ import (
 	"testing"
 
 	"github.com/romshark/dgraph_graphql_go/api/graph/gqlmod"
-	"github.com/romshark/dgraph_graphql_go/store/errors"
-
 	"github.com/romshark/dgraph_graphql_go/apitest/setup"
+	"github.com/romshark/dgraph_graphql_go/store/errors"
 	"github.com/stretchr/testify/require"
 )
 
-// TestSignInErr tests all possible sign in errors
-func TestSignInErr(t *testing.T) {
+// TestCreateSessionErr tests all possible sign in errors
+func TestCreateSessionErr(t *testing.T) {
 	ensureNoSession := func(
 		t *testing.T,
 		debug *setup.Client,
@@ -48,7 +47,11 @@ func TestSignInErr(t *testing.T) {
 			"foo@bar.buz",
 			"testpass",
 		)
-		debug.Help.ERR.SignIn(errors.ErrWrongCreds, "foo@fooo.foo", "testpass")
+		debug.Help.ERR.CreateSession(
+			errors.ErrWrongCreds,
+			"foo@fooo.foo",
+			"testpass",
+		)
 
 		ensureNoSession(t, debug, user)
 	})
@@ -64,7 +67,11 @@ func TestSignInErr(t *testing.T) {
 			"foo@bar.buz",
 			"testpass",
 		)
-		debug.Help.ERR.SignIn(errors.ErrWrongCreds, "foo@bar.buz", "wronpass")
+		debug.Help.ERR.CreateSession(
+			errors.ErrWrongCreds,
+			"foo@bar.buz",
+			"wronpass",
+		)
 
 		ensureNoSession(t, debug, user)
 	})
@@ -80,7 +87,7 @@ func TestSignInErr(t *testing.T) {
 			"foo@bar.buz",
 			"testpass",
 		)
-		debug.Help.ERR.SignIn(errors.ErrInvalidInput, "", "wronpass")
+		debug.Help.ERR.CreateSession(errors.ErrInvalidInput, "", "wronpass")
 
 		ensureNoSession(t, debug, user)
 	})
@@ -96,7 +103,7 @@ func TestSignInErr(t *testing.T) {
 			"foo@bar.buz",
 			"testpass",
 		)
-		debug.Help.ERR.SignIn(errors.ErrInvalidInput, "foo@bar.buz", "")
+		debug.Help.ERR.CreateSession(errors.ErrInvalidInput, "foo@bar.buz", "")
 
 		ensureNoSession(t, debug, user)
 	})

@@ -30,10 +30,14 @@ func TestEditUser(t *testing.T) {
 		)
 
 		// Test signing in using the old email
-		ts.Guest().Help.ERR.SignIn(errors.ErrWrongCreds, oldEmail, password)
+		ts.Guest().Help.ERR.CreateSession(
+			errors.ErrWrongCreds,
+			oldEmail,
+			password,
+		)
 
 		// Test signing in using the new email
-		ts.Guest().Help.OK.SignIn(newEmail, password)
+		ts.Guest().Help.OK.CreateSession(newEmail, password)
 	})
 
 	t.Run("password", func(t *testing.T) {
@@ -58,9 +62,13 @@ func TestEditUser(t *testing.T) {
 		)
 
 		// Test signing in using the old password
-		ts.Guest().Help.ERR.SignIn(errors.ErrWrongCreds, email, oldPassword)
+		ts.Guest().Help.ERR.CreateSession(
+			errors.ErrWrongCreds,
+			email,
+			oldPassword,
+		)
 
 		// Test signing in using the new password
-		ts.Guest().Help.OK.SignIn(email, newPassword)
+		ts.Guest().Help.OK.CreateSession(email, newPassword)
 	})
 }

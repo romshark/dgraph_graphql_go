@@ -8,8 +8,8 @@ import (
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
-// SignIn resolves Mutation.signIn
-func (rsv *Resolver) SignIn(
+// CreateSession resolves Mutation.createSession
+func (rsv *Resolver) CreateSession(
 	ctx context.Context,
 	params struct {
 		Email    string

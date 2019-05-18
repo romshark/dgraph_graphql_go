@@ -131,14 +131,14 @@ func (c *Client) QueryVar(
 // Auth implements the transport.Client interface
 func (c *Client) Auth(email, password string) (*gqlmod.Session, error) {
 	var result struct {
-		SignIn gqlmod.Session `json:"signIn"`
+		CreateSession gqlmod.Session `json:"createSession"`
 	}
 	if err := c.QueryVar(
 		`mutation(
 			$email: String!
 			$password: String!
 		) {
-			signIn(
+			createSession(
 				email: $email
 				password: $password
 			) {
@@ -158,9 +158,9 @@ func (c *Client) Auth(email, password string) (*gqlmod.Session, error) {
 		return nil, err
 	}
 
-	c.sessionKey = *result.SignIn.Key
+	c.sessionKey = *result.CreateSession.Key
 
-	return &result.SignIn, nil
+	return &result.CreateSession, nil
 }
 
 // AuthDebug implements the transport.Client interface
