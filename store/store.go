@@ -20,6 +20,22 @@ type MutableStore interface {
 		err error,
 	)
 
+	CloseSession(
+		ctx context.Context,
+		key string,
+	) (
+		result bool,
+		err error,
+	)
+
+	CloseAllSessions(
+		ctx context.Context,
+		user ID,
+	) (
+		result []string,
+		err error,
+	)
+
 	CreatePost(
 		ctx context.Context,
 		creationTime time.Time,

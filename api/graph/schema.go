@@ -21,6 +21,20 @@ type Mutation {
 		password: String!
 	): Session!
 
+	# authenticate signs the client into the
+	# session identified by the given key
+	authenticate(
+		sessionKey: String!
+	): Session!
+
+	closeSession(
+		key: String!
+	): Boolean!
+
+	closeAllSessions(
+		user: Identifier!
+	): [String!]!
+
 	createUser(
 		email: String!
 		displayName: String!

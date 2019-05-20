@@ -8,10 +8,14 @@ import (
 // Run and Init are not intended to be thread-safe and shall only be used
 // by a single goroutine!
 type Client interface {
-	Auth(email, password string) (*gqlmod.Session, error)
+	// SignIn signs the client into a user
+	SignIn(email, password string) (*gqlmod.Session, error)
 
-	// Authenticates as debug user
-	AuthDebug(username, password string) error
+	// SignInDebug signs the client into a debug user
+	SignInDebug(username, password string) error
+
+	// Auth authenticates the client by a user session key
+	Auth(sessionKey string) (*gqlmod.Session, error)
 
 	// Query performs an API query
 	Query(query string, result interface{}) error

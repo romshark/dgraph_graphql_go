@@ -18,7 +18,7 @@ func (str *impl) setupSchema(ctx context.Context) error {
 		Schema: `
 			users: uid .
 			posts: uid .
-			sessions: uid .
+			sessions: uid @reverse .
 
 			Session.key: string @index(exact) .
 			Session.creation: dateTime .

@@ -83,7 +83,7 @@ func (ts *TestSetup) Debug() *Client {
 	clt := ts.Guest()
 
 	// Sign in as debug user
-	require.NoError(ts.t, clt.apiClient.AuthDebug(
+	require.NoError(ts.t, clt.apiClient.SignInDebug(
 		ts.debugUsername,
 		ts.debugPassword,
 	))
@@ -98,7 +98,7 @@ func (ts *TestSetup) Client(
 ) (*Client, *gqlmod.Session) {
 	clt := ts.Guest()
 
-	sess, err := clt.apiClient.Auth(email, password)
+	sess, err := clt.apiClient.SignIn(email, password)
 	require.Nil(ts.t, err)
 
 	return clt, sess

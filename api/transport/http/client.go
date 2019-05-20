@@ -128,8 +128,8 @@ func (c *Client) QueryVar(
 	return nil
 }
 
-// Auth implements the transport.Client interface
-func (c *Client) Auth(email, password string) (*gqlmod.Session, error) {
+// SignIn implements the transport.Client interface
+func (c *Client) SignIn(email, password string) (*gqlmod.Session, error) {
 	var result struct {
 		CreateSession gqlmod.Session `json:"createSession"`
 	}
@@ -163,8 +163,8 @@ func (c *Client) Auth(email, password string) (*gqlmod.Session, error) {
 	return &result.CreateSession, nil
 }
 
-// AuthDebug implements the transport.Client interface
-func (c *Client) AuthDebug(username, password string) error {
+// SignInDebug implements the transport.Client interface
+func (c *Client) SignInDebug(username, password string) error {
 	// Sign in as debug
 	// Initialize request
 	u := c.host
@@ -204,4 +204,34 @@ func (c *Client) AuthDebug(username, password string) error {
 	c.sessionKey = string(debugSessionKey)
 
 	return nil
+}
+
+// Auth implements the transport.Client interface
+func (c *Client) Auth(sessionKey string) (*gqlmod.Session, error) {
+	var result struct {
+		Authenticate gqlmod.Session `json:"authenticate"`
+	}
+	if err := c.QueryVar(
+		`mutation(
+			$sessionKey: String!
+		) {
+			authenticate(sessionKey: $sessionKey) {
+				key
+				creation
+				user {
+					id
+				}
+			}
+		}`,
+		map[string]interface{}{
+			"sessionKey": sessionKey,
+		},
+		&result,
+	); err != nil {
+		return nil, err
+	}
+
+	c.sessionKey = *result.Authenticate.Key
+
+	return &result.Authenticate, nil
 }
