@@ -11,7 +11,8 @@ import (
 
 // stats represents the global statistics recorder the setups must use
 var stats = setup.NewStatisticsRecorder()
-var dbHost = flag.String("dbhost", "localhost:9080", "database host address")
+var dbHost = flag.String("dbhost", "localhost:10180", "database host address")
+var srvHost = flag.String("host", "localhost:8080", "API server host address")
 
 var tcx setup.TestContext
 
@@ -20,6 +21,7 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 	tcx.Stats = stats
 	tcx.DBHost = *dbHost
+	tcx.SrvHost = *srvHost
 
 	// Run the tests
 	exitCode := m.Run()

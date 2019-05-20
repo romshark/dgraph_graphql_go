@@ -12,8 +12,9 @@ import (
 
 // TestContext represents a test context
 type TestContext struct {
-	Stats  *StatisticsRecorder
-	DBHost string
+	Stats   *StatisticsRecorder
+	DBHost  string
+	SrvHost string
 }
 
 // TestSetup represents the ArangoDB-based setup of an individual test
@@ -38,7 +39,10 @@ func New(t *testing.T, context TestContext) *TestSetup {
 	debugUsername := "test"
 	debugPassword := "test"
 
-	serverTransport, err := thttp.NewServer(thttp.ServerOptions{})
+	serverTransport, err := thttp.NewServer(thttp.ServerOptions{
+		Host:       context.SrvHost,
+		Playground: false,
+	})
 	if err != nil {
 		t.Fatalf("API server transport init: %s", err)
 	}
