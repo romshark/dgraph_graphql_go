@@ -1,5 +1,11 @@
 language: go
 
+services:
+  - docker
+
+env:
+  - DOCKER_COMPOSE_VERSION=1.24.0
+
 go:
   - master
   - "1.12"
@@ -13,6 +19,13 @@ matrix:
 
 notifications:
   email: true
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - docker-compose up -d zero server
 
 before_script:
   - GO_FILES=$(find . -iname '*.go' -type f | grep -v /vendor/) # All the .go files, excluding vendor/
@@ -35,3 +48,6 @@ script:
 
   # one last linter
   - golint -set_exit_status $(go list ./...)
+
+  # Run API tests
+  - go test -v -race ./apitest/... -host "localhost:8090" -dbhost "localhost:10180"
