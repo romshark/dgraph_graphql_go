@@ -16,7 +16,6 @@ type Server struct {
 	addrReadWait *sync.WaitGroup
 	opts         ServerOptions
 	httpSrv      *http.Server
-	tls          *ServerTLS
 	addr         net.Addr
 	onGraphQuery trn.OnGraphQuery
 	onAuth       trn.OnAuth
@@ -171,7 +170,7 @@ func (t *Server) Options() ServerOptions {
 	return ServerOptions{
 		Host:              t.opts.Host,
 		KeepAliveDuration: t.opts.KeepAliveDuration,
-		TLS:               t.tls.Clone(),
+		TLS:               t.opts.TLS.Clone(),
 		Playground:        t.opts.Playground,
 	}
 }

@@ -17,12 +17,12 @@ var host = flag.String("host", "localhost:16000", "API server host address")
 var dbHost = flag.String("dbhost", "localhost:9080", "database host address")
 var argCertFilePath = flag.String(
 	"tlscert",
-	"",
+	"./demo.crt",
 	"path to the TLS certificate file",
 )
 var argPrivateKeyFile = flag.String(
 	"tlskey",
-	"",
+	"./demo.key",
 	"path to the TLS private-key file",
 )
 
@@ -41,9 +41,9 @@ func main() {
 				},
 				PreferServerCipherSuites: true,
 				CipherSuites: []uint16{
-					tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 					tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_AES_128_GCM_SHA256,
 				},
 			},
 			CertificateFilePath: *argCertFilePath,
@@ -62,7 +62,7 @@ func main() {
 	}
 
 	api, err := api.NewServer(api.ServerOptions{
-		Mode:                api.ModeProduction,
+		Mode:                api.ModeBeta,
 		Host:                *host,
 		DBHost:              *dbHost,                 // database host address
 		SessionKeyGenerator: sesskeygen.NewDefault(), // session key generator
