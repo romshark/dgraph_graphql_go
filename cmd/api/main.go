@@ -62,6 +62,7 @@ func main() {
 	}
 
 	api, err := api.NewServer(api.ServerOptions{
+		Mode:                api.ModeProduction,
 		Host:                *host,
 		DBHost:              *dbHost,                 // database host address
 		SessionKeyGenerator: sesskeygen.NewDefault(), // session key generator

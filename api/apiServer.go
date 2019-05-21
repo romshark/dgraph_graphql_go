@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 
@@ -38,22 +39,30 @@ type server struct {
 
 // NewServer creates a new API server instance
 func NewServer(opts ServerOptions) (Server, error) {
-	opts.SetDefaults()
+	if err := opts.Prepare(); err != nil {
+		return nil, fmt.Errorf("options: %s", err)
+	}
 
 	// Initialize validator
-	validator := validator.NewValidator(validator.Options{
-		PasswordLenMin:        6,
-		PasswordLenMax:        256,
-		EmailLenMax:           96,
-		PostContentsLenMin:    1,
-		PostContentsLenMax:    256,
-		PostTitleLenMin:       2,
-		PostTitleLenMax:       64,
-		ReactionMessageLenMin: 1,
-		ReactionMessageLenMax: 256,
-		UserDisplayNameLenMin: 2,
-		UserDisplayNameLenMax: 64,
-	})
+	validator, err := validator.NewValidator(
+		opts.Mode == ModeProduction,
+		validator.Options{
+			PasswordLenMin:        6,
+			PasswordLenMax:        256,
+			EmailLenMax:           96,
+			PostContentsLenMin:    1,
+			PostContentsLenMax:    256,
+			PostTitleLenMin:       2,
+			PostTitleLenMax:       64,
+			ReactionMessageLenMin: 1,
+			ReactionMessageLenMax: 256,
+			UserDisplayNameLenMin: 2,
+			UserDisplayNameLenMax: 64,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("validator init: %s", err)
+	}
 
 	// Initialize store instance
 	store := dgraph.NewStore(

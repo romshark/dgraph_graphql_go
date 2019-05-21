@@ -48,6 +48,7 @@ func New(t *testing.T, context TestContext) *TestSetup {
 	}
 
 	srvOpts := api.ServerOptions{
+		Mode:   api.ModeDebug,
 		DBHost: context.DBHost,
 		DebugUser: api.DebugUserOptions{
 			// Enable the debug user in read-write mode

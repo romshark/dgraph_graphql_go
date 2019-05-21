@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -54,14 +55,21 @@ type validator struct {
 }
 
 // NewValidator creates a new validator instance
-func NewValidator(opts Options) Validator {
+func NewValidator(productionModeEnabled bool, opts Options) (Validator, error) {
 	regexpEmail, err := regexp.Compile("^.+@.+\\..+$")
 	if err != nil {
 		panic(errors.Wrap(err, "compile regexpEmail"))
 	}
 
+	if productionModeEnabled && opts.PasswordLenMin < 6 {
+		return nil, fmt.Errorf(
+			"minimum password length must be 6 in production mode, was: %d",
+			opts.PasswordLenMin,
+		)
+	}
+
 	return &validator{
 		opts:        opts,
 		regexpEmail: regexpEmail,
-	}
+	}, nil
 }

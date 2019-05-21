@@ -27,7 +27,7 @@ type Server struct {
 // NewServer creates a new unencrypted JSON based HTTP transport.
 // Use NewSecure to enable encryption instead
 func NewServer(opts ServerOptions) (trn.Server, error) {
-	if err := opts.SetDefaults(); err != nil {
+	if err := opts.Prepare(); err != nil {
 		return nil, err
 	}
 
@@ -163,5 +163,15 @@ func (t *Server) Addr() url.URL {
 		Scheme: "http",
 		Host:   hostAddrStr,
 		Path:   "/",
+	}
+}
+
+// Options returns the active configuration
+func (t *Server) Options() ServerOptions {
+	return ServerOptions{
+		Host:              t.opts.Host,
+		KeepAliveDuration: t.opts.KeepAliveDuration,
+		TLS:               t.tls.Clone(),
+		Playground:        t.opts.Playground,
 	}
 }

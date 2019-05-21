@@ -13,6 +13,18 @@ type ServerTLS struct {
 	PrivateKeyFilePath  string
 }
 
+// Clone creates an exact detached copy of the server TLS options
+func (stls *ServerTLS) Clone() *ServerTLS {
+	if stls == nil {
+		return nil
+	}
+	return &ServerTLS{
+		Config:              stls.Config.Clone(),
+		CertificateFilePath: stls.CertificateFilePath,
+		PrivateKeyFilePath:  stls.PrivateKeyFilePath,
+	}
+}
+
 // ServerOptions defines the HTTP server transport layer options
 type ServerOptions struct {
 	Host              string
@@ -21,8 +33,8 @@ type ServerOptions struct {
 	Playground        bool
 }
 
-// SetDefaults sets the default options
-func (opts *ServerOptions) SetDefaults() error {
+// Prepare sets defaults and validates the options
+func (opts *ServerOptions) Prepare() error {
 	if opts.KeepAliveDuration == time.Duration(0) {
 		opts.KeepAliveDuration = 3 * time.Minute
 	}
