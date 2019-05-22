@@ -182,6 +182,10 @@ func (rsv *Reaction) Reactions(ctx context.Context) ([]*Reaction, error) {
 		return nil, err
 	}
 
+	if len(query.Reaction) < 1 {
+		return nil, nil
+	}
+
 	resolvers := make([]*Reaction, len(query.Reaction[0].Reactions))
 	for i, subReaction := range query.Reaction[0].Reactions {
 		resolvers[i] = &Reaction{
