@@ -18,7 +18,7 @@ func (rsv *Resolver) CloseAllSessions(
 		Owner: store.ID(params.User),
 	}); err != nil {
 		rsv.error(ctx, err)
-		return []string{}, err
+		return nil, err
 	}
 
 	result, err := rsv.str.CloseAllSessions(
@@ -27,7 +27,7 @@ func (rsv *Resolver) CloseAllSessions(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return []string{}, err
+		return nil, err
 	}
 
 	return result, nil
