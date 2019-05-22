@@ -118,10 +118,6 @@ func (srv *server) logErrf(format string, v ...interface{}) {
 	srv.opts.ErrorLog.Printf(format, v...)
 }
 
-func (srv *server) logErr(v ...interface{}) {
-	srv.opts.ErrorLog.Print(v...)
-}
-
 // Launch implements the Server interface
 func (srv *server) Launch() error {
 	// Prepare the store
