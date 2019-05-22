@@ -1,6 +1,9 @@
 <a href="https://travis-ci.org/romshark/dgraph_graphql_go">
 	<img src="https://travis-ci.org/romshark/dgraph_graphql_go.svg?branch=master" alt="Travis CI: build status">
 </a>
+<a href='https://coveralls.io/github/romshark/dgraph_graphql_go'>
+	<img src='https://coveralls.io/repos/github/romshark/dgraph_graphql_go/badge.svg' alt='Coverage Status' />
+</a>
 <a href="https://goreportcard.com/report/github.com/romshark/dgraph_graphql_go">
 	<img src="https://goreportcard.com/badge/github.com/romshark/dgraph_graphql_go" alt="GoReportCard">
 </a>
