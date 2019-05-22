@@ -42,7 +42,7 @@ func (ok AssumeSuccess) CloseAllSessions(
 	return ok.h.closeAllSessions("", user)
 }
 
-// CloseAllSessions helps closing all sessions of a user
+// CloseAllSessions assumes the given error code to be returned
 func (notOk AssumeFailure) CloseAllSessions(
 	expectedErrorCode errors.Code,
 	user store.ID,

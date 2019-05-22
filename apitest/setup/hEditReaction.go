@@ -120,7 +120,7 @@ func (ok AssumeSuccess) EditReaction(
 	)
 }
 
-// EditReaction helps edit a reaction
+// EditReaction assumes the given error code to be returned
 func (notOk AssumeFailure) EditReaction(
 	expectedErrorCode errors.Code,
 	reactionID store.ID,

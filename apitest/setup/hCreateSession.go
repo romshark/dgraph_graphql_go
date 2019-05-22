@@ -70,7 +70,7 @@ func (ok AssumeSuccess) CreateSession(
 	return ok.h.createSession("", email, password)
 }
 
-// CreateSession helps creating a new session
+// CreateSession assumes the given error code to be returned
 func (notOkay AssumeFailure) CreateSession(
 	expectedErrorCode errors.Code,
 	email string,

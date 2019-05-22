@@ -111,7 +111,7 @@ func (ok AssumeSuccess) EditPost(
 	)
 }
 
-// EditPost helps edit a post
+// EditPost assumes the given error code to be returned
 func (notOk AssumeFailure) EditPost(
 	expectedErrorCode errors.Code,
 	postID store.ID,

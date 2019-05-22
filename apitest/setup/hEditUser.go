@@ -100,7 +100,7 @@ func (ok AssumeSuccess) EditUser(
 	)
 }
 
-// EditUser helps editing a user
+// EditUser assumes the given error code to be returned
 func (notOk AssumeFailure) EditUser(
 	expectedErrorCode errors.Code,
 	userID store.ID,

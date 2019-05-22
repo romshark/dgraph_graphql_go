@@ -84,7 +84,7 @@ func (ok AssumeSuccess) CreateReaction(
 	)
 }
 
-// CreateReaction helps creating a reaction
+// CreateReaction assumes the given error code to be returned
 func (notOk AssumeFailure) CreateReaction(
 	expectedErrorCode errors.Code,
 	author store.ID,

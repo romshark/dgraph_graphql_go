@@ -75,7 +75,7 @@ func (ok AssumeSuccess) CreateUser(
 	return ok.h.createUser("", displayName, email, password)
 }
 
-// CreateUser helps creating a user
+// CreateUser assumes the given error code to be returned
 func (notOkay AssumeFailure) CreateUser(
 	expectedErrorCode errors.Code,
 	displayName,

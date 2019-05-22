@@ -41,7 +41,7 @@ func (ok AssumeSuccess) CloseSession(
 	return ok.h.closeSession("", key)
 }
 
-// CloseSession helps closing a session
+// CloseSession assumes the given error code to be returned
 func (notOk AssumeFailure) CloseSession(
 	expectedErrorCode errors.Code,
 	key string,

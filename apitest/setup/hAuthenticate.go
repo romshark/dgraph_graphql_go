@@ -45,7 +45,7 @@ func (ok AssumeSuccess) Authenticate(
 	return ok.h.authenticate("", sessionKey)
 }
 
-// Authenticate helps closing a session
+// Authenticate assumes the given error code to be returned
 func (notOk AssumeFailure) Authenticate(
 	expectedErrorCode errors.Code,
 	sessionKey string,

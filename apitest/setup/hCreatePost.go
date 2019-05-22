@@ -80,7 +80,7 @@ func (ok AssumeSuccess) CreatePost(
 	return ok.h.createPost("", authorID, title, contents)
 }
 
-// CreatePost helps creating a user
+// CreatePost assumes the given error code to be returned
 func (notOk AssumeFailure) CreatePost(
 	expectedErrorCode errors.Code,
 	authorID store.ID,
