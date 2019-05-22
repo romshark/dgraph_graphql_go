@@ -32,7 +32,14 @@ func TestReactionSubjectUnMarshal(t *testing.T) {
 		var u dgraph.ReactionSubject
 		require.NoError(t, json.Unmarshal(marshedPost, &u))
 		require.IsType(t, &post, u.V)
-		require.Equal(t, post, *u.V.(*dgraph.Post))
+		actual := *u.V.(*dgraph.Post)
+		require.Equal(t, post.ID, actual.ID)
+		require.Equal(t, post.UID, actual.UID)
+		require.Equal(t, post.Title, actual.Title)
+		require.Equal(t, post.Contents, actual.Contents)
+		require.Equal(t, post.Author, actual.Author)
+		require.Equal(t, post.Reactions, actual.Reactions)
+		require.Equal(t, post.Creation.Unix(), actual.Creation.Unix())
 	})
 
 	// Reaction <-> JSON
