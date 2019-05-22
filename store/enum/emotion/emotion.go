@@ -6,10 +6,19 @@ import "github.com/pkg/errors"
 type Emotion string
 
 const (
-	Happy      Emotion = "happy"
-	Angry      Emotion = "angry"
-	Excited    Emotion = "excited"
-	Fearful    Emotion = "fearful"
+	// Happy represents happiness
+	Happy Emotion = "happy"
+
+	// Angry represents anger
+	Angry Emotion = "angry"
+
+	// Excited represents excitement
+	Excited Emotion = "excited"
+
+	// Fearful represents anxiety
+	Fearful Emotion = "fearful"
+
+	// Thoughtful represents thoughtfulness
 	Thoughtful Emotion = "thoughtful"
 )
 
