@@ -22,7 +22,7 @@ type TestContext struct {
 	SrvHost string
 }
 
-// TestSetup represents the ArangoDB-based setup of an individual test
+// TestSetup represents the Dgraph-based server setup of an individual test
 type TestSetup struct {
 	t               *testing.T
 	stats           *StatisticsRecorder
