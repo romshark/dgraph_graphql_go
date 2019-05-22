@@ -56,7 +56,7 @@ func NewStatisticsRecorder() *StatisticsRecorder {
 	return &StatisticsRecorder{
 		lock:   &sync.Mutex{},
 		tests:  make([]*TestStatistics, 0),
-		byName: make(map[string]*TestStatistics, 0),
+		byName: make(map[string]*TestStatistics),
 	}
 }
 

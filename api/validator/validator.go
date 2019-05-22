@@ -56,7 +56,7 @@ type validator struct {
 
 // NewValidator creates a new validator instance
 func NewValidator(productionModeEnabled bool, opts Options) (Validator, error) {
-	regexpEmail, err := regexp.Compile("^.+@.+\\..+$")
+	regexpEmail, err := regexp.Compile(`^.+@.+\..+$`)
 	if err != nil {
 		panic(errors.Wrap(err, "compile regexpEmail"))
 	}

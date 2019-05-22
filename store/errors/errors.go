@@ -22,7 +22,6 @@ const (
 type Error struct {
 	Code    string
 	Message string
-	err     error
 }
 
 // FilterCode turns unknown error codes to empty strings

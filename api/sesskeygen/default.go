@@ -29,7 +29,7 @@ func generateRandomBytes(length uint32) (bytes []byte, err error) {
 func generateSessionKey() string {
 	bytes, err := generateRandomBytes(48)
 	if err != nil {
-		panic(fmt.Errorf("Could not generate a session key"))
+		panic(fmt.Errorf("could not generate a session key"))
 	}
 	return base64.URLEncoding.EncodeToString(bytes)
 }

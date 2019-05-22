@@ -15,12 +15,10 @@ import (
 
 // Client represents an API client
 type Client struct {
-	t          *testing.T
-	ts         *TestSetup
-	apiClient  trn.Client
-	sessionKey []byte
-
-	Help Helper
+	t         *testing.T
+	ts        *TestSetup
+	apiClient trn.Client
+	Help      Helper
 }
 
 // Query performs an API query
