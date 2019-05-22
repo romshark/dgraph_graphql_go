@@ -105,9 +105,9 @@ func (opts *ServerOptions) Prepare() error {
 	if opts.DBHost == "" {
 		switch opts.Mode {
 		case ModeProduction:
-			opts.DBHost = "localhost:8080"
+			opts.DBHost = "localhost:9080"
 		default:
-			opts.DBHost = "localhost:10080"
+			opts.DBHost = "localhost:10180"
 		}
 	}
 
