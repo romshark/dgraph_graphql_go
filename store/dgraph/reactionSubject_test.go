@@ -59,7 +59,16 @@ func TestReactionSubjectUnMarshal(t *testing.T) {
 		var u dgraph.ReactionSubject
 		require.NoError(t, json.Unmarshal(marshedReaction, &u))
 		require.IsType(t, &reaction, u.V)
-		require.Equal(t, reaction, *u.V.(*dgraph.Reaction))
+		actual := *u.V.(*dgraph.Reaction)
+
+		require.Equal(t, reaction.ID, actual.ID)
+		require.Equal(t, reaction.UID, actual.UID)
+		require.Equal(t, reaction.Emotion, actual.Emotion)
+		require.Equal(t, reaction.Message, actual.Message)
+		require.Equal(t, reaction.Author, actual.Author)
+		require.Equal(t, reaction.Reactions, actual.Reactions)
+		require.Equal(t, reaction.Subject, actual.Subject)
+		require.Equal(t, reaction.Creation.Unix(), actual.Creation.Unix())
 	})
 
 	// Invalid type <-> JSON
