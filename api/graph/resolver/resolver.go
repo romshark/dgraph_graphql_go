@@ -119,7 +119,7 @@ func (rsv *Resolver) Posts(ctx context.Context) ([]*Post, error) {
 			title:     post.Title,
 			contents:  post.Contents,
 			creation:  post.Creation,
-			authorUID: post.UID,
+			authorUID: post.Author[0].UID,
 		}
 	}
 	return resolvers, nil
