@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
@@ -53,7 +52,7 @@ func (srv *server) onGraphQuery(
 		} else {
 			tracedError = resolverErr.Error()
 		}
-		log.Printf("graph query: %s", tracedError)
+		srv.logErrf("graph query: %s", tracedError)
 
 		return graph.Response{}, resolverErr
 	}

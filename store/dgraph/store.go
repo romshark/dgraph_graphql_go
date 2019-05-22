@@ -17,17 +17,20 @@ type impl struct {
 	db              *dgo.Dgraph
 	comparePassword func(hash, password string) bool
 	onClose         func()
+	errorLog        *log.Logger
 }
 
 // NewStore creates a new disconnected database client instance
 func NewStore(
 	host string,
 	comparePassword func(hash, password string) bool,
+	errorLog *log.Logger,
 ) store.Store {
 	return &impl{
 		host:            host,
 		db:              nil,
 		comparePassword: comparePassword,
+		errorLog:        errorLog,
 	}
 }
 
@@ -45,7 +48,7 @@ func (str *impl) Prepare() error {
 	str.db = dgo.NewDgraphClient(api.NewDgraphClient(conn))
 	str.onClose = func() {
 		if err := conn.Close(); err != nil {
-			log.Printf("closing db conn: %s", err)
+			str.errorLog.Printf("closing db conn: %s", err)
 		}
 		str.db = nil
 		str.onClose = nil

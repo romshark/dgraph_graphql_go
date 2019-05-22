@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -21,6 +22,7 @@ type Server struct {
 	onAuth       trn.OnAuth
 	onDebugAuth  trn.OnDebugAuth
 	onDebugSess  trn.OnDebugSess
+	errorLog     *log.Logger
 }
 
 // NewServer creates a new unencrypted JSON based HTTP transport.
@@ -53,6 +55,7 @@ func (t *Server) Init(
 	onAuth trn.OnAuth,
 	onDebugAuth trn.OnDebugAuth,
 	onDebugSess trn.OnDebugSess,
+	errorLog *log.Logger,
 ) error {
 	if onGraphQuery == nil {
 		panic("missing onGraphQuery callback")
@@ -70,6 +73,7 @@ func (t *Server) Init(
 	t.onAuth = onAuth
 	t.onDebugAuth = onDebugAuth
 	t.onDebugSess = onDebugSess
+	t.errorLog = errorLog
 	return nil
 }
 

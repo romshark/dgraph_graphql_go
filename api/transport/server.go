@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/romshark/dgraph_graphql_go/api/graph"
@@ -31,6 +32,7 @@ type Server interface {
 		onAuth OnAuth,
 		onDebugAuth OnDebugAuth,
 		onDebugSess OnDebugSess,
+		errorLog *log.Logger,
 	) error
 
 	// Run starts serving. Blocks until the underlying server is shut down

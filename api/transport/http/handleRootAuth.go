@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/base64"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -53,6 +52,6 @@ func (t *Server) handleDebugAuth(
 
 	// Return session key
 	if _, err := resp.Write(debugSessionKey); err != nil {
-		log.Printf("writing debug auth response: %s", err)
+		t.errorLog.Printf("writing debug auth response: %s", err)
 	}
 }

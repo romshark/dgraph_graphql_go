@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -72,6 +71,7 @@ func NewServer(opts ServerOptions) (Server, error) {
 		func(hash, password string) bool {
 			return opts.PasswordHasher.Compare([]byte(hash), []byte(password))
 		},
+		opts.ErrorLog,
 	)
 
 	graph, err := graph.New(
@@ -100,6 +100,7 @@ func NewServer(opts ServerOptions) (Server, error) {
 			newSrv.onAuth,
 			newSrv.onDebugAuth,
 			newSrv.onDebugSess,
+			opts.ErrorLog,
 		); err != nil {
 			return nil, err
 		}
@@ -111,6 +112,14 @@ func NewServer(opts ServerOptions) (Server, error) {
 	}
 
 	return newSrv, nil
+}
+
+func (srv *server) logErrf(format string, v ...interface{}) {
+	srv.opts.ErrorLog.Printf(format, v...)
+}
+
+func (srv *server) logErr(v ...interface{}) {
+	srv.opts.ErrorLog.Print(v...)
 }
 
 // Launch implements the Server interface
@@ -126,7 +135,7 @@ func (srv *server) Launch() error {
 		t := transport
 		go func() {
 			if err := t.Run(); err != nil {
-				log.Printf("ERR: transport: %s", err)
+				srv.logErrf("transport: %s", err)
 			}
 			srv.shutdownAwaitBlocker.Done()
 		}()
@@ -154,7 +163,7 @@ func (srv *server) Shutdown(ctx context.Context) error {
 					shutdownErrs,
 					errors.Wrap(err, "transport shutdown"),
 				)
-				log.Printf("ERR: transport shutdown: %s", err)
+				srv.logErrf("transport shutdown: %s", err)
 			}
 			wg.Done()
 		}()

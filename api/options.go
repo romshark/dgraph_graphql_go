@@ -2,6 +2,8 @@ package api
 
 import (
 	"errors"
+	"log"
+	"os"
 
 	"github.com/romshark/dgraph_graphql_go/api/passhash"
 	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
@@ -92,6 +94,7 @@ type ServerOptions struct {
 	PasswordHasher      passhash.PasswordHasher
 	DebugUser           DebugUserOptions
 	Transport           []transport.Server
+	ErrorLog            *log.Logger
 }
 
 // Prepare sets defaults and validates the options
@@ -119,6 +122,15 @@ func (opts *ServerOptions) Prepare() error {
 	// Use default password hasher
 	if opts.PasswordHasher == nil {
 		opts.PasswordHasher = passhash.Bcrypt{}
+	}
+
+	// Use default error logger to stderr
+	if opts.ErrorLog == nil {
+		opts.ErrorLog = log.New(
+			os.Stderr,
+			"ERR",
+			log.Ldate|log.Ltime,
+		)
 	}
 
 	// VALIDATE

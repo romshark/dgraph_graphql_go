@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -40,9 +39,8 @@ func (t *Server) handleGraphQuery(
 			http.StatusText(http.StatusInternalServerError),
 			http.StatusInternalServerError,
 		)
-		log.Printf("ERR: %s", err)
 		if logErr {
-			log.Printf("ERR: %s", err)
+			t.errorLog.Print(err)
 		}
 	}
 
