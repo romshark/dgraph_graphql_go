@@ -4,6 +4,7 @@
 <a href="https://goreportcard.com/report/github.com/romshark/dgraph_graphql_go">
 	<img src="https://goreportcard.com/badge/github.com/romshark/dgraph_graphql_go" alt="GoReportCard">
 </a>
+<a href="https://codebeat.co/projects/github-com-romshark-dgraph_graphql_go-master"><img alt="codebeat badge" src="https://codebeat.co/badges/c7216b46-359e-46ee-8a62-7741b75eb15a" /></a>
 
 # Dgraph + GraphQL + Go = API
 - Web-App back-end in 100% [Go](https://golang.org/)
