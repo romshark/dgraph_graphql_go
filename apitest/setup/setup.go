@@ -2,12 +2,17 @@ package setup
 
 import (
 	"context"
+	ctx "context"
 	"testing"
 	"time"
 
+	"github.com/dgraph-io/dgo"
+	dbapi "github.com/dgraph-io/dgo/protos/api"
 	"github.com/romshark/dgraph_graphql_go/api"
 	trn "github.com/romshark/dgraph_graphql_go/api/transport"
 	thttp "github.com/romshark/dgraph_graphql_go/api/transport/http"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 )
 
 // TestContext represents a test context
@@ -39,13 +44,21 @@ func New(t *testing.T, context TestContext) *TestSetup {
 	debugUsername := "test"
 	debugPassword := "test"
 
+	// Clear database
+	conn, err := grpc.Dial(context.DBHost, grpc.WithInsecure())
+	require.NoError(t, err)
+	db := dgo.NewDgraphClient(dbapi.NewDgraphClient(conn))
+	require.NoError(t, db.Alter(
+		ctx.Background(),
+		&dbapi.Operation{DropAll: true},
+	))
+	require.NoError(t, conn.Close())
+
 	serverTransport, err := thttp.NewServer(thttp.ServerOptions{
 		Host:       context.SrvHost,
 		Playground: false,
 	})
-	if err != nil {
-		t.Fatalf("API server transport init: %s", err)
-	}
+	require.NoError(t, err)
 
 	srvOpts := api.ServerOptions{
 		Mode:   api.ModeDebug,
@@ -62,12 +75,8 @@ func New(t *testing.T, context TestContext) *TestSetup {
 	}
 
 	apiServer, err := api.NewServer(srvOpts)
-	if err != nil {
-		t.Fatalf("API server init: %s", err)
-	}
-	if err := apiServer.Launch(); err != nil {
-		t.Fatalf("API server launch: %s", err)
-	}
+	require.NoError(t, err)
+	require.NoError(t, apiServer.Launch())
 
 	testSetup := &TestSetup{
 		t:               t,

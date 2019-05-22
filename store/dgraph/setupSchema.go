@@ -7,13 +7,6 @@ import (
 )
 
 func (str *impl) setupSchema(ctx context.Context) error {
-	// TODO: avoid DropAll
-	if err := str.db.Alter(ctx, &api.Operation{
-		DropAll: true,
-	}); err != nil {
-		panic(err)
-	}
-
 	return str.db.Alter(ctx, &api.Operation{
 		Schema: `
 			users: uid .
