@@ -18,8 +18,12 @@ func (stls *ServerTLS) Clone() *ServerTLS {
 	if stls == nil {
 		return nil
 	}
+	var config *tls.Config
+	if stls.Config != nil {
+		config = stls.Config.Clone()
+	}
 	return &ServerTLS{
-		Config:              stls.Config.Clone(),
+		Config:              config,
 		CertificateFilePath: stls.CertificateFilePath,
 		PrivateKeyFilePath:  stls.PrivateKeyFilePath,
 	}
