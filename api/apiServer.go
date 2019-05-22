@@ -20,7 +20,7 @@ type Server interface {
 	// is running
 	Launch() error
 
-	// Shutdown instructs the server to shut down gracefuly and blocks until
+	// Shutdown instructs the server to shut down gracefully and blocks until
 	// the server is shut down
 	Shutdown(context.Context) error
 
