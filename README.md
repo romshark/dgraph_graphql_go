@@ -1,6 +1,9 @@
 <a href="https://travis-ci.org/romshark/dgraph_graphql_go">
 	<img src="https://travis-ci.org/romshark/dgraph_graphql_go.svg?branch=master" alt="Travis CI: build status">
 </a>
+<a href="https://goreportcard.com/report/github.com/romshark/dgraph_graphql_go">
+	<img src="https://goreportcard.com/badge/github.com/romshark/dgraph_graphql_go" alt="GoReportCard">
+</a>
 
 # Dgraph + GraphQL + Go = API
 - Web-App back-end in 100% [Go](https://golang.org/)
