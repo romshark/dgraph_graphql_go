@@ -5,6 +5,7 @@
 	<img src="https://goreportcard.com/badge/github.com/romshark/dgraph_graphql_go" alt="GoReportCard">
 </a>
 <a href="https://codebeat.co/projects/github-com-romshark-dgraph_graphql_go-master"><img alt="codebeat badge" src="https://codebeat.co/badges/c7216b46-359e-46ee-8a62-7741b75eb15a" /></a>
+<a href="https://app.fossa.io/projects/git%2Bgithub.com%2Fromshark%2Fdgraph_graphql_go?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.io/api/projects/git%2Bgithub.com%2Fromshark%2Fdgraph_graphql_go.svg?type=shield"/></a>
 
 # Dgraph + GraphQL + Go = API
 - Web-App back-end in 100% [Go](https://golang.org/)
@@ -14,3 +15,7 @@
 - API tests based on [Go testing](https://golang.org/pkg/testing/) and [stretchr/testify](https://github.com/stretchr/testify)
 - Session-based authentication
 - Authorization (permission system)
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fromshark%2Fdgraph_graphql_go.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fromshark%2Fdgraph_graphql_go?ref=badge_large)
