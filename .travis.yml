@@ -51,6 +51,3 @@ script:
 
   # Build cmd/api
   - go build -o apisrv cmd/api
-
-  # Run API tests
-  - go test -v -race ./apitest/... -host "localhost:8090" -dbhost "localhost:10180"
