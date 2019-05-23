@@ -8,7 +8,7 @@ import (
 	"github.com/romshark/dgraph_graphql_go/api/graph"
 )
 
-var graphRespHead = []byte(`{"d":`)
+var graphRespHead = []byte(`{"data":`)
 var graphRespTail = []byte(`}`)
 
 type graphResponseError struct {
@@ -17,8 +17,8 @@ type graphResponseError struct {
 }
 
 type graphResponse struct {
-	Data  []byte              `json:"d"`
-	Error *graphResponseError `json:"e"`
+	Data  []byte              `json:"data"`
+	Error *graphResponseError `json:"errors"`
 }
 
 // graphQuery represents the JSON graph query structure

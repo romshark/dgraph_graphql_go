@@ -109,8 +109,8 @@ func (c *Client) QueryVar(
 	responseDecoderJSON := json.NewDecoder(resp.Body)
 
 	res := struct {
-		Data  interface{}         `json:"d"`
-		Error *graphResponseError `json:"e"`
+		Data  interface{}         `json:"data"`
+		Error *graphResponseError `json:"errors"`
 	}{
 		Data: result,
 	}
