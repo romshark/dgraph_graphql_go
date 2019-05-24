@@ -8,7 +8,7 @@ schema {
 
 type Query {
 	users: [User!]!
-	posts: [Post!]!
+	posts: PostList!
 
 	user(id: Identifier!): User
 	post(id: Identifier!): Post
@@ -73,6 +73,15 @@ type Mutation {
 		editor: Identifier!
 		newMessage: String!
 	): Reaction!
+}
+
+type PostList {
+	list(
+		first: Int!
+		offset: Int!
+	): [Post!]!
+	size: Int!
+	version: String!
 }
 
 type Session {
