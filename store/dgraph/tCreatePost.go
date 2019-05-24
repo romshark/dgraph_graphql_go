@@ -36,10 +36,12 @@ func (str *impl) CreatePost(
 	}
 	defer close()
 
-	// Ensure author exists
+	// Get author and posts list meta information
 	var qr struct {
-		ByID   []UID `json:"byId"`
-		Author []UID `json:"author"`
+		ByID         []UID                   `json:"byId"`
+		Author       []UID                   `json:"author"`
+		PostsCount   []struct{ Count int32 } `json:"postsCount"`
+		PostsVersion []UID                   `json:"postsVersion"`
 	}
 	err = txn.QueryVars(
 		ctx,
@@ -49,6 +51,12 @@ func (str *impl) CreatePost(
 		) {
 			byId(func: eq(Post.id, $id)) { uid }
 			author(func: eq(User.id, $authorId)) { uid }
+			postsCount(func: has(<posts>)) {
+				count: count(uid)
+			}
+			postsVersion(func: has(posts.version)) {
+				uid
+			}
 		}`,
 		map[string]string{
 			"$id":       string(result.ID),
@@ -125,9 +133,9 @@ func (str *impl) CreatePost(
 		return
 	}
 
-	// Add the new post to the global Index
-	var newPostsIndexJSON []byte
-	newPostsIndexJSON, err = json.Marshal(struct {
+	// Add the new post to the global index
+	var updateJSON []byte
+	updateJSON, err = json.Marshal(struct {
 		UID UID `json:"posts"`
 	}{
 		UID: UID{NodeID: result.UID},
@@ -137,8 +145,30 @@ func (str *impl) CreatePost(
 	}
 
 	_, err = txn.Mutation(ctx, &api.Mutation{
-		SetJson: newPostsIndexJSON,
+		SetJson: updateJSON,
 	})
+	if err != nil {
+		return
+	}
+
+	// Update posts.version
+	updateJSON, err = json.Marshal(struct {
+		UID     string `json:"uid"`
+		Version string `json:"posts.version"`
+	}{
+		UID:     qr.PostsVersion[0].NodeID,
+		Version: string(store.NewID()),
+	})
+	if err != nil {
+		return
+	}
+
+	_, err = txn.Mutation(ctx, &api.Mutation{
+		SetJson: updateJSON,
+	})
+	if err != nil {
+		return
+	}
 
 	return
 }
