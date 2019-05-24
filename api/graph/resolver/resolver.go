@@ -87,42 +87,8 @@ func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
 }
 
 // Posts resolves Query.posts
-func (rsv *Resolver) Posts(ctx context.Context) ([]*Post, error) {
-	var result struct {
-		Posts []dgraph.Post `json:"posts"`
-	}
-	if err := rsv.str.Query(
-		ctx,
-		`{
-			posts(func: has(Post.id)) {
-				uid
-				Post.id
-				Post.creation
-				Post.title
-				Post.contents
-				Post.author {
-					uid
-				}
-			}
-		}`,
-		&result,
-	); err != nil {
-		rsv.error(ctx, err)
-		return nil, err
-	}
-	resolvers := make([]*Post, len(result.Posts))
-	for i, post := range result.Posts {
-		resolvers[i] = &Post{
-			root:      rsv,
-			uid:       post.UID,
-			id:        post.ID,
-			title:     post.Title,
-			contents:  post.Contents,
-			creation:  post.Creation,
-			authorUID: post.Author[0].UID,
-		}
-	}
-	return resolvers, nil
+func (rsv *Resolver) Posts(ctx context.Context) (*PostList, error) {
+	return &PostList{rsv}, nil
 }
 
 // User resolves Query.user
