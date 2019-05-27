@@ -128,7 +128,7 @@ func (opts *ServerOptions) Prepare() error {
 	if opts.ErrorLog == nil {
 		opts.ErrorLog = log.New(
 			os.Stderr,
-			"ERR",
+			"ERR: ",
 			log.Ldate|log.Ltime,
 		)
 	}
