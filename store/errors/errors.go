@@ -6,6 +6,9 @@ import "fmt"
 type Code string
 
 const (
+	// ErrCanceled is thrown when a transaction is canceled
+	ErrCanceled Code = "Canceled"
+
 	// ErrUnauthorized is thrown when the API user is unauthorized to perform
 	// the request
 	ErrUnauthorized Code = "Unauthorized"
@@ -27,6 +30,8 @@ type Error struct {
 // FilterCode turns unknown error codes to empty strings
 func FilterCode(code Code) string {
 	switch code {
+	case ErrCanceled:
+		return string(code)
 	case ErrUnauthorized:
 		return string(code)
 	case ErrInvalidInput:

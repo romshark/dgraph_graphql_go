@@ -7,6 +7,9 @@ import (
 	"github.com/dgraph-io/dgo"
 	"github.com/dgraph-io/dgo/protos/api"
 	"github.com/pkg/errors"
+	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type transaction interface {
@@ -33,6 +36,10 @@ type txn struct {
 	dgTxn *dgo.Txn
 }
 
+func (txn *txn) isCancelErr(err error) bool {
+	return status.Code(err) == codes.Canceled
+}
+
 func (txn *txn) Query(
 	ctx context.Context,
 	query string,
@@ -40,6 +47,9 @@ func (txn *txn) Query(
 ) error {
 	rep, err := txn.dgTxn.Query(ctx, query)
 	if err != nil {
+		if txn.isCancelErr(err) {
+			return strerr.New(strerr.ErrCanceled, "")
+		}
 		return errors.Wrap(err, "query")
 	}
 	if err := json.Unmarshal(rep.Json, &res); err != nil {
@@ -56,6 +66,9 @@ func (txn *txn) QueryVars(
 ) error {
 	rep, err := txn.dgTxn.QueryWithVars(ctx, query, vars)
 	if err != nil {
+		if txn.isCancelErr(err) {
+			return strerr.New(strerr.ErrCanceled, "")
+		}
 		return errors.Wrap(err, "query")
 	}
 	if err := json.Unmarshal(rep.Json, &res); err != nil {
@@ -70,6 +83,9 @@ func (txn *txn) Mutation(
 ) (map[string]string, error) {
 	assigned, err := txn.dgTxn.Mutate(ctx, mutation)
 	if err != nil {
+		if txn.isCancelErr(err) {
+			return nil, strerr.New(strerr.ErrCanceled, "")
+		}
 		return nil, errors.Wrap(err, "mutation")
 	}
 	return assigned.Uids, nil
