@@ -62,6 +62,7 @@ func (t *Server) handleGraphQuery(
 	)
 	if err != nil {
 		handleUnexpectedErr(err, false)
+		return
 	}
 
 	jsonEncoder := json.NewEncoder(resp)

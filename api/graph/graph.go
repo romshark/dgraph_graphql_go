@@ -2,10 +2,10 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/graph-gophers/graphql-go"
-	"github.com/pkg/errors"
 	rsv "github.com/romshark/dgraph_graphql_go/api/graph/resolver"
 	"github.com/romshark/dgraph_graphql_go/api/passhash"
 	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
@@ -71,6 +71,12 @@ func (graph *Graph) Query(
 	ctx context.Context,
 	query Query,
 ) (reply []byte, err error) {
+	// Validate query
+	if errs := graph.schema.Validate(query.Query); errs != nil {
+		return nil, GQLError{errs: errs}
+	}
+
+	// Execute query
 	rep := graph.schema.Exec(
 		ctx,
 		query.Query,
@@ -79,12 +85,11 @@ func (graph *Graph) Query(
 	)
 
 	if rep.Errors != nil {
-		// Serialize errors
-		errMsg := "graph error:"
-		for _, err := range rep.Errors {
-			errMsg += " " + err.Error() + ";"
-		}
-		return nil, errors.New(errMsg)
+		err := GQLError{errs: rep.Errors}
+		// Return an untyped error to prevent it from leaking to the client
+		// because GQLError instances are served as error feedback to clients
+		// but unexpected errors should not be leaked!
+		return nil, errors.New(err.Error())
 	}
 
 	return rep.Data, nil

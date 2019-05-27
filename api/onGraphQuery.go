@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"fmt"
+	"log"
+	"reflect"
 
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
@@ -12,6 +14,22 @@ import (
 
 type stackTracer interface {
 	StackTrace() errors.StackTrace
+}
+
+func (srv *server) handleUnexpectedError(err error) {
+	// Retrieve error stack trace and log the error
+	var tracedError string
+	_, isTrc := err.(stackTracer)
+	log.Print("QERR: ", reflect.TypeOf(err), " | ", isTrc, " | ", err)
+	if tracErr, ok := err.(stackTracer); ok {
+		tracedError = err.Error() + "\n"
+		for _, f := range tracErr.StackTrace() {
+			tracedError = fmt.Sprintf("%s%+s:%d\n", tracedError, f, f)
+		}
+	} else {
+		tracedError = err.Error()
+	}
+	srv.logErrf("graph query: %s", tracedError)
 }
 
 // onGraphQuery handles a graph query
@@ -40,23 +58,21 @@ func (srv *server) onGraphQuery(
 			}, nil
 		}
 
-		// Unexpected error
-
-		// Retrieve error stack trace and log the error
-		var tracedError string
-		if tracErr, ok := resolverErr.(stackTracer); ok {
-			tracedError = resolverErr.Error() + "\n"
-			for _, f := range tracErr.StackTrace() {
-				tracedError = fmt.Sprintf("%s%+s:%d\n", tracedError, f, f)
-			}
-		} else {
-			tracedError = resolverErr.Error()
-		}
-		srv.logErrf("graph query: %s", tracedError)
-
+		// Unexpected resolver error
+		srv.handleUnexpectedError(queryErr)
 		return graph.Response{}, resolverErr
 	}
+
 	if queryErr != nil {
+		if gqlErr, isGQLErr := queryErr.(graph.GQLError); isGQLErr {
+			return graph.Response{
+				Error: &graph.ResponseError{
+					Message: gqlErr.Error(),
+				},
+			}, nil
+		}
+		// Unexpected internal server error
+		srv.handleUnexpectedError(queryErr)
 		return graph.Response{}, queryErr
 	}
 
