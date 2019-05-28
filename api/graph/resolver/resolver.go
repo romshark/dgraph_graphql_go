@@ -110,6 +110,11 @@ func (rsv *Resolver) Posts(ctx context.Context) ([]*Post, error) {
 		rsv.error(ctx, err)
 		return nil, err
 	}
+
+	if len(result.Posts) < 1 {
+		return nil, nil
+	}
+
 	resolvers := make([]*Post, len(result.Posts))
 	for i, post := range result.Posts {
 		resolvers[i] = &Post{
