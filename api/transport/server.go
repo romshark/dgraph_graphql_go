@@ -32,6 +32,7 @@ type Server interface {
 		onAuth OnAuth,
 		onDebugAuth OnDebugAuth,
 		onDebugSess OnDebugSess,
+		debugLog *log.Logger,
 		errorLog *log.Logger,
 	) error
 

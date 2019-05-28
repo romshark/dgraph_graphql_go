@@ -1,4 +1,4 @@
-package api
+package options
 
 import (
 	"errors"
@@ -94,6 +94,7 @@ type ServerOptions struct {
 	PasswordHasher      passhash.PasswordHasher
 	DebugUser           DebugUserOptions
 	Transport           []transport.Server
+	DebugLog            *log.Logger
 	ErrorLog            *log.Logger
 }
 
@@ -122,6 +123,15 @@ func (opts *ServerOptions) Prepare() error {
 	// Use default password hasher
 	if opts.PasswordHasher == nil {
 		opts.PasswordHasher = passhash.Bcrypt{}
+	}
+
+	// Use default debug logger to stdout
+	if opts.DebugLog == nil {
+		opts.DebugLog = log.New(
+			os.Stdout,
+			"DBG: ",
+			log.Ldate|log.Ltime,
+		)
 	}
 
 	// Use default error logger to stderr

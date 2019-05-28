@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/options"
 	"github.com/romshark/dgraph_graphql_go/api/passhash"
 	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
 	"github.com/romshark/dgraph_graphql_go/api/transport"
@@ -61,8 +62,8 @@ func main() {
 		log.Fatalf("API server HTTP(S) transport init: %s", err)
 	}
 
-	api, err := api.NewServer(api.ServerOptions{
-		Mode:                api.ModeBeta,
+	api, err := api.NewServer(options.ServerOptions{
+		Mode:                options.ModeBeta,
 		Host:                *host,
 		DBHost:              *dbHost,                 // database host address
 		SessionKeyGenerator: sesskeygen.NewDefault(), // session key generator

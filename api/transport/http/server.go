@@ -22,6 +22,7 @@ type Server struct {
 	onAuth       trn.OnAuth
 	onDebugAuth  trn.OnDebugAuth
 	onDebugSess  trn.OnDebugSess
+	debugLog     *log.Logger
 	errorLog     *log.Logger
 }
 
@@ -55,6 +56,7 @@ func (t *Server) Init(
 	onAuth trn.OnAuth,
 	onDebugAuth trn.OnDebugAuth,
 	onDebugSess trn.OnDebugSess,
+	debugLog *log.Logger,
 	errorLog *log.Logger,
 ) error {
 	if onGraphQuery == nil {
@@ -73,6 +75,7 @@ func (t *Server) Init(
 	t.onAuth = onAuth
 	t.onDebugAuth = onDebugAuth
 	t.onDebugSess = onDebugSess
+	t.debugLog = debugLog
 	t.errorLog = errorLog
 	return nil
 }
@@ -98,6 +101,8 @@ func (t *Server) Run() error {
 	}
 
 	if t.opts.TLS != nil {
+		t.debugLog.Print("listening https://" + t.addr.String())
+
 		if err := t.httpSrv.ServeTLS(
 			tcpListener,
 			t.opts.TLS.CertificateFilePath,
@@ -106,6 +111,8 @@ func (t *Server) Run() error {
 			return err
 		}
 	} else {
+		t.debugLog.Print("listening http://" + t.addr.String())
+
 		if err := t.httpSrv.Serve(tcpListener); err != http.ErrServerClosed {
 			return err
 		}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
+	"github.com/romshark/dgraph_graphql_go/api/options"
 	"github.com/romshark/dgraph_graphql_go/api/transport"
 	"github.com/romshark/dgraph_graphql_go/api/validator"
 	"github.com/romshark/dgraph_graphql_go/store"
@@ -28,7 +29,7 @@ type Server interface {
 }
 
 type server struct {
-	opts                 ServerOptions
+	opts                 options.ServerOptions
 	store                store.Store
 	graph                *graph.Graph
 	debugSessionKey      []byte
@@ -37,14 +38,14 @@ type server struct {
 }
 
 // NewServer creates a new API server instance
-func NewServer(opts ServerOptions) (Server, error) {
+func NewServer(opts options.ServerOptions) (Server, error) {
 	if err := opts.Prepare(); err != nil {
 		return nil, fmt.Errorf("options: %s", err)
 	}
 
 	// Initialize validator
 	validator, err := validator.NewValidator(
-		opts.Mode == ModeProduction,
+		opts.Mode == options.ModeProduction,
 		validator.Options{
 			PasswordLenMin:        6,
 			PasswordLenMax:        256,
@@ -71,6 +72,8 @@ func NewServer(opts ServerOptions) (Server, error) {
 		func(hash, password string) bool {
 			return opts.PasswordHasher.Compare([]byte(hash), []byte(password))
 		},
+
+		opts.DebugLog,
 		opts.ErrorLog,
 	)
 
@@ -100,14 +103,16 @@ func NewServer(opts ServerOptions) (Server, error) {
 			newSrv.onAuth,
 			newSrv.onDebugAuth,
 			newSrv.onDebugSess,
+			opts.DebugLog,
 			opts.ErrorLog,
 		); err != nil {
 			return nil, err
 		}
 	}
+	opts.DebugLog.Print("all transports initialized")
 
 	// Generate the debug user session key if the debug user is enabled
-	if opts.DebugUser.Status != DebugUserDisabled {
+	if opts.DebugUser.Status != options.DebugUserDisabled {
 		newSrv.debugSessionKey = []byte(opts.SessionKeyGenerator.Generate())
 	}
 
