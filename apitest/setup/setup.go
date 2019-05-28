@@ -9,6 +9,7 @@ import (
 	"github.com/dgraph-io/dgo"
 	dbapi "github.com/dgraph-io/dgo/protos/api"
 	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/options"
 	trn "github.com/romshark/dgraph_graphql_go/api/transport"
 	thttp "github.com/romshark/dgraph_graphql_go/api/transport/http"
 	"github.com/stretchr/testify/require"
@@ -60,12 +61,12 @@ func New(t *testing.T, context TestContext) *TestSetup {
 	})
 	require.NoError(t, err)
 
-	srvOpts := api.ServerOptions{
-		Mode:   api.ModeDebug,
+	srvOpts := options.ServerOptions{
+		Mode:   options.ModeDebug,
 		DBHost: context.DBHost,
-		DebugUser: api.DebugUserOptions{
+		DebugUser: options.DebugUserOptions{
 			// Enable the debug user in read-write mode
-			Status:   api.DebugUserRW,
+			Status:   options.DebugUserRW,
 			Username: debugUsername,
 			Password: debugPassword,
 		},
