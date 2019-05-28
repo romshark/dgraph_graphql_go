@@ -15,12 +15,12 @@ func (rsv *Resolver) CreateSession(
 		Email    string
 		Password string
 	},
-) (*Session, error) {
+) *Session {
 	// Validate inputs
 	if len(params.Email) < 1 || len(params.Password) < 1 {
 		err := strerr.New(strerr.ErrInvalidInput, "missing credentials")
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	// Generate session key
@@ -36,7 +36,7 @@ func (rsv *Resolver) CreateSession(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	// Dynamically update the session on successful sign-in
@@ -53,5 +53,5 @@ func (rsv *Resolver) CreateSession(
 		key:      key,
 		creation: creationTime,
 		userUID:  newSession.User.UID,
-	}, nil
+	}
 }

@@ -33,16 +33,16 @@ func (rsv *User) Creation() graphql.Time {
 }
 
 // Email resolves User.email
-func (rsv *User) Email(ctx context.Context) (string, error) {
+func (rsv *User) Email(ctx context.Context) string {
 	// Check permissions
 	if err := auth.Authorize(ctx, auth.IsOwner{
 		Owner: store.ID(rsv.id),
 	}); err != nil {
 		rsv.root.error(ctx, err)
-		return "", err
+		return ""
 	}
 
-	return rsv.email, nil
+	return rsv.email
 }
 
 // DisplayName resolves User.displayName
@@ -53,7 +53,7 @@ func (rsv *User) DisplayName() string {
 // Posts resolves User.posts
 func (rsv *User) Posts(
 	ctx context.Context,
-) ([]*Post, error) {
+) []*Post {
 	var query struct {
 		Users []dgraph.User `json:"users"`
 	}
@@ -76,11 +76,11 @@ func (rsv *User) Posts(
 		&query,
 	); err != nil {
 		rsv.root.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	if len(query.Users) < 1 {
-		return nil, nil
+		return nil
 	}
 
 	usr := query.Users[0]
@@ -97,19 +97,19 @@ func (rsv *User) Posts(
 		}
 	}
 
-	return resolvers, nil
+	return resolvers
 }
 
 // Sessions resolves User.sessions
 func (rsv *User) Sessions(
 	ctx context.Context,
-) ([]*Session, error) {
+) []*Session {
 	// Check permissions
 	if err := auth.Authorize(ctx, auth.IsOwner{
 		Owner: store.ID(rsv.id),
 	}); err != nil {
 		rsv.root.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	var query struct {
@@ -132,11 +132,11 @@ func (rsv *User) Sessions(
 		&query,
 	); err != nil {
 		rsv.root.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	if len(query.Users) < 1 {
-		return nil, nil
+		return nil
 	}
 
 	usr := query.Users[0]
@@ -151,13 +151,13 @@ func (rsv *User) Sessions(
 		}
 	}
 
-	return resolvers, nil
+	return resolvers
 }
 
 // PublishedReactions resolves User.publishedReactions
 func (rsv *User) PublishedReactions(
 	ctx context.Context,
-) ([]*Reaction, error) {
+) []*Reaction {
 	var query struct {
 		Users []dgraph.User `json:"users"`
 	}
@@ -185,11 +185,11 @@ func (rsv *User) PublishedReactions(
 		&query,
 	); err != nil {
 		rsv.root.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	if len(query.Users) < 1 {
-		return nil, nil
+		return nil
 	}
 
 	usr := query.Users[0]
@@ -214,5 +214,5 @@ func (rsv *User) PublishedReactions(
 		}
 	}
 
-	return resolvers, nil
+	return resolvers
 }

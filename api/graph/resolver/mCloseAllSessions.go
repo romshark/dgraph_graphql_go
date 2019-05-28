@@ -13,12 +13,12 @@ func (rsv *Resolver) CloseAllSessions(
 	params struct {
 		User string
 	},
-) ([]string, error) {
+) []string {
 	if err := auth.Authorize(ctx, auth.IsOwner{
 		Owner: store.ID(params.User),
 	}); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	result, err := rsv.str.CloseAllSessions(
@@ -27,8 +27,8 @@ func (rsv *Resolver) CloseAllSessions(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
-	return result, nil
+	return result
 }

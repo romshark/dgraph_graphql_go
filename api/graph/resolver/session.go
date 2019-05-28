@@ -31,7 +31,7 @@ func (rsv *Session) Creation() graphql.Time {
 // User resolves Session.user
 func (rsv *Session) User(
 	ctx context.Context,
-) (*User, error) {
+) *User {
 	var query struct {
 		Sessions []dgraph.Session `json:"session"`
 	}
@@ -54,7 +54,7 @@ func (rsv *Session) User(
 		&query,
 	); err != nil {
 		rsv.root.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	owner := query.Sessions[0].User[0]
@@ -65,5 +65,5 @@ func (rsv *Session) User(
 		creation:    owner.Creation,
 		email:       owner.Email,
 		displayName: owner.DisplayName,
-	}, nil
+	}
 }

@@ -14,7 +14,7 @@ func (rsv *Resolver) Authenticate(
 	params struct {
 		SessionKey string
 	},
-) (*Session, error) {
+) *Session {
 	var queryResult struct {
 		Session []dgraph.Session `json:"session"`
 	}
@@ -34,13 +34,13 @@ func (rsv *Resolver) Authenticate(
 		&queryResult,
 	); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	if len(queryResult.Session) < 1 {
 		err := strerr.New(strerr.ErrInvalidInput, "session not found")
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	sess := queryResult.Session[0]
@@ -59,5 +59,5 @@ func (rsv *Resolver) Authenticate(
 		key:      sess.Key,
 		creation: sess.Creation,
 		userUID:  sess.User[0].UID,
-	}, nil
+	}
 }

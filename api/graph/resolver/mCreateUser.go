@@ -15,28 +15,29 @@ func (rsv *Resolver) CreateUser(
 		DisplayName string
 		Password    string
 	},
-) (*User, error) {
+) *User {
 	// Validate inputs
 	if err := rsv.validator.UserDisplayName(params.DisplayName); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if err := rsv.validator.Email(params.Email); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if err := rsv.validator.Password(params.Password); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	// Create password hash
 	passwordHash, err := rsv.passwordHasher.Hash([]byte(params.Password))
 	if err != nil {
-		return nil, err
+		rsv.error(ctx, err)
+		return nil
 	}
 
 	creationTime := time.Now()
@@ -50,7 +51,7 @@ func (rsv *Resolver) CreateUser(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	return &User{
@@ -60,5 +61,5 @@ func (rsv *Resolver) CreateUser(
 		creation:    creationTime,
 		displayName: params.DisplayName,
 		email:       params.Email,
-	}, nil
+	}
 }

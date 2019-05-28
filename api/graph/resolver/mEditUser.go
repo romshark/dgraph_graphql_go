@@ -17,38 +17,38 @@ func (rsv *Resolver) EditUser(
 		NewEmail    *string
 		NewPassword *string
 	},
-) (*User, error) {
+) *User {
 	if err := auth.Authorize(ctx, auth.IsOwner{
 		Owner: store.ID(params.Editor),
 	}); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if err := auth.Authorize(ctx, auth.IsOwner{
 		Owner: store.ID(params.User),
 	}); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	// Validate input
 	if params.NewEmail == nil && params.NewPassword == nil {
 		err := strerr.New(strerr.ErrInvalidInput, "no changes")
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if params.NewEmail != nil {
 		if err := rsv.validator.Email(*params.NewEmail); err != nil {
 			err = strerr.Wrap(strerr.ErrInvalidInput, err)
 			rsv.error(ctx, err)
-			return nil, err
+			return nil
 		}
 	}
 	if params.NewPassword != nil {
 		if err := rsv.validator.Password(*params.NewPassword); err != nil {
 			err = strerr.Wrap(strerr.ErrInvalidInput, err)
 			rsv.error(ctx, err)
-			return nil, err
+			return nil
 		}
 	}
 
@@ -59,7 +59,7 @@ func (rsv *Resolver) EditUser(
 		)
 		if err != nil {
 			rsv.error(ctx, err)
-			return nil, err
+			return nil
 		}
 		*params.NewPassword = string(passwordHash)
 	}
@@ -73,7 +73,7 @@ func (rsv *Resolver) EditUser(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	return &User{
@@ -83,5 +83,5 @@ func (rsv *Resolver) EditUser(
 		creation:    mutatedUser.Creation,
 		displayName: mutatedUser.DisplayName,
 		email:       mutatedUser.Email,
-	}, nil
+	}
 }

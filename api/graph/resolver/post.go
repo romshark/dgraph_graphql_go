@@ -26,7 +26,7 @@ func (rsv *Post) ID() store.ID {
 }
 
 // Author resolves Post.author
-func (rsv *Post) Author(ctx context.Context) (*User, error) {
+func (rsv *Post) Author(ctx context.Context) *User {
 	var query struct {
 		Author []dgraph.User `json:"author"`
 	}
@@ -47,7 +47,7 @@ func (rsv *Post) Author(ctx context.Context) (*User, error) {
 		&query,
 	); err != nil {
 		rsv.root.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	author := query.Author[0]
@@ -58,7 +58,7 @@ func (rsv *Post) Author(ctx context.Context) (*User, error) {
 		creation:    author.Creation,
 		email:       author.Email,
 		displayName: author.DisplayName,
-	}, nil
+	}
 }
 
 // Creation resolves Post.creation
@@ -79,7 +79,7 @@ func (rsv *Post) Contents() string {
 }
 
 // Reactions resolves Post.reactions
-func (rsv *Post) Reactions(ctx context.Context) ([]*Reaction, error) {
+func (rsv *Post) Reactions(ctx context.Context) []*Reaction {
 	var query struct {
 		Posts []dgraph.Post `json:"posts"`
 	}
@@ -105,11 +105,11 @@ func (rsv *Post) Reactions(ctx context.Context) ([]*Reaction, error) {
 		&query,
 	); err != nil {
 		rsv.root.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	if len(query.Posts) < 1 {
-		return nil, nil
+		return nil
 	}
 
 	post := query.Posts[0]
@@ -127,5 +127,5 @@ func (rsv *Post) Reactions(ctx context.Context) ([]*Reaction, error) {
 		}
 	}
 
-	return resolvers, nil
+	return resolvers
 }

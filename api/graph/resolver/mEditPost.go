@@ -17,32 +17,32 @@ func (rsv *Resolver) EditPost(
 		NewTitle    *string
 		NewContents *string
 	},
-) (*Post, error) {
+) *Post {
 	if err := auth.Authorize(ctx, auth.IsOwner{
 		Owner: store.ID(params.Editor),
 	}); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	// Validate input
 	if params.NewTitle == nil && params.NewContents == nil {
 		err := strerr.New(strerr.ErrInvalidInput, "no changes")
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if params.NewTitle != nil {
 		if err := rsv.validator.PostTitle(*params.NewTitle); err != nil {
 			err = strerr.Wrap(strerr.ErrInvalidInput, err)
 			rsv.error(ctx, err)
-			return nil, err
+			return nil
 		}
 	}
 	if params.NewContents != nil {
 		if err := rsv.validator.PostContents(*params.NewContents); err != nil {
 			err = strerr.Wrap(strerr.ErrInvalidInput, err)
 			rsv.error(ctx, err)
-			return nil, err
+			return nil
 		}
 	}
 
@@ -55,7 +55,7 @@ func (rsv *Resolver) EditPost(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	return &Post{
@@ -66,5 +66,5 @@ func (rsv *Resolver) EditPost(
 		title:     mutatedPost.Title,
 		contents:  mutatedPost.Contents,
 		authorUID: mutatedPost.Author.UID,
-	}, nil
+	}
 }

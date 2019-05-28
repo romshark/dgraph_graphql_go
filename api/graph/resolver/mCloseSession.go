@@ -12,10 +12,10 @@ func (rsv *Resolver) CloseSession(
 	params struct {
 		Key string
 	},
-) (bool, error) {
+) bool {
 	if err := auth.Authorize(ctx, auth.IsUser{}); err != nil {
 		rsv.error(ctx, err)
-		return false, err
+		return false
 	}
 
 	result, err := rsv.str.CloseSession(
@@ -24,8 +24,8 @@ func (rsv *Resolver) CloseSession(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return false, err
+		return false
 	}
 
-	return result, nil
+	return result
 }

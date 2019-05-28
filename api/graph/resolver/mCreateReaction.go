@@ -19,12 +19,12 @@ func (rsv *Resolver) CreateReaction(
 		Emotion string
 		Message string
 	},
-) (*Reaction, error) {
+) *Reaction {
 	if err := auth.Authorize(ctx, auth.IsOwner{
 		Owner: store.ID(params.Author),
 	}); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	emot := emotion.Emotion(params.Emotion)
@@ -33,12 +33,12 @@ func (rsv *Resolver) CreateReaction(
 	if err := rsv.validator.ReactionMessage(params.Message); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if err := emotion.Validate(emot); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	creationTime := time.Now()
@@ -54,7 +54,7 @@ func (rsv *Resolver) CreateReaction(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	return &Reaction{
@@ -66,5 +66,5 @@ func (rsv *Resolver) CreateReaction(
 		subjectUID: newReaction.Subject.NodeID(),
 		emotion:    emot,
 		message:    params.Message,
-	}, nil
+	}
 }
