@@ -3,8 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"log"
-	"reflect"
 
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
@@ -19,8 +17,6 @@ type stackTracer interface {
 func (srv *server) handleUnexpectedError(err error) {
 	// Retrieve error stack trace and log the error
 	var tracedError string
-	_, isTrc := err.(stackTracer)
-	log.Print("QERR: ", reflect.TypeOf(err), " | ", isTrc, " | ", err)
 	if tracErr, ok := err.(stackTracer); ok {
 		tracedError = err.Error() + "\n"
 		for _, f := range tracErr.StackTrace() {
