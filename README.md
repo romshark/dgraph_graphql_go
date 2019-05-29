@@ -24,3 +24,6 @@
 - API tests based on [Go testing](https://golang.org/pkg/testing/) and [stretchr/testify](https://github.com/stretchr/testify)
 - Session-based authentication
 - Authorization (permission system)
+
+## Frontend
+- [Svelte-based frontend](https://github.com/DanielSharkov/dgraph_graphql_go_svelte) by [DanielSharkov](https://github.com/DanielSharkov)
