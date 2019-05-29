@@ -169,19 +169,23 @@ func (f *File) transportHTTP(conf *ServerConfig) error {
 		// Min version
 		srvConf.TLS.Config.MinVersion = uint16(f.TransportHTTP.TLS.MinVersion)
 
+		// Curve preferences
+		curveIDs := make(
+			[]tls.CurveID,
+			len(f.TransportHTTP.TLS.CurvePreferences),
+		)
+		for i, curveID := range f.TransportHTTP.TLS.CurvePreferences {
+			curveIDs[i] = tls.CurveID(curveID)
+		}
+		srvConf.TLS.Config.CurvePreferences = curveIDs
+		srvConf.TLS.Config.PreferServerCipherSuites = true
+
 		// Cipher suites
 		cipherSuites := make([]uint16, len(f.TransportHTTP.TLS.CipherSuites))
 		for i, cipherSuite := range f.TransportHTTP.TLS.CipherSuites {
 			cipherSuites[i] = uint16(cipherSuite)
 		}
 		srvConf.TLS.Config.CipherSuites = cipherSuites
-
-		// Curve preferences
-		curveIDs := make([]tls.CurveID, len(f.TransportHTTP.TLS.CipherSuites))
-		for i, curveID := range f.TransportHTTP.TLS.CipherSuites {
-			curveIDs[i] = tls.CurveID(curveID)
-		}
-		srvConf.TLS.Config.CurvePreferences = curveIDs
 	}
 
 	// Playground
