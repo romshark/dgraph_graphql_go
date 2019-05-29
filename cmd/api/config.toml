@@ -25,6 +25,7 @@ playground = true
 
 [transport-http.tls]
 enabled = true
+min-version = "TLS 1.2"
 curve-preferences = [
 	"X25519",
 	"CurveP256"
