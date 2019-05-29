@@ -46,7 +46,7 @@ func (ts *TestSetup) Guest() *Client {
 			Scheme: "http",
 			Host:   ts.serverTransport.(*thttp.Server).Addr().Host,
 		},
-		thttp.ClientOptions{
+		thttp.ClientConfig{
 			Timeout: time.Second * 10,
 		},
 	)

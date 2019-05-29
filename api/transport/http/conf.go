@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-// ServerTLS represents the TLS options
+// ServerTLS represents the TLS configurations
 type ServerTLS struct {
 	Config              *tls.Config
 	CertificateFilePath string
 	PrivateKeyFilePath  string
 }
 
-// Clone creates an exact detached copy of the server TLS options
+// Clone creates an exact detached copy of the server TLS configurations
 func (stls *ServerTLS) Clone() *ServerTLS {
 	if stls == nil {
 		return nil
@@ -29,25 +29,25 @@ func (stls *ServerTLS) Clone() *ServerTLS {
 	}
 }
 
-// ServerOptions defines the HTTP server transport layer options
-type ServerOptions struct {
+// ServerConfig defines the HTTP server transport layer configurations
+type ServerConfig struct {
 	Host              string
 	KeepAliveDuration time.Duration
 	TLS               *ServerTLS
 	Playground        bool
 }
 
-// Prepare sets defaults and validates the options
-func (opts *ServerOptions) Prepare() error {
-	if opts.KeepAliveDuration == time.Duration(0) {
-		opts.KeepAliveDuration = 3 * time.Minute
+// Prepare sets defaults and validates the configurations
+func (conf *ServerConfig) Prepare() error {
+	if conf.KeepAliveDuration == time.Duration(0) {
+		conf.KeepAliveDuration = 3 * time.Minute
 	}
 
-	if opts.TLS != nil {
-		if opts.TLS.CertificateFilePath == "" {
+	if conf.TLS != nil {
+		if conf.TLS.CertificateFilePath == "" {
 			return errors.New("missing TLS certificate file path")
 		}
-		if opts.TLS.PrivateKeyFilePath == "" {
+		if conf.TLS.PrivateKeyFilePath == "" {
 			return errors.New("missing TLS private key file path")
 		}
 	}
@@ -55,14 +55,14 @@ func (opts *ServerOptions) Prepare() error {
 	return nil
 }
 
-// ClientOptions defines the HTTP client transport layer options
-type ClientOptions struct {
+// ClientConfig defines the HTTP client transport layer configuration
+type ClientConfig struct {
 	Timeout time.Duration
 }
 
-// SetDefaults sets the default options
-func (opts *ClientOptions) SetDefaults() {
-	if opts.Timeout == time.Duration(0) {
-		opts.Timeout = 30 * time.Second
+// SetDefaults sets the default configuration
+func (conf *ClientConfig) SetDefaults() {
+	if conf.Timeout == time.Duration(0) {
+		conf.Timeout = 30 * time.Second
 	}
 }

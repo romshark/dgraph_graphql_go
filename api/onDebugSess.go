@@ -8,8 +8,8 @@ func (srv *server) onDebugSess(
 	username, password string,
 ) []byte {
 	// Check debug credentials
-	if username != srv.opts.DebugUser.Username ||
-		password != srv.opts.DebugUser.Password {
+	if username != srv.conf.DebugUser.Username ||
+		password != srv.conf.DebugUser.Password {
 		return nil
 	}
 
