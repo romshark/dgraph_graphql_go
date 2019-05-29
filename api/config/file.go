@@ -91,7 +91,7 @@ func (f *File) debugLog(conf *ServerConfig) error {
 		// Debug log to file
 		var err error
 		writer, err = os.OpenFile(
-			f.Log.Debug,
+			f.Log.Debug[5:],
 			os.O_WRONLY|os.O_APPEND|os.O_CREATE,
 			0660,
 		)
@@ -118,7 +118,7 @@ func (f *File) errorLog(conf *ServerConfig) error {
 		// Error log to file
 		var err error
 		writer, err = os.OpenFile(
-			f.Log.Error,
+			f.Log.Error[5:],
 			os.O_WRONLY|os.O_APPEND|os.O_CREATE,
 			0660,
 		)
