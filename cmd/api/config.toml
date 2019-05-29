@@ -10,7 +10,7 @@ session-key-generator = "default"
 host = "localhost:10180"
 
 [log]
-debug = "file:sd"
+debug = "stdout"
 error = "stderr"
 
 [debug]
