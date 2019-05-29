@@ -9,7 +9,7 @@ func (t *Server) servePlayground(
 	resp http.ResponseWriter,
 	req *http.Request,
 ) {
-	if !t.opts.Playground {
+	if !t.conf.Playground {
 		http.Error(
 			resp,
 			http.StatusText(http.StatusNotFound),

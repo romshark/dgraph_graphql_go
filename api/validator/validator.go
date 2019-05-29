@@ -34,8 +34,8 @@ type Validator interface {
 	UserDisplayName(v string) error
 }
 
-// Options represents the validator options
-type Options struct {
+// Config represents the validator configuration
+type Config struct {
 	PasswordLenMin        uint
 	PasswordLenMax        uint
 	EmailLenMax           uint
@@ -50,26 +50,26 @@ type Options struct {
 }
 
 type validator struct {
-	opts        Options
+	conf        Config
 	regexpEmail *regexp.Regexp
 }
 
 // NewValidator creates a new validator instance
-func NewValidator(productionModeEnabled bool, opts Options) (Validator, error) {
+func NewValidator(productionModeEnabled bool, conf Config) (Validator, error) {
 	regexpEmail, err := regexp.Compile(`^.+@.+\..+$`)
 	if err != nil {
 		panic(errors.Wrap(err, "compile regexpEmail"))
 	}
 
-	if productionModeEnabled && opts.PasswordLenMin < 6 {
+	if productionModeEnabled && conf.PasswordLenMin < 6 {
 		return nil, fmt.Errorf(
 			"minimum password length must be 6 in production mode, was: %d",
-			opts.PasswordLenMin,
+			conf.PasswordLenMin,
 		)
 	}
 
 	return &validator{
-		opts:        opts,
+		conf:        conf,
 		regexpEmail: regexpEmail,
 	}, nil
 }
