@@ -147,46 +147,47 @@ func (f *File) debug(conf *ServerConfig) error {
 }
 
 func (f *File) transportHTTP(conf *ServerConfig) error {
-	opt := thttp.ServerConfig{}
+	srvConf := thttp.ServerConfig{}
 
 	// Host
 	if len(f.TransportHTTP.Host) < 1 {
 		return nil
 	}
+	srvConf.Host = f.TransportHTTP.Host
 
 	// Keep-alive duration
-	opt.KeepAliveDuration = time.Duration(f.TransportHTTP.KeepAliveDuration)
+	srvConf.KeepAliveDuration = time.Duration(f.TransportHTTP.KeepAliveDuration)
 
 	// TLS
 	if f.TransportHTTP.TLS.Enabled {
-		opt.TLS = &thttp.ServerTLS{
+		srvConf.TLS = &thttp.ServerTLS{
 			Config:              &tls.Config{},
 			CertificateFilePath: f.TransportHTTP.TLS.CertificateFile,
 			PrivateKeyFilePath:  f.TransportHTTP.TLS.KeyFile,
 		}
 
 		// Min version
-		opt.TLS.Config.MinVersion = uint16(f.TransportHTTP.TLS.MinVersion)
+		srvConf.TLS.Config.MinVersion = uint16(f.TransportHTTP.TLS.MinVersion)
 
 		// Cipher suites
 		cipherSuites := make([]uint16, len(f.TransportHTTP.TLS.CipherSuites))
 		for i, cipherSuite := range f.TransportHTTP.TLS.CipherSuites {
 			cipherSuites[i] = uint16(cipherSuite)
 		}
-		opt.TLS.Config.CipherSuites = cipherSuites
+		srvConf.TLS.Config.CipherSuites = cipherSuites
 
 		// Curve preferences
 		curveIDs := make([]tls.CurveID, len(f.TransportHTTP.TLS.CipherSuites))
 		for i, curveID := range f.TransportHTTP.TLS.CipherSuites {
 			curveIDs[i] = tls.CurveID(curveID)
 		}
-		opt.TLS.Config.CurvePreferences = curveIDs
+		srvConf.TLS.Config.CurvePreferences = curveIDs
 	}
 
 	// Playground
-	opt.Playground = f.TransportHTTP.Playground
+	srvConf.Playground = f.TransportHTTP.Playground
 
-	newServer, err := thttp.NewServer(opt)
+	newServer, err := thttp.NewServer(srvConf)
 	if err != nil {
 		return errors.Wrap(err, "HTTP server init")
 	}
