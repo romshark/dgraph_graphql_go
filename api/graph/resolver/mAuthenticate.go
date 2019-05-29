@@ -22,6 +22,7 @@ func (rsv *Resolver) Authenticate(
 		ctx,
 		`query Session($sessionKey: string) {
 			session(func: eq(Session.key, $sessionKey)) {
+				uid
 				Session.key
 				Session.creation
 				Session.user {
