@@ -2,6 +2,7 @@ package gqlshield
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	art "github.com/plar/go-adaptive-radix-tree"
@@ -9,7 +10,6 @@ import (
 
 // Parameter represents a query parameter
 type Parameter struct {
-	Name           string
 	MaxValueLength uint32
 }
 
@@ -47,7 +47,7 @@ type GraphQLShield interface {
 	RemoveQuery(query []byte) (*Query, error)
 
 	// Check returns an error if the given query isn't whitelisted
-	Check(query []byte) (bool, error)
+	Check(query []byte, arguments map[string]string) (bool, error)
 
 	// Queries returns all whitelisted queries
 	Queries() map[string]*Query
@@ -116,7 +116,10 @@ func (shld *shield) RemoveQuery(query []byte) (*Query, error) {
 	return nil, nil
 }
 
-func (shld *shield) Check(query []byte) (bool, error) {
+func (shld *shield) Check(
+	query []byte,
+	arguments map[string]string,
+) (bool, error) {
 	if len(query) < 1 {
 		return false, errors.New("invalid (empty) query")
 	}
@@ -128,8 +131,38 @@ func (shld *shield) Check(query []byte) (bool, error) {
 	shld.lock.RLock()
 	defer shld.lock.RUnlock()
 
-	_, found := shld.index.Search(normalized)
-	return found, nil
+	// Lookup query
+	qrObj, found := shld.index.Search(normalized)
+	if !found {
+		return false, nil
+	}
+
+	qr := qrObj.(*Query)
+	if len(arguments) != len(qr.Parameters) {
+		return true, fmt.Errorf(
+			"unexpected number of arguments: (%d/%d)",
+			len(arguments),
+			len(qr.Parameters),
+		)
+	}
+
+	// Verify arguments
+	for name, expectedParam := range qr.Parameters {
+		actual, hasArg := arguments[name]
+		if !hasArg {
+			return true, fmt.Errorf("missing argument '%s'", name)
+		}
+		if uint32(len(actual)) > expectedParam.MaxValueLength {
+			return true, fmt.Errorf(
+				"argument '%s' exceeds max length (%d/%d)",
+				name,
+				len(actual),
+				expectedParam.MaxValueLength,
+			)
+		}
+	}
+
+	return true, nil
 }
 
 func (shld *shield) Queries() map[string]*Query {
