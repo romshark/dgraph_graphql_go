@@ -45,7 +45,9 @@ func TestGQLShield(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, query2isIn)
 
-	require.Len(t, shield.Queries(), 0)
+	queries1, err := shield.Queries()
+	require.NoError(t, err)
+	require.Len(t, queries1, 0)
 
 	// Insert first query
 	require.NoError(t, shield.WhitelistQuery(query1.Clone()))
@@ -60,7 +62,9 @@ func TestGQLShield(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, query2isIn2)
 
-	require.Len(t, shield.Queries(), 1)
+	queries2, err := shield.Queries()
+	require.NoError(t, err)
+	require.Len(t, queries2, 1)
 
 	// Insert second query
 	require.NoError(t, shield.WhitelistQuery(query2.Clone()))
@@ -75,7 +79,9 @@ func TestGQLShield(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, query2isIn3)
 
-	require.Len(t, shield.Queries(), 2)
+	queries3, err := shield.Queries()
+	require.NoError(t, err)
+	require.Len(t, queries3, 2)
 
 	// Remove first query
 	q = query1.Clone()
@@ -93,7 +99,9 @@ func TestGQLShield(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, query2isIn4)
 
-	require.Len(t, shield.Queries(), 1)
+	queries4, err := shield.Queries()
+	require.NoError(t, err)
+	require.Len(t, queries4, 1)
 
 	// Remove second query
 	q = query2.Clone()
@@ -111,7 +119,9 @@ func TestGQLShield(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, query2isIn5)
 
-	require.Len(t, shield.Queries(), 0)
+	queries5, err := shield.Queries()
+	require.NoError(t, err)
+	require.Len(t, queries5, 0)
 }
 
 func TestGQLShieldWrongArg(t *testing.T) {

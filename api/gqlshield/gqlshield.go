@@ -50,15 +50,16 @@ type GraphQLShield interface {
 	Check(query []byte, arguments map[string]string) (bool, error)
 
 	// Queries returns all whitelisted queries
-	Queries() map[string]*Query
+	Queries() (map[string]*Query, error)
 }
 
 // NewGraphQLShield creates a new GraphQL shield instance
 func NewGraphQLShield() GraphQLShield {
 	return &shield{
-		lock:  &sync.RWMutex{},
-		index: art.New(),
-		store: make(map[string]*Query),
+		lock:    &sync.RWMutex{},
+		index:   art.New(),
+		store:   make(map[string]*Query),
+		longest: 0,
 	}
 }
 
@@ -70,6 +71,9 @@ type shield struct {
 
 	// index holds a radix-tree lookup index
 	index art.Tree
+
+	// longest keeps track of the longest whitelisted query
+	longest int
 }
 
 func (shld *shield) WhitelistQuery(query *Query) error {
@@ -91,6 +95,9 @@ func (shld *shield) WhitelistQuery(query *Query) error {
 	shld.store[query.Name] = query
 
 	shld.index.Insert(normalized, query)
+	if len(query.Query) > shld.longest {
+		shld.longest = len(query.Query)
+	}
 	return nil
 }
 
@@ -110,6 +117,22 @@ func (shld *shield) RemoveQuery(query []byte) (*Query, error) {
 	if deleted {
 		removed := val.(*Query)
 		delete(shld.store, removed.Name)
+
+		if len(removed.Query) == shld.longest {
+			// Recalculate longest
+			shld.longest = 0
+			for itr := shld.index.Iterator(); itr.HasNext(); {
+				node, err := itr.Next()
+				if err != nil {
+					return nil, err
+				}
+				queryLength := len(node.Value().(*Query).Query)
+				if queryLength > shld.longest {
+					shld.longest = queryLength
+				}
+			}
+		}
+
 		return removed, nil
 	}
 
@@ -165,15 +188,18 @@ func (shld *shield) Check(
 	return true, nil
 }
 
-func (shld *shield) Queries() map[string]*Query {
+func (shld *shield) Queries() (map[string]*Query, error) {
 	shld.lock.RLock()
 	defer shld.lock.RUnlock()
 
 	m := make(map[string]*Query, shld.index.Size())
 	for itr := shld.index.Iterator(); itr.HasNext(); {
-		node, _ := itr.Next()
+		node, err := itr.Next()
+		if err != nil {
+			return nil, err
+		}
 		qr := node.Value().(*Query)
 		m[qr.Name] = qr
 	}
-	return m
+	return m, nil
 }
