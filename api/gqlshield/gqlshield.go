@@ -39,17 +39,28 @@ func (q *Query) Clone() *Query {
 
 // GraphQLShield represents a GraphQL shield instance
 type GraphQLShield interface {
-	// WhitelistQuery adds a query to the whitelist
+	// WhitelistQuery adds the given query to the whitelist
+	// returning an error if the query doesn't meet the requirements.
+	// The provided query will be mutated due to normalization!
+	//
+	// This method is thread-safe.
 	WhitelistQuery(query *Query) error
 
 	// RemoveQuery removes a query from the whitelist and returns true
-	// if any query was removed
+	// if any query was removed as well as the actual removed query.
+	//
+	// This method is thread-safe.
 	RemoveQuery(query []byte) (*Query, error)
 
 	// Check returns an error if the given query isn't whitelisted
+	// or if the provided arguments are unacceptable.
+	//
+	// This method is thread-safe.
 	Check(query []byte, arguments map[string]string) (bool, error)
 
-	// Queries returns all whitelisted queries
+	// Queries returns all whitelisted queries.
+	//
+	// This method is thread-safe.
 	Queries() (map[string]*Query, error)
 }
 
@@ -77,6 +88,9 @@ type shield struct {
 }
 
 func (shld *shield) WhitelistQuery(query *Query) error {
+	if query == nil {
+		return errors.New("missing query")
+	}
 	if len(query.Query) < 1 {
 		return errors.New("invalid (empty) query")
 	}
@@ -199,7 +213,7 @@ func (shld *shield) Queries() (map[string]*Query, error) {
 			return nil, err
 		}
 		qr := node.Value().(*Query)
-		m[qr.Name] = qr
+		m[qr.Name] = qr.Clone()
 	}
 	return m, nil
 }
