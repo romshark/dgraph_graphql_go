@@ -3,164 +3,266 @@ package gqlshield
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 
 	art "github.com/plar/go-adaptive-radix-tree"
 )
 
-// Parameter represents a query parameter
-type Parameter struct {
-	MaxValueLength uint32
-}
-
-// Query represents a whitelisted query
-type Query struct {
-	Query      []byte
-	Name       string
-	Parameters map[string]Parameter
-}
-
-// Clone creates a new exact copy of the query object
-func (q *Query) Clone() *Query {
-	qr := make([]byte, len(q.Query))
-	copy(qr, q.Query)
-
-	params := make(map[string]Parameter, len(q.Parameters))
-	for paramName, param := range q.Parameters {
-		params[paramName] = param
-	}
-
-	return &Query{
-		Query:      qr,
-		Name:       q.Name,
-		Parameters: params,
-	}
-}
-
 // GraphQLShield represents a GraphQL shield instance
 type GraphQLShield interface {
 	// WhitelistQuery adds the given query to the whitelist
 	// returning an error if the query doesn't meet the requirements.
-	// The provided query will be mutated due to normalization!
-	//
-	// This method is thread-safe.
-	WhitelistQuery(query *Query) error
+	WhitelistQuery(
+		queryString []byte,
+		name string,
+		parameters map[string]Parameter,
+		whitelistedFor []int,
+	) (Query, error)
 
 	// RemoveQuery removes a query from the whitelist and returns true
 	// if any query was removed as well as the actual removed query.
-	//
-	// This method is thread-safe.
-	RemoveQuery(query []byte) (*Query, error)
+	RemoveQuery(query Query) error
 
-	// Check returns an error if the given query isn't whitelisted
-	// or if the provided arguments are unacceptable.
+	// Check returns an error if the given query isn't allowed for the given
+	// client role to be executed or if the provided arguments are unacceptable.
 	//
-	// This method is thread-safe.
-	Check(query []byte, arguments map[string]string) (bool, error)
+	// WARNING: query will be mutated during normalization! Manually copy the
+	// query byte-slice if you don't want your inputs to be mutated.
+	Check(
+		clientRole int,
+		query []byte,
+		arguments map[string]string,
+	) (bool, error)
 
 	// Queries returns all whitelisted queries.
-	//
-	// This method is thread-safe.
-	Queries() (map[string]*Query, error)
+	Queries() (map[string]Query, error)
+}
+
+// ClientRole represents a client role
+type ClientRole struct {
+	ID   int
+	Name string
+}
+
+func copyRoles(roles ...ClientRole) (map[int]ClientRole, error) {
+	if len(roles) < 1 {
+		return nil, errors.New("missing roles")
+	}
+
+	byName := make(map[string]ClientRole, len(roles))
+	byID := make(map[int]ClientRole, len(roles))
+	cp := make(map[int]ClientRole, len(roles))
+	for _, role := range roles {
+		// Ensure the client role ID is unique
+		if defined, alreadyDefined := byID[role.ID]; alreadyDefined {
+			return nil, fmt.Errorf(
+				"role ID %d redefined for %s",
+				defined.ID,
+				defined.Name,
+			)
+		}
+
+		// Ensure the client role name is valid
+		if len(role.Name) < 1 {
+			return nil, fmt.Errorf(
+				"invalid (empty) client role name (%d)",
+				role.ID,
+			)
+		}
+
+		// Ensure the client role name is unique
+		if defined, alreadyDefined := byName[role.Name]; alreadyDefined {
+			return nil, fmt.Errorf(
+				"%d:'%s' redefined for %d",
+				defined.ID,
+				role.Name,
+				role.ID,
+			)
+		}
+
+		role := ClientRole{
+			ID:   role.ID,
+			Name: role.Name,
+		}
+
+		// Define name->id
+		byName[role.Name] = role
+		byID[role.ID] = role
+		cp[role.ID] = role
+	}
+	return cp, nil
 }
 
 // NewGraphQLShield creates a new GraphQL shield instance
-func NewGraphQLShield() GraphQLShield {
-	return &shield{
-		lock:    &sync.RWMutex{},
-		index:   art.New(),
-		store:   make(map[string]*Query),
-		longest: 0,
+func NewGraphQLShield(clientRoles ...ClientRole) (GraphQLShield, error) {
+	roles, err := copyRoles(clientRoles...)
+	if err != nil {
+		return nil, err
 	}
+
+	return &shield{
+		lock:        &sync.RWMutex{},
+		index:       art.New(),
+		store:       make(map[string]*query),
+		longest:     0,
+		clientRoles: roles,
+	}, nil
 }
 
 type shield struct {
 	lock *sync.RWMutex
 
 	// store stores all original queries associted by a name
-	store map[string]*Query
+	store map[string]*query
 
 	// index holds a radix-tree lookup index
 	index art.Tree
 
 	// longest keeps track of the longest whitelisted query
 	longest int
+
+	// clientRoles keeps track of all registered client roles
+	clientRoles map[int]ClientRole
 }
 
-func (shld *shield) WhitelistQuery(query *Query) error {
-	if query == nil {
-		return errors.New("missing query")
-	}
-	if len(query.Query) < 1 {
-		return errors.New("invalid (empty) query")
-	}
-	normalized, err := prepareQuery(query.Query)
-	if err != nil {
-		return err
-	}
+func (shld *shield) WhitelistQuery(
+	queryString []byte,
+	name string,
+	parameters map[string]Parameter,
+	whitelistedFor []int,
+) (Query, error) {
+	newQuery := &query{}
 
-	shld.lock.Lock()
-	defer shld.lock.Unlock()
-	if _, nameIsRegistered := shld.store[query.Name]; nameIsRegistered {
-		return errors.New("a query with a similar name is already whitelisted")
+	// Set name
+	if len(name) < 1 {
+		return nil, errors.New("invalid (empty) query name")
 	}
+	newQuery.name = name
 
-	// Store the original query
-	shld.store[query.Name] = query
-
-	shld.index.Insert(normalized, query)
-	if len(query.Query) > shld.longest {
-		shld.longest = len(query.Query)
-	}
-	return nil
-}
-
-func (shld *shield) RemoveQuery(query []byte) (*Query, error) {
-	if len(query) < 1 {
+	// Set query (normalized)
+	if len(queryString) < 1 {
 		return nil, errors.New("invalid (empty) query")
 	}
-	normalized, err := prepareQuery(query)
+	newQuery.query = make([]byte, len(queryString))
+	copy(newQuery.query, queryString)
+	normalized, err := prepareQuery(newQuery.query)
 	if err != nil {
 		return nil, err
 	}
+	newQuery.query = normalized
+
+	// Set whitelistedFor
+	if len(whitelistedFor) < 1 {
+		return nil, fmt.Errorf("query '%s' has no roles associated", name)
+	}
+	newQuery.whitelistedFor = make(map[int]struct{}, len(whitelistedFor))
+	for _, roleID := range whitelistedFor {
+		newQuery.whitelistedFor[roleID] = struct{}{}
+	}
+
+	// Set parameters
+	newQuery.parameters = make(map[string]Parameter, len(parameters))
+	for paramName, param := range parameters {
+		if len(paramName) < 1 {
+			return nil, fmt.Errorf(
+				"query '%s' has parameter with invalid (empty name)",
+				name,
+			)
+		}
+		if param.MaxValueLength < 1 {
+			return nil, fmt.Errorf(
+				"query '%s' has parameter with invalid MaxValueLength: %d",
+				name,
+				param.MaxValueLength,
+			)
+		}
+		newQuery.parameters[paramName] = param
+	}
+
+	// Verify & register query
+	shld.lock.Lock()
+	defer shld.lock.Unlock()
+
+	// Ensure name uniqueness
+	if _, nameIsRegistered := shld.store[name]; nameIsRegistered {
+		return nil, errors.New(
+			"a query with a similar name is already whitelisted",
+		)
+	}
+
+	// Ensure query uniqueness
+	if existing, similarQueryRegistered := shld.index.Search(
+		newQuery.query,
+	); similarQueryRegistered {
+		return nil, fmt.Errorf(
+			"similar query already whitelisted under the name: '%s'",
+			existing.(*query).name,
+		)
+	}
+
+	// Ensure referenced roles exist
+	for role := range newQuery.whitelistedFor {
+		if _, roleDefined := shld.clientRoles[role]; !roleDefined {
+			return nil, fmt.Errorf("undefined role: %d", role)
+		}
+	}
+
+	// Store the original query
+	shld.store[name] = newQuery
+
+	// Update index
+	shld.index.Insert(normalized, newQuery)
+	if len(newQuery.query) > shld.longest {
+		shld.longest = len(newQuery.query)
+	}
+
+	return newQuery, nil
+}
+
+func (shld *shield) RemoveQuery(queryObject Query) error {
+	qr, isExpectedType := queryObject.(*query)
+	if !isExpectedType {
+		return fmt.Errorf(
+			"unexpected query type: %s",
+			reflect.TypeOf(queryObject),
+		)
+	}
 
 	shld.lock.Lock()
 	defer shld.lock.Unlock()
 
-	val, deleted := shld.index.Delete(normalized)
-	if deleted {
-		removed := val.(*Query)
-		delete(shld.store, removed.Name)
+	if _, deleted := shld.index.Delete(qr.query); deleted {
+		delete(shld.store, qr.name)
 
-		if len(removed.Query) == shld.longest {
+		if len(qr.query) == shld.longest {
 			// Recalculate longest
 			shld.longest = 0
 			for itr := shld.index.Iterator(); itr.HasNext(); {
 				node, err := itr.Next()
 				if err != nil {
-					return nil, err
+					return err
 				}
-				queryLength := len(node.Value().(*Query).Query)
+				queryLength := len(node.Value().(*query).query)
 				if queryLength > shld.longest {
 					shld.longest = queryLength
 				}
 			}
 		}
-
-		return removed, nil
 	}
 
-	return nil, nil
+	return nil
 }
 
 func (shld *shield) Check(
-	query []byte,
+	clientRoleID int,
+	queryString []byte,
 	arguments map[string]string,
 ) (bool, error) {
-	if len(query) < 1 {
+	if len(queryString) < 1 {
 		return false, errors.New("invalid (empty) query")
 	}
-	normalized, err := prepareQuery(query)
+	normalized, err := prepareQuery(queryString)
 	if err != nil {
 		return false, err
 	}
@@ -168,23 +270,35 @@ func (shld *shield) Check(
 	shld.lock.RLock()
 	defer shld.lock.RUnlock()
 
+	// Find role
+	if _, roleDefined := shld.clientRoles[clientRoleID]; !roleDefined {
+		return false, fmt.Errorf("role %d is undefined", clientRoleID)
+	}
+
 	// Lookup query
 	qrObj, found := shld.index.Search(normalized)
 	if !found {
 		return false, nil
 	}
+	qr := qrObj.(*query)
 
-	qr := qrObj.(*Query)
-	if len(arguments) != len(qr.Parameters) {
+	// Ensure the client is allowed to execute this query
+	if _, roleAllowed := qr.whitelistedFor[clientRoleID]; !roleAllowed {
 		return true, fmt.Errorf(
-			"unexpected number of arguments: (%d/%d)",
-			len(arguments),
-			len(qr.Parameters),
+			"role %d is not allowed to execute this query",
+			clientRoleID,
 		)
 	}
 
-	// Verify arguments
-	for name, expectedParam := range qr.Parameters {
+	// Check arguments
+	if len(arguments) != len(qr.parameters) {
+		return true, fmt.Errorf(
+			"unexpected number of arguments: (%d/%d)",
+			len(arguments),
+			len(qr.parameters),
+		)
+	}
+	for name, expectedParam := range qr.parameters {
 		actual, hasArg := arguments[name]
 		if !hasArg {
 			return true, fmt.Errorf("missing argument '%s'", name)
@@ -202,18 +316,18 @@ func (shld *shield) Check(
 	return true, nil
 }
 
-func (shld *shield) Queries() (map[string]*Query, error) {
+func (shld *shield) Queries() (map[string]Query, error) {
 	shld.lock.RLock()
 	defer shld.lock.RUnlock()
 
-	m := make(map[string]*Query, shld.index.Size())
+	allQueries := make(map[string]Query, shld.index.Size())
 	for itr := shld.index.Iterator(); itr.HasNext(); {
 		node, err := itr.Next()
 		if err != nil {
 			return nil, err
 		}
-		qr := node.Value().(*Query)
-		m[qr.Name] = qr.Clone()
+		qr := node.Value().(*query)
+		allQueries[qr.name] = qr
 	}
-	return m, nil
+	return allQueries, nil
 }
