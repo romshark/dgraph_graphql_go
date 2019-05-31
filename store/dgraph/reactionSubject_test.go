@@ -74,7 +74,11 @@ func TestReactionSubjectUnMarshal(t *testing.T) {
 	// Invalid type <-> JSON
 	t.Run("JSON_invalid", func(t *testing.T) {
 		require.Panics(t, func() {
-			json.Marshal(dgraph.ReactionSubject{V: "invalid_union_type"})
+			res, err := json.Marshal(
+				dgraph.ReactionSubject{V: "invalid_union_type"},
+			)
+			require.Nil(t, res)
+			require.Error(t, err)
 		})
 		invalidJson := []byte(`{"Foo": "bar", "Baz": 42}`)
 		var u dgraph.ReactionSubject

@@ -19,7 +19,7 @@ func TestCreateSessionErr(t *testing.T) {
 		var query struct {
 			User *gqlmod.User `json:"user"`
 		}
-		debug.QueryVar(
+		require.NoError(t, debug.QueryVar(
 			`query($userId: Identifier!) {
 				user(id: $userId) {
 					sessions {
@@ -31,7 +31,7 @@ func TestCreateSessionErr(t *testing.T) {
 				"userId": string(*user.ID),
 			},
 			&query,
-		)
+		))
 		require.NotNil(t, query.User)
 		require.Len(t, query.User.Sessions, 0)
 	}
