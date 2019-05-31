@@ -36,10 +36,6 @@ before_script:
   - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.16.0
 
 script:
-  # Run all the tests with the race detector enabled
-  - overalls -project=github.com/romshark/dgraph_graphql_go -covermode=atomic -debug -- -race -v -coverpkg=./...
-  - $HOME/gopath/bin/goveralls -coverprofile=overalls.coverprofile -service=travis-ci -repotoken=$COVERALLS_TOKEN
-
   # go vet is the official Go static analyzer
   - go vet ./...
 
@@ -51,3 +47,7 @@ script:
 
   # Build cmd/api
   - go build -o apisrv cmd/api
+
+  # Run all the tests with the race detector enabled
+  - overalls -project=github.com/romshark/dgraph_graphql_go -covermode=atomic -debug -- -race -v -coverpkg=./...
+  - $HOME/gopath/bin/goveralls -coverprofile=overalls.coverprofile -service=travis-ci -repotoken=$COVERALLS_TOKEN
