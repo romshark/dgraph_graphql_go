@@ -18,7 +18,7 @@ func TestQuery(t *testing.T) {
 		var query struct {
 			Users []gqlmod.User `json:"users"`
 		}
-		s.ts.Debug().Query(
+		require.NoError(t, s.ts.Debug().Query(
 			`query {
 				users {
 					id
@@ -28,7 +28,7 @@ func TestQuery(t *testing.T) {
 				}
 			}`,
 			&query,
-		)
+		))
 		require.Len(t, query.Users, len(s.users))
 		for _, actual := range query.Users {
 			require.Contains(t, s.users, *actual.ID)
@@ -43,7 +43,7 @@ func TestQuery(t *testing.T) {
 		var query struct {
 			Users []gqlmod.User `json:"users"`
 		}
-		ts.Debug().Query(
+		require.NoError(t, ts.Debug().Query(
 			`query {
 				users {
 					id
@@ -53,7 +53,7 @@ func TestQuery(t *testing.T) {
 				}
 			}`,
 			&query,
-		)
+		))
 		require.Len(t, query.Users, 0)
 	})
 
@@ -64,7 +64,7 @@ func TestQuery(t *testing.T) {
 		var query struct {
 			Posts []gqlmod.Post `json:"posts"`
 		}
-		s.ts.Debug().Query(
+		require.NoError(t, s.ts.Debug().Query(
 			`query {
 				posts {
 					id
@@ -74,7 +74,7 @@ func TestQuery(t *testing.T) {
 				}
 			}`,
 			&query,
-		)
+		))
 		require.Len(t, query.Posts, len(s.posts))
 		for _, actual := range query.Posts {
 			require.Contains(t, s.posts, *actual.ID)
@@ -89,7 +89,7 @@ func TestQuery(t *testing.T) {
 		var query struct {
 			Posts []gqlmod.Post `json:"posts"`
 		}
-		ts.Debug().Query(
+		require.NoError(t, ts.Debug().Query(
 			`query {
 				posts {
 					id
@@ -99,7 +99,7 @@ func TestQuery(t *testing.T) {
 				}
 			}`,
 			&query,
-		)
+		))
 		require.Len(t, query.Posts, 0)
 	})
 
@@ -113,7 +113,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			clt.QueryVar(
+			require.NoError(t, clt.QueryVar(
 				`query($userId: Identifier!) {
 					user(id: $userId) {
 						id
@@ -126,7 +126,7 @@ func TestQuery(t *testing.T) {
 					"userId": string(*expected.ID),
 				},
 				&query,
-			)
+			))
 			require.NotNil(t, query.User)
 			compareUsers(t, expected, query.User)
 		}
@@ -139,7 +139,7 @@ func TestQuery(t *testing.T) {
 		var query struct {
 			User *gqlmod.User `json:"user"`
 		}
-		s.ts.Debug().QueryVar(
+		require.NoError(t, s.ts.Debug().QueryVar(
 			`query($userId: Identifier!) {
 				user(id: $userId) {
 					id
@@ -152,7 +152,7 @@ func TestQuery(t *testing.T) {
 				"userId": string(store.NewID()),
 			},
 			&query,
-		)
+		))
 		require.Nil(t, query.User)
 	})
 
@@ -164,7 +164,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				Post *gqlmod.Post `json:"post"`
 			}
-			s.ts.Debug().QueryVar(
+			require.NoError(t, s.ts.Debug().QueryVar(
 				`query($postId: Identifier!) {
 					post(id: $postId) {
 						id
@@ -177,7 +177,7 @@ func TestQuery(t *testing.T) {
 					"postId": string(*expected.ID),
 				},
 				&query,
-			)
+			))
 			require.NotNil(t, query.Post)
 			comparePosts(t, expected, query.Post)
 		}
@@ -190,7 +190,7 @@ func TestQuery(t *testing.T) {
 		var query struct {
 			Post *gqlmod.Post `json:"post"`
 		}
-		s.ts.Debug().QueryVar(
+		require.NoError(t, s.ts.Debug().QueryVar(
 			`query($postId: Identifier!) {
 				post(id: $postId) {
 					id
@@ -203,7 +203,7 @@ func TestQuery(t *testing.T) {
 				"postId": string(store.NewID()),
 			},
 			&query,
-		)
+		))
 		require.Nil(t, query.Post)
 	})
 
@@ -215,7 +215,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				Reaction *gqlmod.Reaction `json:"reaction"`
 			}
-			s.ts.Debug().QueryVar(
+			require.NoError(t, s.ts.Debug().QueryVar(
 				`query($reactionId: Identifier!) {
 					reaction(id: $reactionId) {
 						id
@@ -228,7 +228,7 @@ func TestQuery(t *testing.T) {
 					"reactionId": string(*expected.ID),
 				},
 				&query,
-			)
+			))
 			compareReactions(t, expected, query.Reaction)
 		}
 	})
@@ -240,7 +240,7 @@ func TestQuery(t *testing.T) {
 		var query struct {
 			Reaction *gqlmod.Reaction `json:"reaction"`
 		}
-		s.ts.Debug().QueryVar(
+		require.NoError(t, s.ts.Debug().QueryVar(
 			`query($reactionId: Identifier!) {
 				reaction(id: $reactionId) {
 					id
@@ -253,7 +253,7 @@ func TestQuery(t *testing.T) {
 				"reactionId": string(store.NewID()),
 			},
 			&query,
-		)
+		))
 		require.Nil(t, query.Reaction)
 	})
 
@@ -265,7 +265,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			s.ts.Debug().QueryVar(
+			require.NoError(t, s.ts.Debug().QueryVar(
 				`query($userId: Identifier!) {
 					user(id: $userId) {
 						posts {
@@ -280,7 +280,7 @@ func TestQuery(t *testing.T) {
 					"userId": string(authorID),
 				},
 				&query,
-			)
+			))
 
 			require.NotNil(t, query.User)
 			require.Len(t, query.User.Posts, len(posts))
@@ -301,7 +301,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				Post *gqlmod.Post `json:"post"`
 			}
-			s.ts.Debug().QueryVar(
+			require.NoError(t, s.ts.Debug().QueryVar(
 				`query($postId: Identifier!) {
 					post(id: $postId) {
 						author {
@@ -316,7 +316,7 @@ func TestQuery(t *testing.T) {
 					"postId": string(postID),
 				},
 				&query,
-			)
+			))
 
 			require.NotNil(t, query.Post)
 			require.NotNil(t, query.Post.Author)
@@ -336,7 +336,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			clt.QueryVar(
+			require.NoError(t, clt.QueryVar(
 				`query($userId: Identifier!) {
 					user(id: $userId) {
 						sessions {
@@ -349,7 +349,7 @@ func TestQuery(t *testing.T) {
 					"userId": string(*sess.User.ID),
 				},
 				&query,
-			)
+			))
 
 			require.NotNil(t, query.User)
 			require.Len(t, query.User.Sessions, len(expectedSessions))
@@ -381,7 +381,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			s.ts.Debug().QueryVar(
+			require.NoError(t, s.ts.Debug().QueryVar(
 				`query($userId: Identifier!) {
 					user(id: $userId) {
 						sessions {
@@ -394,7 +394,7 @@ func TestQuery(t *testing.T) {
 					"userId": string(userID),
 				},
 				&query,
-			)
+			))
 			require.NotNil(t, query.User)
 			require.Len(t, query.User.Sessions, 0)
 		}
@@ -408,7 +408,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				Post *gqlmod.Post `json:"post"`
 			}
-			s.ts.Debug().QueryVar(
+			require.NoError(t, s.ts.Debug().QueryVar(
 				`query($postId: Identifier!) {
 					post(id: $postId) {
 						reactions {
@@ -423,7 +423,7 @@ func TestQuery(t *testing.T) {
 					"postId": string(postID),
 				},
 				&query,
-			)
+			))
 
 			require.NotNil(t, query.Post)
 			require.Len(t, query.Post.Reactions, len(reactions))
@@ -444,7 +444,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				User *gqlmod.User `json:"user"`
 			}
-			s.ts.Debug().QueryVar(
+			require.NoError(t, s.ts.Debug().QueryVar(
 				`query($authorId: Identifier!) {
 					user(id: $authorId) {
 						publishedReactions {
@@ -459,7 +459,7 @@ func TestQuery(t *testing.T) {
 					"authorId": string(authorID),
 				},
 				&query,
-			)
+			))
 
 			require.NotNil(t, query.User)
 			require.Len(t, query.User.PublishedReactions, len(reactions))
@@ -480,7 +480,7 @@ func TestQuery(t *testing.T) {
 			var query struct {
 				Reaction *gqlmod.Reaction `json:"reaction"`
 			}
-			s.ts.Debug().QueryVar(
+			require.NoError(t, s.ts.Debug().QueryVar(
 				`query($subjectReactionId: Identifier!) {
 					reaction(id: $subjectReactionId) {
 						reactions {
@@ -495,7 +495,7 @@ func TestQuery(t *testing.T) {
 					"subjectReactionId": string(subjectReactionID),
 				},
 				&query,
-			)
+			))
 
 			require.NotNil(t, query.Reaction)
 			require.Len(t, query.Reaction.Reactions, len(subReactions))
