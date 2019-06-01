@@ -163,7 +163,9 @@ func BenchmarkPrepareQuery(b *testing.B) {
 	)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		prepareQuery(query)
+		if _, err := prepareQuery(query); err != nil {
+			panic(err)
+		}
 	}
 }
 
