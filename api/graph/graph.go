@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/graph-gophers/graphql-go"
+	"github.com/romshark/dgraph_graphql_go/api/graph/resolver"
 	rsv "github.com/romshark/dgraph_graphql_go/api/graph/resolver"
 	"github.com/romshark/dgraph_graphql_go/api/passhash"
 	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
@@ -70,19 +71,29 @@ func New(
 func (graph *Graph) Query(
 	ctx context.Context,
 	query Query,
-) (reply []byte, err error) {
+) ([]byte, error) {
 	// Validate query
 	if errs := graph.schema.Validate(query.Query); errs != nil {
 		return nil, GQLError{errs: errs}
 	}
 
+	var resolverErr error
+
 	// Execute query
 	rep := graph.schema.Exec(
-		ctx,
+		context.WithValue(
+			ctx,
+			resolver.CtxErrorRef,
+			&resolverErr,
+		),
 		query.Query,
 		query.OperationName,
 		query.Variables,
 	)
+
+	if resolverErr != nil {
+		return nil, resolverErr
+	}
 
 	if rep.Errors != nil {
 		err := GQLError{errs: rep.Errors}
