@@ -1,10 +1,11 @@
 package gqlshield
 
-import "errors"
-
 func prepareQuery(query []byte) ([]byte, error) {
 	if len(query) < 1 {
-		return nil, errors.New("invalid (empty) query")
+		return nil, Error{
+			Code:    ErrWrongInput,
+			Message: "invalid (empty) query",
+		}
 	}
 
 	start := int(-1)
@@ -82,7 +83,10 @@ LEADING_LOOP:
 		tail -= shift - start
 	}
 	if inString {
-		return nil, errors.New("unclosed string context")
+		return nil, Error{
+			Code:    ErrWrongInput,
+			Message: "unclosed string context",
+		}
 	}
 	return query[:tail], nil
 }

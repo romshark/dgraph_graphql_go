@@ -50,21 +50,19 @@ func TestWhitelisting(t *testing.T) {
 	require.NotNil(t, query2)
 
 	// Check
-	isQuery1Whitelisted, err := shield.Check(
+	err = shield.Check(
 		0,
 		query1.Query(),
 		map[string]string{"var1": "v"},
 	)
 	require.NoError(t, err)
-	require.True(t, isQuery1Whitelisted)
 
-	isQuery2Whitelisted, err := shield.Check(
+	err = shield.Check(
 		0,
 		query2.Query(),
 		nil,
 	)
 	require.NoError(t, err)
-	require.True(t, isQuery2Whitelisted)
 
 	queries, err := shield.Queries()
 	require.NoError(t, err)
@@ -282,7 +280,7 @@ func TestRoleErr(t *testing.T) {
 		expectancy Expect,
 	) {
 		for role, expectAuth := range expectancy {
-			isWhitelisted, err := shield.Check(
+			err := shield.Check(
 				role,
 				query.Query(),
 				args,
@@ -291,8 +289,12 @@ func TestRoleErr(t *testing.T) {
 				require.NoError(t, err)
 			} else {
 				require.Error(t, err)
+				require.Equal(
+					t,
+					gqlshield.ErrUnauthorized,
+					gqlshield.ErrCode(err),
+				)
 			}
-			require.True(t, isWhitelisted)
 		}
 	}
 
@@ -364,21 +366,20 @@ func TestRemove(t *testing.T) {
 	require.NoError(t, shield.RemoveQuery(query1))
 
 	// Check
-	isQuery1Whitelisted, err := shield.Check(
+	err = shield.Check(
 		0,
 		query1.Query(),
 		map[string]string{"var1": "v"},
 	)
-	require.NoError(t, err)
-	require.False(t, isQuery1Whitelisted)
+	require.Error(t, err)
+	require.Equal(t, gqlshield.ErrUnauthorized, gqlshield.ErrCode(err))
 
-	isQuery2Whitelisted, err := shield.Check(
+	err = shield.Check(
 		0,
 		query2.Query(),
 		nil,
 	)
 	require.NoError(t, err)
-	require.True(t, isQuery2Whitelisted)
 
 	queries, err := shield.Queries()
 	require.NoError(t, err)
@@ -389,13 +390,13 @@ func TestRemove(t *testing.T) {
 	require.NoError(t, shield.RemoveQuery(query2))
 
 	// Check
-	isQuery2Whitelisted, err = shield.Check(
+	err = shield.Check(
 		0,
 		query2.Query(),
 		nil,
 	)
-	require.NoError(t, err)
-	require.False(t, isQuery2Whitelisted)
+	require.Error(t, err)
+	require.Equal(t, gqlshield.ErrUnauthorized, gqlshield.ErrCode(err))
 
 	queries, err = shield.Queries()
 	require.NoError(t, err)
@@ -432,24 +433,24 @@ func TestWrongArg(t *testing.T) {
 
 	t.Run("wrongName", func(t *testing.T) {
 		shield, qr := setup()
-		found, err := shield.Check(
+		err := shield.Check(
 			0,
 			qr.Query(),
 			map[string]string{"wrongName": "v"},
 		)
-		require.True(t, found)
 		require.Error(t, err)
+		require.Equal(t, gqlshield.ErrUnauthorized, gqlshield.ErrCode(err))
 	})
 
 	t.Run("maxLenExceeded", func(t *testing.T) {
 		shield, qr := setup()
-		found, err := shield.Check(
+		err := shield.Check(
 			0,
 			qr.Query(),
 			map[string]string{"wrongName": "11110000111100001111000011110000F"},
 		)
-		require.True(t, found)
 		require.Error(t, err)
+		require.Equal(t, gqlshield.ErrUnauthorized, gqlshield.ErrCode(err))
 	})
 }
 
