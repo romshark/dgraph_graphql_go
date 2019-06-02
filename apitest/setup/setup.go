@@ -70,6 +70,9 @@ func New(t *testing.T, context TestContext) *TestSetup {
 			Username: debugUsername,
 			Password: debugPassword,
 		},
+		Shield: config.ShieldConfig{
+			WhitelistEnabled: false,
+		},
 		Transport: []trn.Server{
 			serverTransport,
 		},

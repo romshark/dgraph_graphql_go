@@ -7,12 +7,18 @@ func (shld *shield) Check(
 	Query []byte,
 	arguments map[string]string,
 ) error {
+	if !shld.conf.WhitelistEnabled {
+		// Don't check the query if query whitelisting is disabled
+		return nil
+	}
+
 	if len(Query) < 1 {
 		return Error{
 			Code:    ErrWrongInput,
 			Message: "invalid (empty) query",
 		}
 	}
+
 	normalized, err := prepareQuery(Query)
 	if err != nil {
 		return err

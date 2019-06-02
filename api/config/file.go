@@ -34,6 +34,7 @@ type File struct {
 		Password string `toml:"password"`
 	} `toml:"debug"`
 	Shield struct {
+		Whitelist bool   `toml:"whitelist"`
 		PersistTo string `toml:"persist-to"`
 	} `toml:"shield"`
 	TransportHTTP struct {
@@ -151,6 +152,7 @@ func (f *File) debug(conf *ServerConfig) error {
 
 func (f *File) shield(conf *ServerConfig) error {
 	conf.Shield = ShieldConfig{
+		WhitelistEnabled:    f.Shield.Whitelist,
 		PersistencyFilePath: f.Shield.PersistTo,
 	}
 	return nil

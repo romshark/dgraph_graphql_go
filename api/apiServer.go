@@ -81,16 +81,21 @@ func NewServer(conf *config.ServerConfig) (Server, error) {
 	)
 
 	// Initialize the GraphQL shield persistency manager
-	shieldPersistencyManager, err := gqlshield.NewPepersistencyManagerFileJSON(
-		conf.Shield.PersistencyFilePath,
-		true,
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "GraphQL shield persistency manager init")
+	var shieldPersistencyManager gqlshield.PersistencyManager
+	if conf.Shield.PersistencyFilePath != "" {
+		manager, err := gqlshield.NewPepersistencyManagerFileJSON(
+			conf.Shield.PersistencyFilePath,
+			true,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "GraphQL shield persistency manager init")
+		}
+		shieldPersistencyManager = manager
 	}
 
 	graphShield, err := gqlshield.NewGraphQLShield(
 		gqlshield.Config{
+			WhitelistEnabled:   conf.Shield.WhitelistEnabled,
 			PersistencyManager: shieldPersistencyManager,
 		},
 		gqlshield.ClientRole{
