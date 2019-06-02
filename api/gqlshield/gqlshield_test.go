@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestWhitelisting tests WhitelistQuery
+// TestWhitelisting tests WhitelistQueries
 func TestWhitelisting(t *testing.T) {
 	// Create a new shield instance
 	shield, err := gqlshield.NewGraphQLShield(
@@ -19,7 +19,7 @@ func TestWhitelisting(t *testing.T) {
 	require.NotNil(t, shield)
 
 	// Define whitelist
-	query1, err := shield.WhitelistQuery(gqlshield.Entry{
+	query1, err := shield.WhitelistQueries(gqlshield.Entry{
 		Query: `query {
 			users {
 				id
@@ -34,9 +34,10 @@ func TestWhitelisting(t *testing.T) {
 		WhitelistedFor: []int{0},
 	})
 	require.NoError(t, err)
-	require.NotNil(t, query1)
+	require.Len(t, query1, 1)
+	require.NotNil(t, query1[0])
 
-	query2, err := shield.WhitelistQuery(gqlshield.Entry{
+	query2, err := shield.WhitelistQueries(gqlshield.Entry{
 		Query: `query {
 			posts {
 				id
@@ -47,29 +48,30 @@ func TestWhitelisting(t *testing.T) {
 		WhitelistedFor: []int{0, 1},
 	})
 	require.NoError(t, err)
-	require.NotNil(t, query2)
+	require.Len(t, query2, 1)
+	require.NotNil(t, query2[0])
 
 	// Check
 	err = shield.Check(
 		0,
-		query1.Query(),
+		query1[0].Query(),
 		map[string]string{"var1": "v"},
 	)
 	require.NoError(t, err)
 
 	err = shield.Check(
 		0,
-		query2.Query(),
+		query2[0].Query(),
 		nil,
 	)
 	require.NoError(t, err)
 
-	queries, err := shield.Queries()
+	queries, err := shield.ListQueries()
 	require.NoError(t, err)
 	require.Len(t, queries, 2)
 }
 
-// TestWhitelistingErr tests all possible shield.WhitelistQuery errors
+// TestWhitelistingErr tests all possible shield.WhitelistQueries errors
 func TestWhitelistingErr(t *testing.T) {
 	setup := func(t *testing.T) (shield gqlshield.GraphQLShield) {
 		// Create a new shield instance
@@ -87,7 +89,7 @@ func TestWhitelistingErr(t *testing.T) {
 	t.Run("duplicateQuery", func(t *testing.T) {
 		shield := setup(t)
 
-		query1, err := shield.WhitelistQuery(gqlshield.Entry{
+		query1, err := shield.WhitelistQueries(gqlshield.Entry{
 			Query: `query {
 				users {
 					id
@@ -104,7 +106,7 @@ func TestWhitelistingErr(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, query1)
 
-		query2, err := shield.WhitelistQuery(gqlshield.Entry{
+		query2, err := shield.WhitelistQueries(gqlshield.Entry{
 			Query: `query {
 				users {
 					id
@@ -125,7 +127,7 @@ func TestWhitelistingErr(t *testing.T) {
 	t.Run("duplicateQueryName", func(t *testing.T) {
 		shield := setup(t)
 
-		query1, err := shield.WhitelistQuery(gqlshield.Entry{
+		query1, err := shield.WhitelistQueries(gqlshield.Entry{
 			Query: `query { users { id displayName email } }`,
 			Name:  "query one",
 			Parameters: map[string]gqlshield.Parameter{
@@ -136,7 +138,7 @@ func TestWhitelistingErr(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, query1)
 
-		query2, err := shield.WhitelistQuery(gqlshield.Entry{
+		query2, err := shield.WhitelistQueries(gqlshield.Entry{
 			Query: `query { users { id } }`,
 			Name:  "query one", // Duplicate name
 			Parameters: map[string]gqlshield.Parameter{
@@ -151,7 +153,7 @@ func TestWhitelistingErr(t *testing.T) {
 	t.Run("invalidRoles(no roles)", func(t *testing.T) {
 		shield := setup(t)
 
-		query, err := shield.WhitelistQuery(gqlshield.Entry{
+		query, err := shield.WhitelistQueries(gqlshield.Entry{
 			Query:          `query { users { id } }`,
 			Name:           "query one",
 			WhitelistedFor: []int{}, // Invalid: no roles
@@ -163,7 +165,7 @@ func TestWhitelistingErr(t *testing.T) {
 	t.Run("invalidRoles(undefined roles)", func(t *testing.T) {
 		shield := setup(t)
 
-		query, err := shield.WhitelistQuery(gqlshield.Entry{
+		query, err := shield.WhitelistQueries(gqlshield.Entry{
 			Query:          `query { users { id } }`,
 			Name:           "query one",
 			WhitelistedFor: []int{0, 1, 999}, // Invalid: undefined role "999"
@@ -175,7 +177,7 @@ func TestWhitelistingErr(t *testing.T) {
 	t.Run("invalidParameter(invalid name(empty))", func(t *testing.T) {
 		shield := setup(t)
 
-		query, err := shield.WhitelistQuery(gqlshield.Entry{
+		query, err := shield.WhitelistQueries(gqlshield.Entry{
 			Query: `query { users { id } }`,
 			Name:  "query one",
 			Parameters: map[string]gqlshield.Parameter{
@@ -192,7 +194,7 @@ func TestWhitelistingErr(t *testing.T) {
 	t.Run("invalidParameter(invalid MaxValueLength)", func(t *testing.T) {
 		shield := setup(t)
 
-		query, err := shield.WhitelistQuery(gqlshield.Entry{
+		query, err := shield.WhitelistQueries(gqlshield.Entry{
 			Query: `query { users { id } }`,
 			Name:  "query one",
 			Parameters: map[string]gqlshield.Parameter{
@@ -207,7 +209,7 @@ func TestWhitelistingErr(t *testing.T) {
 	})
 }
 
-// TestRoleErr tests shield.WhitelistQuery
+// TestRoleErr tests shield.WhitelistQueries
 func TestRoleErr(t *testing.T) {
 	// Create a new shield instance
 	shield, err := gqlshield.NewGraphQLShield(
@@ -221,56 +223,55 @@ func TestRoleErr(t *testing.T) {
 	require.NotNil(t, shield)
 
 	// Define whitelist
-	query1, err := shield.WhitelistQuery(gqlshield.Entry{
-		Query: `query {
-			users {
-				id
-				displayName
-				email
-			}
-		}`,
-		Name: "query one",
-		Parameters: map[string]gqlshield.Parameter{
-			"var1": gqlshield.Parameter{MaxValueLength: 1024},
+	queries, err := shield.WhitelistQueries(
+		gqlshield.Entry{
+			Query: `query {
+				users {
+					id
+					displayName
+					email
+				}
+			}`,
+			Name: "query one",
+			Parameters: map[string]gqlshield.Parameter{
+				"var1": gqlshield.Parameter{MaxValueLength: 1024},
+			},
+			WhitelistedFor: []int{1},
 		},
-		WhitelistedFor: []int{1},
-	})
-	require.NoError(t, err)
-	require.NotNil(t, query1)
-
-	query2, err := shield.WhitelistQuery(gqlshield.Entry{
-		Query: `query {
-			posts {
-				id
-				title
-			}
-		}`,
-		Name:           "query two",
-		WhitelistedFor: []int{1, 2},
-	})
-	require.NoError(t, err)
-	require.NotNil(t, query2)
-
-	query3, err := shield.WhitelistQuery(gqlshield.Entry{
-		Query: `query( $userID: Identifier! ) {
-			user( userID: $userID ) {
-				id
-				displayName
+		gqlshield.Entry{
+			Query: `query {
 				posts {
 					id
 					title
 				}
-			}
-		}`,
-		Name: "query three",
-		Parameters: map[string]gqlshield.Parameter{
-			"userID":        gqlshield.Parameter{MaxValueLength: 32},
-			"postListLimit": gqlshield.Parameter{MaxValueLength: 8},
+			}`,
+			Name:           "query two",
+			WhitelistedFor: []int{1, 2},
 		},
-		WhitelistedFor: []int{4},
-	})
+		gqlshield.Entry{
+			Query: `query( $userID: Identifier! ) {
+				user( userID: $userID ) {
+					id
+					displayName
+					posts {
+						id
+						title
+					}
+				}
+			}`,
+			Name: "query three",
+			Parameters: map[string]gqlshield.Parameter{
+				"userID":        gqlshield.Parameter{MaxValueLength: 32},
+				"postListLimit": gqlshield.Parameter{MaxValueLength: 8},
+			},
+			WhitelistedFor: []int{4},
+		},
+	)
 	require.NoError(t, err)
-	require.NotNil(t, query3)
+	require.Len(t, queries, 3)
+	require.NotNil(t, queries[0])
+	require.NotNil(t, queries[1])
+	require.NotNil(t, queries[2])
 
 	type Expect map[int]bool
 	check := func(
@@ -297,19 +298,19 @@ func TestRoleErr(t *testing.T) {
 		}
 	}
 
-	check(query1, map[string]string{"var1": "v"}, Expect{
+	check(queries[0], map[string]string{"var1": "v"}, Expect{
 		1: true,
 		2: false,
 		3: false,
 		4: false,
 	})
-	check(query2, nil, Expect{
+	check(queries[1], nil, Expect{
 		1: true,
 		2: true,
 		3: false,
 		4: false,
 	})
-	check(query3, map[string]string{
+	check(queries[2], map[string]string{
 		"userID":        "12345678901234567890123456789012",
 		"postListLimit": "50",
 	}, Expect{
@@ -331,43 +332,44 @@ func TestRemove(t *testing.T) {
 	require.NotNil(t, shield)
 
 	// Define whitelist
-	query1, err := shield.WhitelistQuery(gqlshield.Entry{
-		Query: `query {
-			users {
-				id
-				displayName
-				email
-			}
-		}`,
-		Name: "query one",
-		Parameters: map[string]gqlshield.Parameter{
-			"var1": gqlshield.Parameter{MaxValueLength: 1024},
+	queries, err := shield.WhitelistQueries(
+		gqlshield.Entry{
+			Query: `query {
+				users {
+					id
+					displayName
+					email
+				}
+			}`,
+			Name: "query one",
+			Parameters: map[string]gqlshield.Parameter{
+				"var1": gqlshield.Parameter{MaxValueLength: 1024},
+			},
+			WhitelistedFor: []int{0},
 		},
-		WhitelistedFor: []int{0},
-	})
+		gqlshield.Entry{
+			Query: `query {
+				posts {
+					id
+					title
+				}
+			}`,
+			Name:           "query two",
+			WhitelistedFor: []int{0},
+		},
+	)
 	require.NoError(t, err)
-	require.NotNil(t, query1)
-
-	query2, err := shield.WhitelistQuery(gqlshield.Entry{
-		Query: `query {
-			posts {
-				id
-				title
-			}
-		}`,
-		Name:           "query two",
-		WhitelistedFor: []int{0},
-	})
-	require.NoError(t, err)
-	require.NotNil(t, query2)
+	require.Len(t, queries, 2)
+	require.NotNil(t, queries[0])
+	require.NotNil(t, queries[1])
 
 	// Remove first query
-	require.NoError(t, shield.RemoveQuery(query1))
+	require.NoError(t, shield.RemoveQuery(queries[0]))
 
 	// Check
 	err = shield.Check(
 		0,
-		query1.Query(),
+		queries[0].Query(),
 		map[string]string{"var1": "v"},
 	)
 	require.Error(t, err)
@@ -375,31 +377,31 @@ func TestRemove(t *testing.T) {
 
 	err = shield.Check(
 		0,
-		query2.Query(),
+		queries[1].Query(),
 		nil,
 	)
 	require.NoError(t, err)
 
-	queries, err := shield.Queries()
+	listedQueries, err := shield.ListQueries()
 	require.NoError(t, err)
-	require.Len(t, queries, 1)
-	require.Equal(t, query2.Name(), queries["query two"].Name())
+	require.Len(t, listedQueries, 1)
+	require.Equal(t, queries[1].Name(), listedQueries["query two"].Name())
 
 	// Remove second query
-	require.NoError(t, shield.RemoveQuery(query2))
+	require.NoError(t, shield.RemoveQuery(queries[1]))
 
 	// Check
 	err = shield.Check(
 		0,
-		query2.Query(),
+		queries[1].Query(),
 		nil,
 	)
 	require.Error(t, err)
 	require.Equal(t, gqlshield.ErrUnauthorized, gqlshield.ErrCode(err))
 
-	queries, err = shield.Queries()
+	listedQueries, err = shield.ListQueries()
 	require.NoError(t, err)
-	require.Len(t, queries, 0)
+	require.Len(t, listedQueries, 0)
 }
 
 // TestWrongArg tests argument validation
@@ -414,7 +416,7 @@ func TestWrongArg(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, shield)
 
-		query, err = shield.WhitelistQuery(gqlshield.Entry{
+		queries, err := shield.WhitelistQueries(gqlshield.Entry{
 			Query: `query($id: String!) {
 				users( id: $id ) {
 					name
@@ -427,7 +429,11 @@ func TestWrongArg(t *testing.T) {
 			WhitelistedFor: []int{0},
 		})
 		require.NoError(t, err)
+		require.Len(t, queries, 1)
+
+		query = queries[0]
 		require.NotNil(t, query)
+
 		return
 	}
 
@@ -536,7 +542,7 @@ func TestNewGraphQLShieldErr(t *testing.T) {
 	})
 }
 
-// TestQueries tests shield.Queries
+// TestQueries tests shield.ListQueries
 func TestQueries(t *testing.T) {
 	// Create and initialize a new shield instance
 	shield, err := gqlshield.NewGraphQLShield(
@@ -548,84 +554,72 @@ func TestQueries(t *testing.T) {
 	require.NotNil(t, shield)
 
 	// Define whitelist
-	query1, err := shield.WhitelistQuery(gqlshield.Entry{
-		Query: `query {
-			users {
-				id
-				displayName
-				email
-			}
-		}`,
-		Name: "query one",
-		Parameters: map[string]gqlshield.Parameter{
-			"var1": gqlshield.Parameter{MaxValueLength: 1024},
+	queries, err := shield.WhitelistQueries(
+		gqlshield.Entry{
+			Query: `query { users { id displayName email } }`,
+			Name:  "query one",
+			Parameters: map[string]gqlshield.Parameter{
+				"var1": gqlshield.Parameter{MaxValueLength: 1024},
+			},
+			WhitelistedFor: []int{0},
 		},
-		WhitelistedFor: []int{0},
-	})
-	require.NoError(t, err)
-	require.NotNil(t, query1)
-
-	query2, err := shield.WhitelistQuery(gqlshield.Entry{
-		Query: `query {
-			posts {
-				id
-				title
-			}
-		}`,
-		Name:           "query two",
-		WhitelistedFor: []int{0, 1},
-	})
-	require.NoError(t, err)
-	require.NotNil(t, query2)
-
-	// Check
-	queries, err := shield.Queries()
+		gqlshield.Entry{
+			Query:          `query { posts { id title } }`,
+			Name:           "query two",
+			WhitelistedFor: []int{0, 1},
+		},
+	)
 	require.NoError(t, err)
 	require.Len(t, queries, 2)
 
-	q1, exists := queries["query one"]
-	require.True(t, exists)
-	require.NotNil(t, q1)
-	require.Equal(t, query1.Name(), q1.Name())
-	require.Equal(t, query1.Query(), q1.Query())
-	require.Equal(t, query1.Parameters(), q1.Parameters())
-	require.Equal(t, query1.WhitelistedFor(), q1.WhitelistedFor())
+	// Check
+	listedQueries, err := shield.ListQueries()
+	require.NoError(t, err)
+	require.Len(t, listedQueries, 2)
 
-	q2, exists := queries["query two"]
+	q1, exists := listedQueries["query one"]
 	require.True(t, exists)
 	require.NotNil(t, q1)
-	require.Equal(t, query2.Name(), q2.Name())
-	require.Equal(t, query2.Query(), q2.Query())
-	require.Equal(t, query2.Parameters(), q2.Parameters())
-	require.Equal(t, query2.WhitelistedFor(), q2.WhitelistedFor())
+	require.Equal(t, queries[0].Name(), q1.Name())
+	require.Equal(t, queries[0].Query(), q1.Query())
+	require.Equal(t, queries[0].Parameters(), q1.Parameters())
+	require.Equal(t, queries[0].WhitelistedFor(), q1.WhitelistedFor())
+
+	q2, exists := listedQueries["query two"]
+	require.True(t, exists)
+	require.NotNil(t, q1)
+	require.Equal(t, queries[1].Name(), q2.Name())
+	require.Equal(t, queries[1].Query(), q2.Query())
+	require.Equal(t, queries[1].Parameters(), q2.Parameters())
+	require.Equal(t, queries[1].WhitelistedFor(), q2.WhitelistedFor())
 
 	// Remove first query
-	require.NoError(t, shield.RemoveQuery(query1))
-	queries, err = shield.Queries()
+	require.NoError(t, shield.RemoveQuery(queries[0]))
+	listedQueries, err = shield.ListQueries()
 	require.NoError(t, err)
 
-	q1, exists = queries["query one"]
+	q1, exists = listedQueries["query one"]
 	require.False(t, exists)
 	require.Nil(t, q1)
 
-	q2, exists = queries["query two"]
+	q2, exists = listedQueries["query two"]
 	require.True(t, exists)
 	require.NotNil(t, q2)
-	require.Equal(t, query2.Name(), q2.Name())
-	require.Equal(t, query2.Query(), q2.Query())
-	require.Equal(t, query2.Parameters(), q2.Parameters())
-	require.Equal(t, query2.WhitelistedFor(), q2.WhitelistedFor())
+	require.Equal(t, queries[1].Name(), q2.Name())
+	require.Equal(t, queries[1].Query(), q2.Query())
+	require.Equal(t, queries[1].Parameters(), q2.Parameters())
+	require.Equal(t, queries[1].WhitelistedFor(), q2.WhitelistedFor())
 
 	// Remove second query
-	require.NoError(t, shield.RemoveQuery(query2))
-	queries, err = shield.Queries()
+	require.NoError(t, shield.RemoveQuery(queries[1]))
+	listedQueries, err = shield.ListQueries()
 	require.NoError(t, err)
 
-	q1, exists = queries["query one"]
+	q1, exists = listedQueries["query one"]
 	require.False(t, exists)
 	require.Nil(t, q1)
 
-	q2, exists = queries["query two"]
+	q2, exists = listedQueries["query two"]
 	require.False(t, exists)
 	require.Nil(t, q2)
 }
@@ -732,7 +726,7 @@ func TestPersistency(t *testing.T) {
 		},
 		WhitelistedFor: []int{1},
 	}
-	query1, err := shield.WhitelistQuery(query1Entry)
+	query1, err := shield.WhitelistQueries(query1Entry)
 	require.NoError(t, err)
 	require.NotNil(t, query1)
 
@@ -745,7 +739,7 @@ func TestPersistency(t *testing.T) {
 		Name:           "query two",
 		WhitelistedFor: []int{1},
 	}
-	query2, err := shield.WhitelistQuery(query2Entry)
+	query2, err := shield.WhitelistQueries(query2Entry)
 	require.NoError(t, err)
 	require.NotNil(t, query2)
 
@@ -754,14 +748,14 @@ func TestPersistency(t *testing.T) {
 	check(1, 2, query1Entry, query2Entry)
 
 	// Remove first query
-	require.NoError(t, shield.RemoveQuery(query1))
+	require.NoError(t, shield.RemoveQuery(query1[0]))
 
 	// Expect the persistence manager to have saved the state again
 	// not including query 1 any longer
 	check(1, 3, query2Entry)
 
 	// Remove second query
-	require.NoError(t, shield.RemoveQuery(query2))
+	require.NoError(t, shield.RemoveQuery(query2[0]))
 
 	// Expect the persistence manager to have saved the state again
 	// not including any query
