@@ -1,24 +1,28 @@
 package gqlshield
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"sync"
+	"time"
 
+	"github.com/pkg/errors"
 	art "github.com/plar/go-adaptive-radix-tree"
 )
+
+// Entry represents a whitelist entry prototype
+type Entry struct {
+	Query          string
+	Name           string
+	Parameters     map[string]Parameter
+	WhitelistedFor []int
+}
 
 // GraphQLShield represents a GraphQL shield instance
 type GraphQLShield interface {
 	// WhitelistQuery adds the given query to the whitelist
 	// returning an error if the query doesn't meet the requirements.
-	WhitelistQuery(
-		queryString []byte,
-		name string,
-		parameters map[string]Parameter,
-		whitelistedFor []int,
-	) (Query, error)
+	WhitelistQuery(newEntry Entry) (Query, error)
 
 	// RemoveQuery removes a query from the whitelist and returns true
 	// if any query was removed as well as the actual removed query.
@@ -41,8 +45,8 @@ type GraphQLShield interface {
 
 // ClientRole represents a client role
 type ClientRole struct {
-	ID   int
-	Name string
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 func copyRoles(roles ...ClientRole) (map[int]ClientRole, error) {
@@ -95,13 +99,21 @@ func copyRoles(roles ...ClientRole) (map[int]ClientRole, error) {
 }
 
 // NewGraphQLShield creates a new GraphQL shield instance
-func NewGraphQLShield(clientRoles ...ClientRole) (GraphQLShield, error) {
+func NewGraphQLShield(
+	config Config,
+	clientRoles ...ClientRole,
+) (GraphQLShield, error) {
 	roles, err := copyRoles(clientRoles...)
 	if err != nil {
 		return nil, err
 	}
 
+	if config.PersistencyManager != nil {
+		config.PersistencyManager.Load()
+	}
+
 	return &shield{
+		conf:        config,
 		lock:        &sync.RWMutex{},
 		index:       art.New(),
 		store:       make(map[string]*query),
@@ -111,6 +123,9 @@ func NewGraphQLShield(clientRoles ...ClientRole) (GraphQLShield, error) {
 }
 
 type shield struct {
+	conf Config
+
+	// lock synchronizes concurrent access
 	lock *sync.RWMutex
 
 	// store stores all original queries associted by a name
@@ -126,26 +141,75 @@ type shield struct {
 	clientRoles map[int]ClientRole
 }
 
-func (shld *shield) WhitelistQuery(
-	queryString []byte,
-	name string,
-	parameters map[string]Parameter,
-	whitelistedFor []int,
-) (Query, error) {
-	newQuery := &query{}
+func (shld *shield) captureState() *State {
+	roles := make([]ClientRole, 0, len(shld.clientRoles))
+	for _, role := range shld.clientRoles {
+		roles = append(roles, role)
+	}
+
+	queries := make(map[string]QueryModel, len(shld.store))
+	for _, query := range shld.store {
+		var params map[string]Parameter
+		if query.parameters != nil {
+			params = make(map[string]Parameter, len(query.parameters))
+			for name, param := range query.parameters {
+				params[name] = param
+			}
+		}
+
+		whitelistedFor := make([]int, 0, len(query.whitelistedFor))
+		for role := range query.whitelistedFor {
+			whitelistedFor = append(whitelistedFor, role)
+		}
+
+		queries[string(query.id)] = QueryModel{
+			Query:          string(query.query),
+			Creation:       query.creation,
+			Name:           query.name,
+			Parameters:     params,
+			WhitelistedFor: whitelistedFor,
+		}
+	}
+
+	return &State{
+		Roles:              roles,
+		WhitelistedQueries: queries,
+	}
+}
+
+func (shld *shield) recalculateLongest() error {
+	// Recalculate longest
+	shld.longest = 0
+	for itr := shld.index.Iterator(); itr.HasNext(); {
+		node, err := itr.Next()
+		if err != nil {
+			return err
+		}
+		queryLength := len(node.Value().(*query).query)
+		if queryLength > shld.longest {
+			shld.longest = queryLength
+		}
+	}
+	return nil
+}
+
+func (shld *shield) WhitelistQuery(newEntry Entry) (Query, error) {
+	newQuery := &query{
+		id:       newID(),
+		creation: time.Now(),
+	}
 
 	// Set name
-	if len(name) < 1 {
+	if len(newEntry.Name) < 1 {
 		return nil, errors.New("invalid (empty) query name")
 	}
-	newQuery.name = name
+	newQuery.name = newEntry.Name
 
 	// Set query (normalized)
-	if len(queryString) < 1 {
+	if len(newEntry.Query) < 1 {
 		return nil, errors.New("invalid (empty) query")
 	}
-	newQuery.query = make([]byte, len(queryString))
-	copy(newQuery.query, queryString)
+	newQuery.query = []byte(newEntry.Query)
 	normalized, err := prepareQuery(newQuery.query)
 	if err != nil {
 		return nil, err
@@ -153,31 +217,42 @@ func (shld *shield) WhitelistQuery(
 	newQuery.query = normalized
 
 	// Set whitelistedFor
-	if len(whitelistedFor) < 1 {
-		return nil, fmt.Errorf("query '%s' has no roles associated", name)
+	if len(newEntry.WhitelistedFor) < 1 {
+		return nil, fmt.Errorf(
+			"query '%s' has no roles associated",
+			newEntry.Name,
+		)
 	}
-	newQuery.whitelistedFor = make(map[int]struct{}, len(whitelistedFor))
-	for _, roleID := range whitelistedFor {
+	newQuery.whitelistedFor = make(
+		map[int]struct{},
+		len(newEntry.WhitelistedFor),
+	)
+	for _, roleID := range newEntry.WhitelistedFor {
 		newQuery.whitelistedFor[roleID] = struct{}{}
 	}
 
 	// Set parameters
-	newQuery.parameters = make(map[string]Parameter, len(parameters))
-	for paramName, param := range parameters {
-		if len(paramName) < 1 {
-			return nil, fmt.Errorf(
-				"query '%s' has parameter with invalid (empty name)",
-				name,
-			)
+	if newEntry.Parameters != nil {
+		newQuery.parameters = make(
+			map[string]Parameter,
+			len(newEntry.Parameters),
+		)
+		for paramName, param := range newEntry.Parameters {
+			if len(paramName) < 1 {
+				return nil, fmt.Errorf(
+					"query '%s' has parameter with invalid (empty name)",
+					newEntry.Name,
+				)
+			}
+			if param.MaxValueLength < 1 {
+				return nil, fmt.Errorf(
+					"query '%s' has parameter with invalid MaxValueLength: %d",
+					newEntry.Name,
+					param.MaxValueLength,
+				)
+			}
+			newQuery.parameters[paramName] = param
 		}
-		if param.MaxValueLength < 1 {
-			return nil, fmt.Errorf(
-				"query '%s' has parameter with invalid MaxValueLength: %d",
-				name,
-				param.MaxValueLength,
-			)
-		}
-		newQuery.parameters[paramName] = param
 	}
 
 	// Verify & register query
@@ -185,7 +260,7 @@ func (shld *shield) WhitelistQuery(
 	defer shld.lock.Unlock()
 
 	// Ensure name uniqueness
-	if _, nameIsRegistered := shld.store[name]; nameIsRegistered {
+	if _, nameIsRegistered := shld.store[newEntry.Name]; nameIsRegistered {
 		return nil, errors.New(
 			"a query with a similar name is already whitelisted",
 		)
@@ -208,13 +283,38 @@ func (shld *shield) WhitelistQuery(
 		}
 	}
 
+	/* Update state */
+
 	// Store the original query
-	shld.store[name] = newQuery
+	shld.store[newEntry.Name] = newQuery
 
 	// Update index
 	shld.index.Insert(normalized, newQuery)
 	if len(newQuery.query) > shld.longest {
 		shld.longest = len(newQuery.query)
+	}
+
+	// Persist state changes
+	if shld.conf.PersistencyManager != nil {
+		if err := shld.conf.PersistencyManager.Save(
+			shld.captureState(),
+		); err != nil {
+			// Rollback changes
+			delete(shld.store, newEntry.Name)
+			shld.index.Delete(normalized)
+			if err := shld.recalculateLongest(); err != nil {
+				rollbackErr := errors.Wrap(
+					err,
+					"persisting state after insertion",
+				)
+				return nil, errors.Wrap(
+					rollbackErr,
+					"recalculating longest after rollback",
+				)
+			}
+
+			return nil, errors.Wrap(err, "persisting state after insertion")
+		}
 	}
 
 	return newQuery, nil
@@ -232,22 +332,38 @@ func (shld *shield) RemoveQuery(queryObject Query) error {
 	shld.lock.Lock()
 	defer shld.lock.Unlock()
 
-	if _, deleted := shld.index.Delete(qr.query); deleted {
-		delete(shld.store, qr.name)
+	if _, deleted := shld.index.Delete(qr.query); !deleted {
+		return nil
+	}
 
-		if len(qr.query) == shld.longest {
-			// Recalculate longest
-			shld.longest = 0
-			for itr := shld.index.Iterator(); itr.HasNext(); {
-				node, err := itr.Next()
-				if err != nil {
-					return err
-				}
-				queryLength := len(node.Value().(*query).query)
-				if queryLength > shld.longest {
-					shld.longest = queryLength
-				}
+	deletedQuery := shld.store[qr.name]
+	delete(shld.store, qr.name)
+
+	if len(qr.query) == shld.longest {
+		if err := shld.recalculateLongest(); err != nil {
+			return err
+		}
+	}
+
+	// Persist state changes
+	if shld.conf.PersistencyManager != nil {
+		if err := shld.conf.PersistencyManager.Save(
+			shld.captureState(),
+		); err != nil {
+			// Rollback changes
+			shld.store[qr.name] = deletedQuery
+			shld.index.Insert(qr.query, deletedQuery)
+			if err := shld.recalculateLongest(); err != nil {
+				rollbackErr := errors.Wrap(
+					err,
+					"persisting state after removal",
+				)
+				return errors.Wrap(
+					rollbackErr,
+					"recalculating longest after rollback",
+				)
 			}
+			return errors.Wrap(err, "persisting state after removal")
 		}
 	}
 
@@ -256,16 +372,16 @@ func (shld *shield) RemoveQuery(queryObject Query) error {
 
 func (shld *shield) Check(
 	clientRoleID int,
-	queryString []byte,
+	Query []byte,
 	arguments map[string]string,
 ) error {
-	if len(queryString) < 1 {
+	if len(Query) < 1 {
 		return Error{
 			Code:    ErrWrongInput,
 			Message: "invalid (empty) query",
 		}
 	}
-	normalized, err := prepareQuery(queryString)
+	normalized, err := prepareQuery(Query)
 	if err != nil {
 		return err
 	}
