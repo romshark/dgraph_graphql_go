@@ -33,6 +33,9 @@ type File struct {
 		Username string `toml:"username"`
 		Password string `toml:"password"`
 	} `toml:"debug"`
+	Shield struct {
+		PersistTo string `toml:"persist-to"`
+	} `toml:"shield"`
 	TransportHTTP struct {
 		Host              string   `toml:"host"`
 		KeepAliveDuration Duration `toml:"keep-alive-duration"`
@@ -146,6 +149,13 @@ func (f *File) debug(conf *ServerConfig) error {
 	return nil
 }
 
+func (f *File) shield(conf *ServerConfig) error {
+	conf.Shield = ShieldConfig{
+		PersistencyFilePath: f.Shield.PersistTo,
+	}
+	return nil
+}
+
 func (f *File) transportHTTP(conf *ServerConfig) error {
 	srvConf := thttp.ServerConfig{}
 
@@ -214,6 +224,7 @@ func FromFile(path string) (*ServerConfig, error) {
 	for setterName, setter := range map[string]func(*ServerConfig) error{
 		"mode":                  file.mode,
 		"db.host":               file.dbHost,
+		"shield":                file.shield,
 		"password-hasher":       file.passwordHasher,
 		"session-key-generator": file.sessionKeyGenerator,
 		"log.debug":             file.debugLog,

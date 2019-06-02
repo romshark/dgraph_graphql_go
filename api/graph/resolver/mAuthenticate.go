@@ -52,6 +52,7 @@ func (rsv *Resolver) Authenticate(
 	).(*auth.RequestSession); isSession {
 		session.Creation = sess.Creation
 		session.UserID = sess.User[0].ID
+		session.ShieldClientRole = auth.GQLShieldClientRegular
 	}
 
 	return &Session{

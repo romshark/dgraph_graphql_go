@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/romshark/dgraph_graphql_go/api/graph/auth"
+
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/api/config"
+	"github.com/romshark/dgraph_graphql_go/api/gqlshield"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/transport"
 	"github.com/romshark/dgraph_graphql_go/api/validator"
@@ -77,11 +80,42 @@ func NewServer(conf *config.ServerConfig) (Server, error) {
 		conf.ErrorLog,
 	)
 
+	// Initialize the GraphQL shield persistency manager
+	shieldPersistencyManager, err := gqlshield.NewPepersistencyManagerFileJSON(
+		conf.Shield.PersistencyFilePath,
+		true,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "GraphQL shield persistency manager init")
+	}
+
+	graphShield, err := gqlshield.NewGraphQLShield(
+		gqlshield.Config{
+			PersistencyManager: shieldPersistencyManager,
+		},
+		gqlshield.ClientRole{
+			ID:   int(auth.GQLShieldClientDebug),
+			Name: "debug",
+		},
+		gqlshield.ClientRole{
+			ID:   int(auth.GQLShieldClientGuest),
+			Name: "guest",
+		},
+		gqlshield.ClientRole{
+			ID:   int(auth.GQLShieldClientRegular),
+			Name: "regular",
+		},
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "graph shield init")
+	}
+
 	graph, err := graph.New(
 		store,
 		validator,
 		conf.SessionKeyGenerator,
 		conf.PasswordHasher,
+		graphShield,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "graph init")

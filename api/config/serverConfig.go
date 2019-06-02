@@ -15,6 +15,7 @@ import (
 type ServerConfig struct {
 	Mode                Mode
 	DBHost              string
+	Shield              ShieldConfig
 	SessionKeyGenerator sesskeygen.SessionKeyGenerator
 	PasswordHasher      passhash.PasswordHasher
 	DebugUser           DebugUserConfig

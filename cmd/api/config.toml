@@ -9,6 +9,9 @@ session-key-generator = "default"
 [db]
 host = "localhost:10180"
 
+[shield]
+persist-to = "./shield.json"
+
 [log]
 debug = "stdout"
 error = "stderr"
