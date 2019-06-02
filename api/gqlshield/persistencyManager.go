@@ -51,6 +51,7 @@ func (man *persistencyManagerFileJSON) onFile(f func(*os.File) error) error {
 func (man *persistencyManagerFileJSON) Load() (state *State, err error) {
 	err = man.onFile(func(file *os.File) error {
 		jsonDecoder := json.NewDecoder(file)
+		state = &State{}
 		return jsonDecoder.Decode(state)
 	})
 	return
@@ -59,6 +60,7 @@ func (man *persistencyManagerFileJSON) Load() (state *State, err error) {
 func (man *persistencyManagerFileJSON) Save(state *State) error {
 	return man.onFile(func(file *os.File) error {
 		jsonEncoder := json.NewEncoder(file)
+		state = &State{}
 		return jsonEncoder.Encode(state)
 	})
 }
