@@ -16,9 +16,9 @@ type PersistencyManager interface {
 	Save(*State) error
 }
 
-// PewpersistencyManagerFileJSON creates a new JSON file based
+// NewPepersistencyManagerFileJSON creates a new JSON file based
 // persistency manager
-func PewpersistencyManagerFileJSON(
+func NewPepersistencyManagerFileJSON(
 	path string,
 	syncWrite bool,
 ) (PersistencyManager, error) {
