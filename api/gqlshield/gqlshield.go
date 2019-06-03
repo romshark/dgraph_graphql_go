@@ -39,7 +39,7 @@ type GraphQLShield interface {
 	Check(
 		clientRole int,
 		query []byte,
-		arguments map[string]string,
+		arguments map[string]*string,
 	) ([]byte, error)
 
 	// ListQueries returns all whitelisted queries.

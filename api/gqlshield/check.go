@@ -5,7 +5,7 @@ import "fmt"
 func (shld *shield) Check(
 	clientRoleID int,
 	queryString []byte,
-	arguments map[string]string,
+	arguments map[string]*string,
 ) ([]byte, error) {
 	if len(queryString) < 1 {
 		return queryString, Error{
@@ -72,13 +72,16 @@ func (shld *shield) Check(
 				Message: fmt.Sprintf("missing argument '%s'", name),
 			}
 		}
-		if uint32(len(actual)) > expectedParam.MaxValueLength {
+		if actual != nil {
+			continue
+		}
+		if uint32(len(*actual)) > expectedParam.MaxValueLength {
 			return normalized, Error{
 				Code: ErrUnauthorized,
 				Message: fmt.Sprintf(
 					"argument '%s' exceeds max length (%d/%d)",
 					name,
-					len(actual),
+					len(*actual),
 					expectedParam.MaxValueLength,
 				),
 			}

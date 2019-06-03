@@ -29,7 +29,7 @@ type Graph struct {
 type Query struct {
 	Query         []byte
 	OperationName string
-	Variables     map[string]string
+	Variables     map[string]*string
 }
 
 // ResponseError represents a response error object
@@ -117,7 +117,11 @@ func (graph *Graph) Query(
 
 	args := make(map[string]interface{}, len(query.Variables))
 	for name, val := range query.Variables {
-		args[name] = val
+		if val != nil {
+			args[name] = *val
+		} else {
+			args[name] = nil
+		}
 	}
 
 	// Validate query

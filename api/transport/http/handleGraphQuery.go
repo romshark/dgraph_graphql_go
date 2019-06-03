@@ -23,9 +23,9 @@ type graphResponse struct {
 
 // graphQuery represents the JSON graph query structure
 type graphQuery struct {
-	Query         json.RawMessage   `json:"query"`
-	OperationName string            `json:"operationName"`
-	Variables     map[string]string `json:"variables"`
+	Query         json.RawMessage    `json:"query"`
+	OperationName string             `json:"operationName"`
+	Variables     map[string]*string `json:"variables"`
 }
 
 // handleGraphQuery handles a graph query request

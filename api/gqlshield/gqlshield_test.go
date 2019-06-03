@@ -52,10 +52,11 @@ func TestWhitelisting(t *testing.T) {
 	require.NotNil(t, query2[0])
 
 	// Check
+	var1 := "v"
 	_, err = shield.Check(
 		0,
 		query1[0].Query(),
-		map[string]string{"var1": "v"},
+		map[string]*string{"var1": &var1},
 	)
 	require.NoError(t, err)
 
@@ -276,7 +277,7 @@ func TestRoleErr(t *testing.T) {
 	type Expect map[int]bool
 	check := func(
 		query gqlshield.Query,
-		args map[string]string,
+		args map[string]*string,
 		expectancy Expect,
 	) {
 		for role, expectAuth := range expectancy {
@@ -298,7 +299,8 @@ func TestRoleErr(t *testing.T) {
 		}
 	}
 
-	check(queries[0], map[string]string{"var1": "v"}, Expect{
+	var1 := "v"
+	check(queries[0], map[string]*string{"var1": &var1}, Expect{
 		1: true,
 		2: false,
 		3: false,
@@ -310,9 +312,11 @@ func TestRoleErr(t *testing.T) {
 		3: false,
 		4: false,
 	})
-	check(queries[2], map[string]string{
-		"userID":        "12345678901234567890123456789012",
-		"postListLimit": "50",
+	userID := "12345678901234567890123456789012"
+	postListLimit := "50"
+	check(queries[2], map[string]*string{
+		"userID":        &userID,
+		"postListLimit": &postListLimit,
 	}, Expect{
 		1: false,
 		2: false,
@@ -367,10 +371,11 @@ func TestRemove(t *testing.T) {
 	require.NoError(t, shield.RemoveQuery(queries[0]))
 
 	// Check
+	var1 := "v"
 	_, err = shield.Check(
 		0,
 		queries[0].Query(),
-		map[string]string{"var1": "v"},
+		map[string]*string{"var1": &var1},
 	)
 	require.Error(t, err)
 	require.Equal(t, gqlshield.ErrUnauthorized, gqlshield.ErrCode(err))
@@ -439,10 +444,11 @@ func TestWrongArg(t *testing.T) {
 
 	t.Run("wrongName", func(t *testing.T) {
 		shield, qr := setup()
+		wrongName := "v"
 		_, err := shield.Check(
 			0,
 			qr.Query(),
-			map[string]string{"wrongName": "v"},
+			map[string]*string{"wrongName": &wrongName},
 		)
 		require.Error(t, err)
 		require.Equal(t, gqlshield.ErrUnauthorized, gqlshield.ErrCode(err))
@@ -450,10 +456,11 @@ func TestWrongArg(t *testing.T) {
 
 	t.Run("maxLenExceeded", func(t *testing.T) {
 		shield, qr := setup()
+		wrongName := "11110000111100001111000011110000F"
 		_, err := shield.Check(
 			0,
 			qr.Query(),
-			map[string]string{"wrongName": "11110000111100001111000011110000F"},
+			map[string]*string{"wrongName": &wrongName},
 		)
 		require.Error(t, err)
 		require.Equal(t, gqlshield.ErrUnauthorized, gqlshield.ErrCode(err))
