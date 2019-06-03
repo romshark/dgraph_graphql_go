@@ -22,7 +22,7 @@
 			"whitelisted-for": [1,2,3]
 		},
 		"6d60642e665245858f7a385a610e5600": {
-			"query": "query { users { id displayName } }",
+			"query": "users { id displayName }",
 			"creation": "2019-06-02T03:26:00+00:00",
 			"name": "usersList",
 			"parameters": null,
