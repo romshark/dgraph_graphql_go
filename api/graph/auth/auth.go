@@ -14,11 +14,28 @@ type CtxKey int
 // CtxSession defines the context.Context session value key
 const CtxSession CtxKey = 1
 
+// GQLShieldClientRole represents a GraphQL shield client role identifier
+type GQLShieldClientRole int
+
+const (
+	_ GQLShieldClientRole = iota
+
+	// GQLShieldClientGuest represents a guest API user
+	GQLShieldClientGuest
+
+	// GQLShieldClientDebug represents the debug API user
+	GQLShieldClientDebug
+
+	// GQLShieldClientRegular represents the regular API user
+	GQLShieldClientRegular
+)
+
 // RequestSession represents a client session
 type RequestSession struct {
-	IsDebug  bool
-	UserID   store.ID
-	Creation time.Time
+	IsDebug          bool
+	UserID           store.ID
+	Creation         time.Time
+	ShieldClientRole GQLShieldClientRole
 }
 
 // Requirement defines the authorization requirement implementation interface

@@ -5,26 +5,31 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/romshark/dgraph_graphql_go/api/graph/auth"
+
 	"github.com/graph-gophers/graphql-go"
+	"github.com/romshark/dgraph_graphql_go/api/gqlshield"
 	"github.com/romshark/dgraph_graphql_go/api/graph/resolver"
 	rsv "github.com/romshark/dgraph_graphql_go/api/graph/resolver"
 	"github.com/romshark/dgraph_graphql_go/api/passhash"
 	"github.com/romshark/dgraph_graphql_go/api/sesskeygen"
 	"github.com/romshark/dgraph_graphql_go/api/validator"
 	"github.com/romshark/dgraph_graphql_go/store"
+	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
 
 // Graph represents the graph resolution engine
 type Graph struct {
 	resolver *rsv.Resolver
 	schema   *graphql.Schema
+	shield   gqlshield.GraphQLShield
 }
 
 // Query represents the graph query structure
 type Query struct {
-	Query         string
+	Query         []byte
 	OperationName string
-	Variables     map[string]interface{}
+	Variables     map[string]*string
 }
 
 // ResponseError represents a response error object
@@ -50,6 +55,7 @@ func New(
 	validator validator.Validator,
 	sessionKeyGenerator sesskeygen.SessionKeyGenerator,
 	passwordHasher passhash.PasswordHasher,
+	shield gqlshield.GraphQLShield,
 ) (*Graph, error) {
 	rsv, err := rsv.New(
 		str,
@@ -64,6 +70,7 @@ func New(
 	return &Graph{
 		resolver: rsv,
 		schema:   shm,
+		shield:   shield,
 	}, nil
 }
 
@@ -72,8 +79,54 @@ func (graph *Graph) Query(
 	ctx context.Context,
 	query Query,
 ) ([]byte, error) {
+	clientRole := auth.GQLShieldClientRegular
+
+	// Try to read the shield client role identifier from session
+	if session, isSession := ctx.Value(
+		auth.CtxSession,
+	).(*auth.RequestSession); isSession {
+		clientRole = session.ShieldClientRole
+	}
+
+	// Ensure the query is whitelisted for this client
+	// and the arguments are valid
+	queryString := []byte(query.Query)
+	var err error
+	queryString, err = graph.shield.Check(
+		int(clientRole),
+		queryString,
+		query.Variables,
+	)
+	if err != nil {
+		switch gqlshield.ErrCode(err) {
+		case gqlshield.ErrWrongInput:
+			return nil, strerr.New(
+				strerr.ErrUnauthorized,
+				err.Error(),
+			)
+		case gqlshield.ErrUnauthorized:
+			return nil, strerr.New(
+				strerr.ErrUnauthorized,
+				"query blacklisted for this client",
+			)
+		default:
+			// Unexpected error
+			return nil, err
+		}
+	}
+
+	args := make(map[string]interface{}, len(query.Variables))
+	for name, val := range query.Variables {
+		if val != nil {
+			args[name] = *val
+		} else {
+			args[name] = nil
+		}
+	}
+
 	// Validate query
-	if errs := graph.schema.Validate(query.Query); errs != nil {
+	queryStr := string(queryString)
+	if errs := graph.schema.Validate(queryStr); errs != nil {
 		return nil, GQLError{errs: errs}
 	}
 
@@ -86,9 +139,9 @@ func (graph *Graph) Query(
 			resolver.CtxErrorRef,
 			&resolverErr,
 		),
-		query.Query,
+		queryStr,
 		query.OperationName,
-		query.Variables,
+		args,
 	)
 
 	if resolverErr != nil {
