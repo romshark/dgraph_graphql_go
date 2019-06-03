@@ -56,13 +56,20 @@ func (shld *shield) restoreState(state *State) error {
 			)
 		}
 
+		// Normalize query string
+		queryString := []byte(queryModel.Query)
+		var err error
+		queryString, err = prepareQuery(queryString)
+		if err != nil {
+			return errors.Wrap(err, "preparing query")
+		}
+
 		// Verify query string validity
 		if err := validateQueryString(queryModel.Name); err != nil {
 			return errors.Wrapf(err, "query %s has invalid query string", id)
 		}
 
 		// Ensure query string uniqueness
-		queryString := []byte(queryModel.Query)
 		if _, found := index.Search(queryString); found {
 			return errors.Errorf("duplicate query ('%s')", queryModel.Query)
 		}
