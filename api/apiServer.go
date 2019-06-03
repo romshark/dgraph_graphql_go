@@ -93,9 +93,14 @@ func NewServer(conf *config.ServerConfig) (Server, error) {
 		shieldPersistencyManager = manager
 	}
 
+	queryWhitelistingEnabled := gqlshield.WhitelistDisabled
+	if conf.Shield.WhitelistEnabled {
+		queryWhitelistingEnabled = gqlshield.WhitelistEnabled
+	}
+
 	graphShield, err := gqlshield.NewGraphQLShield(
 		gqlshield.Config{
-			WhitelistEnabled:   conf.Shield.WhitelistEnabled,
+			WhitelistOption:    queryWhitelistingEnabled,
 			PersistencyManager: shieldPersistencyManager,
 		},
 		gqlshield.ClientRole{

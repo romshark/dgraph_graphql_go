@@ -52,14 +52,14 @@ func TestWhitelisting(t *testing.T) {
 	require.NotNil(t, query2[0])
 
 	// Check
-	err = shield.Check(
+	_, err = shield.Check(
 		0,
 		query1[0].Query(),
 		map[string]string{"var1": "v"},
 	)
 	require.NoError(t, err)
 
-	err = shield.Check(
+	_, err = shield.Check(
 		0,
 		query2[0].Query(),
 		nil,
@@ -280,7 +280,7 @@ func TestRoleErr(t *testing.T) {
 		expectancy Expect,
 	) {
 		for role, expectAuth := range expectancy {
-			err := shield.Check(
+			_, err := shield.Check(
 				role,
 				query.Query(),
 				args,
@@ -367,7 +367,7 @@ func TestRemove(t *testing.T) {
 	require.NoError(t, shield.RemoveQuery(queries[0]))
 
 	// Check
-	err = shield.Check(
+	_, err = shield.Check(
 		0,
 		queries[0].Query(),
 		map[string]string{"var1": "v"},
@@ -375,7 +375,7 @@ func TestRemove(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, gqlshield.ErrUnauthorized, gqlshield.ErrCode(err))
 
-	err = shield.Check(
+	_, err = shield.Check(
 		0,
 		queries[1].Query(),
 		nil,
@@ -391,7 +391,7 @@ func TestRemove(t *testing.T) {
 	require.NoError(t, shield.RemoveQuery(queries[1]))
 
 	// Check
-	err = shield.Check(
+	_, err = shield.Check(
 		0,
 		queries[1].Query(),
 		nil,
@@ -439,7 +439,7 @@ func TestWrongArg(t *testing.T) {
 
 	t.Run("wrongName", func(t *testing.T) {
 		shield, qr := setup()
-		err := shield.Check(
+		_, err := shield.Check(
 			0,
 			qr.Query(),
 			map[string]string{"wrongName": "v"},
@@ -450,7 +450,7 @@ func TestWrongArg(t *testing.T) {
 
 	t.Run("maxLenExceeded", func(t *testing.T) {
 		shield, qr := setup()
-		err := shield.Check(
+		_, err := shield.Check(
 			0,
 			qr.Query(),
 			map[string]string{"wrongName": "11110000111100001111000011110000F"},

@@ -2,7 +2,6 @@ package graph
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -28,7 +27,7 @@ type Graph struct {
 
 // Query represents the graph query structure
 type Query struct {
-	Query         json.RawMessage
+	Query         []byte
 	OperationName string
 	Variables     map[string]string
 }
@@ -91,11 +90,14 @@ func (graph *Graph) Query(
 
 	// Ensure the query is whitelisted for this client
 	// and the arguments are valid
-	if err := graph.shield.Check(
+	queryString := []byte(query.Query)
+	var err error
+	queryString, err = graph.shield.Check(
 		int(clientRole),
-		[]byte(query.Query),
+		queryString,
 		query.Variables,
-	); err != nil {
+	)
+	if err != nil {
 		switch gqlshield.ErrCode(err) {
 		case gqlshield.ErrWrongInput:
 			return nil, strerr.New(
@@ -119,7 +121,7 @@ func (graph *Graph) Query(
 	}
 
 	// Validate query
-	queryStr := string(query.Query)
+	queryStr := string(queryString)
 	if errs := graph.schema.Validate(queryStr); errs != nil {
 		return nil, GQLError{errs: errs}
 	}

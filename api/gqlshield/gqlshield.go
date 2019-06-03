@@ -40,7 +40,7 @@ type GraphQLShield interface {
 		clientRole int,
 		query []byte,
 		arguments map[string]string,
-	) error
+	) ([]byte, error)
 
 	// ListQueries returns all whitelisted queries.
 	ListQueries() (map[string]Query, error)
@@ -51,6 +51,8 @@ func NewGraphQLShield(
 	config Config,
 	clientRoles ...ClientRole,
 ) (GraphQLShield, error) {
+	config.SetDefaults()
+
 	roles, err := copyRoles(clientRoles...)
 	if err != nil {
 		return nil, err

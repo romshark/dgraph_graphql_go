@@ -4,24 +4,24 @@ import "fmt"
 
 func (shld *shield) Check(
 	clientRoleID int,
-	Query []byte,
+	queryString []byte,
 	arguments map[string]string,
-) error {
-	if !shld.conf.WhitelistEnabled {
-		// Don't check the query if query whitelisting is disabled
-		return nil
-	}
-
-	if len(Query) < 1 {
-		return Error{
+) ([]byte, error) {
+	if len(queryString) < 1 {
+		return queryString, Error{
 			Code:    ErrWrongInput,
 			Message: "invalid (empty) query",
 		}
 	}
 
-	normalized, err := prepareQuery(Query)
+	normalized, err := prepareQuery(queryString)
 	if err != nil {
-		return err
+		return queryString, err
+	}
+
+	if shld.conf.WhitelistOption != WhitelistEnabled {
+		// Don't check the query if query whitelisting is disabled
+		return normalized, nil
 	}
 
 	shld.lock.RLock()
@@ -29,13 +29,13 @@ func (shld *shield) Check(
 
 	// Find role
 	if _, roleDefined := shld.clientRoles[clientRoleID]; !roleDefined {
-		return fmt.Errorf("role %d is undefined", clientRoleID)
+		return normalized, fmt.Errorf("role %d is undefined", clientRoleID)
 	}
 
 	// Lookup query
 	qrObj, found := shld.index.Search(normalized)
 	if !found {
-		return Error{
+		return normalized, Error{
 			Code:    ErrUnauthorized,
 			Message: "query not whitelisted",
 		}
@@ -44,7 +44,7 @@ func (shld *shield) Check(
 
 	// Ensure the client is allowed to execute this query
 	if _, roleAllowed := qr.whitelistedFor[clientRoleID]; !roleAllowed {
-		return Error{
+		return normalized, Error{
 			Code: ErrUnauthorized,
 			Message: fmt.Sprintf(
 				"role %d is not allowed to execute this query",
@@ -55,7 +55,7 @@ func (shld *shield) Check(
 
 	// Check arguments
 	if len(arguments) != len(qr.parameters) {
-		return Error{
+		return normalized, Error{
 			Code: ErrUnauthorized,
 			Message: fmt.Sprintf(
 				"unexpected number of arguments: (%d/%d)",
@@ -67,13 +67,13 @@ func (shld *shield) Check(
 	for name, expectedParam := range qr.parameters {
 		actual, hasArg := arguments[name]
 		if !hasArg {
-			return Error{
+			return normalized, Error{
 				Code:    ErrUnauthorized,
 				Message: fmt.Sprintf("missing argument '%s'", name),
 			}
 		}
 		if uint32(len(actual)) > expectedParam.MaxValueLength {
-			return Error{
+			return normalized, Error{
 				Code: ErrUnauthorized,
 				Message: fmt.Sprintf(
 					"argument '%s' exceeds max length (%d/%d)",
@@ -85,5 +85,5 @@ func (shld *shield) Check(
 		}
 	}
 
-	return nil
+	return normalized, nil
 }
