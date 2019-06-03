@@ -17,15 +17,43 @@
 		"87fb2c1249664710a5e836b6f6a822d0": {
 			"query": "query IntrospectionQuery { __schema { queryType { name } mutationType { name } subscriptionType { name } types { ...FullType } directives { name description locations args { ...InputValue } } } } fragment FullType on __Type { kind name description fields(includeDeprecated: true) { name description args { ...InputValue } type { ...TypeRef } isDeprecated deprecationReason } inputFields { ...InputValue } interfaces { ...TypeRef } enumValues(includeDeprecated: true) { name description isDeprecated deprecationReason } possibleTypes { ...TypeRef } } fragment InputValue on __InputValue { name description type { ...TypeRef } defaultValue } fragment TypeRef on __Type { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name } } } } } } } }",
 			"creation": "2019-06-02T03:25:00+00:00",
-			"name": "introspection",
+			"name": "Introspection",
 			"parameters": null,
 			"whitelisted-for": [1,2,3]
 		},
 		"6d60642e665245858f7a385a610e5600": {
 			"query": "{ users { id displayName } }",
 			"creation": "2019-06-02T03:26:00+00:00",
-			"name": "usersList",
+			"name": "Users list",
 			"parameters": null,
+			"whitelisted-for": [1,2,3]
+		},
+		"0f23751434144665b246d8c60901d4d3": {
+			"query": "query ($uid: Identifier!) { user(id: $uid) { id displayName posts { id title } } }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Users profile with posts",
+			"parameters": {
+				"uid": {
+					"max-value-length": 32
+				}
+			},
+			"whitelisted-for": [1,2,3]
+		},
+		"fbccfa2c8be64acabd6227d2875dba7c": {
+			"query": "mutation ($email: String!, $displayName: String!, $password: String!) { createUser(email: $email, displayName: $displayName, password: $password) { id displayName } }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Users creation mutation",
+			"parameters": {
+				"email": {
+					"max-value-length": 256
+				},
+				"displayName": {
+					"max-value-length": 256
+				},
+				"password": {
+					"max-value-length": 256
+				}
+			},
 			"whitelisted-for": [1,2,3]
 		}
 	}
