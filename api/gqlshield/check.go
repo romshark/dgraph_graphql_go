@@ -72,7 +72,7 @@ func (shld *shield) Check(
 				Message: fmt.Sprintf("missing argument '%s'", name),
 			}
 		}
-		if actual != nil {
+		if actual == nil {
 			continue
 		}
 		if uint32(len(*actual)) > expectedParam.MaxValueLength {
