@@ -17,6 +17,7 @@
 # Dgraph + GraphQL + Go = API
 - Web-App back-end in 100% [Go](https://golang.org/)
 - GraphQL API based on [graph-gophers/graphql-go](https://github.com/graph-gophers/graphql-go)
+- Dynamic GraphQL query whitelisting
 - HTTP(S) server based on [net/http](https://golang.org/pkg/net/http/)
 - TOML configurations based on [BurntSushi/toml](https://github.com/BurntSushi/toml)
 - Embedded [GraphQL playground](https://github.com/prisma/graphql-playground)
