@@ -9,6 +9,7 @@ import (
 	"github.com/dgraph-io/dgo"
 	dbapi "github.com/dgraph-io/dgo/protos/api"
 	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/config"
 	trn "github.com/romshark/dgraph_graphql_go/api/transport"
 	thttp "github.com/romshark/dgraph_graphql_go/api/transport/http"
 	"github.com/stretchr/testify/require"
@@ -54,27 +55,30 @@ func New(t *testing.T, context TestContext) *TestSetup {
 	))
 	require.NoError(t, conn.Close())
 
-	serverTransport, err := thttp.NewServer(thttp.ServerOptions{
+	serverTransport, err := thttp.NewServer(thttp.ServerConfig{
 		Host:       context.SrvHost,
 		Playground: false,
 	})
 	require.NoError(t, err)
 
-	srvOpts := api.ServerOptions{
-		Mode:   api.ModeDebug,
+	serverConfig := &config.ServerConfig{
+		Mode:   config.ModeDebug,
 		DBHost: context.DBHost,
-		DebugUser: api.DebugUserOptions{
+		DebugUser: config.DebugUserConfig{
 			// Enable the debug user in read-write mode
-			Status:   api.DebugUserRW,
+			Mode:     config.DebugUserRW,
 			Username: debugUsername,
 			Password: debugPassword,
+		},
+		Shield: config.ShieldConfig{
+			WhitelistEnabled: false,
 		},
 		Transport: []trn.Server{
 			serverTransport,
 		},
 	}
 
-	apiServer, err := api.NewServer(srvOpts)
+	apiServer, err := api.NewServer(serverConfig)
 	require.NoError(t, err)
 	require.NoError(t, apiServer.Launch())
 

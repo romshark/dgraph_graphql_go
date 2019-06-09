@@ -17,24 +17,24 @@ func (rsv *Resolver) CreatePost(
 		Title    string
 		Contents string
 	},
-) (*Post, error) {
+) *Post {
 	if err := auth.Authorize(ctx, auth.IsOwner{
 		Owner: store.ID(params.Author),
 	}); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	// Validate input
 	if err := rsv.validator.PostTitle(params.Title); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if err := rsv.validator.PostContents(params.Contents); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	creationTime := time.Now()
@@ -48,7 +48,7 @@ func (rsv *Resolver) CreatePost(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	return &Post{
@@ -59,5 +59,5 @@ func (rsv *Resolver) CreatePost(
 		title:     params.Title,
 		contents:  params.Contents,
 		authorUID: newPost.Author.UID,
-	}, nil
+	}
 }

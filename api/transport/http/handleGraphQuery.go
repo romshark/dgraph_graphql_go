@@ -23,9 +23,9 @@ type graphResponse struct {
 
 // graphQuery represents the JSON graph query structure
 type graphQuery struct {
-	Query         string                 `json:"query"`
-	OperationName string                 `json:"operationName"`
-	Variables     map[string]interface{} `json:"variables"`
+	Query         json.RawMessage    `json:"query"`
+	OperationName string             `json:"operationName"`
+	Variables     map[string]*string `json:"variables"`
 }
 
 // handleGraphQuery handles a graph query request
@@ -52,10 +52,15 @@ func (t *Server) handleGraphQuery(
 		return
 	}
 
+	var query []byte
+	if len(graphQuery.Query) > 2 {
+		query = []byte(graphQuery.Query)[1 : len(graphQuery.Query)-1]
+	}
+
 	response, err := t.onGraphQuery(
 		req.Context(),
 		graph.Query{
-			Query:         graphQuery.Query,
+			Query:         query,
 			OperationName: graphQuery.OperationName,
 			Variables:     graphQuery.Variables,
 		},

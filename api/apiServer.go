@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/romshark/dgraph_graphql_go/api/graph/auth"
+
 	"github.com/pkg/errors"
+	"github.com/romshark/dgraph_graphql_go/api/config"
+	"github.com/romshark/dgraph_graphql_go/api/gqlshield"
 	"github.com/romshark/dgraph_graphql_go/api/graph"
 	"github.com/romshark/dgraph_graphql_go/api/transport"
 	"github.com/romshark/dgraph_graphql_go/api/validator"
@@ -28,7 +32,7 @@ type Server interface {
 }
 
 type server struct {
-	opts                 ServerOptions
+	conf                 *config.ServerConfig
 	store                store.Store
 	graph                *graph.Graph
 	debugSessionKey      []byte
@@ -37,15 +41,15 @@ type server struct {
 }
 
 // NewServer creates a new API server instance
-func NewServer(opts ServerOptions) (Server, error) {
-	if err := opts.Prepare(); err != nil {
-		return nil, fmt.Errorf("options: %s", err)
+func NewServer(conf *config.ServerConfig) (Server, error) {
+	if err := conf.Prepare(); err != nil {
+		return nil, fmt.Errorf("config: %s", err)
 	}
 
 	// Initialize validator
 	validator, err := validator.NewValidator(
-		opts.Mode == ModeProduction,
-		validator.Options{
+		conf.Mode == config.ModeProduction,
+		validator.Config{
 			PasswordLenMin:        6,
 			PasswordLenMax:        256,
 			EmailLenMax:           96,
@@ -65,20 +69,63 @@ func NewServer(opts ServerOptions) (Server, error) {
 
 	// Initialize store instance
 	store := dgraph.NewStore(
-		opts.DBHost,
+		conf.DBHost,
 
 		// Compare password
 		func(hash, password string) bool {
-			return opts.PasswordHasher.Compare([]byte(hash), []byte(password))
+			return conf.PasswordHasher.Compare([]byte(hash), []byte(password))
 		},
-		opts.ErrorLog,
+
+		conf.DebugLog,
+		conf.ErrorLog,
 	)
+
+	// Initialize the GraphQL shield persistency manager
+	var shieldPersistencyManager gqlshield.PersistencyManager
+	if conf.Shield.PersistencyFilePath != "" {
+		manager, err := gqlshield.NewPepersistencyManagerFileJSON(
+			conf.Shield.PersistencyFilePath,
+			true,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "GraphQL shield persistency manager init")
+		}
+		shieldPersistencyManager = manager
+	}
+
+	queryWhitelistingEnabled := gqlshield.WhitelistDisabled
+	if conf.Shield.WhitelistEnabled {
+		queryWhitelistingEnabled = gqlshield.WhitelistEnabled
+	}
+
+	graphShield, err := gqlshield.NewGraphQLShield(
+		gqlshield.Config{
+			WhitelistOption:    queryWhitelistingEnabled,
+			PersistencyManager: shieldPersistencyManager,
+		},
+		gqlshield.ClientRole{
+			ID:   int(auth.GQLShieldClientDebug),
+			Name: "debug",
+		},
+		gqlshield.ClientRole{
+			ID:   int(auth.GQLShieldClientGuest),
+			Name: "guest",
+		},
+		gqlshield.ClientRole{
+			ID:   int(auth.GQLShieldClientRegular),
+			Name: "regular",
+		},
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "graph shield init")
+	}
 
 	graph, err := graph.New(
 		store,
 		validator,
-		opts.SessionKeyGenerator,
-		opts.PasswordHasher,
+		conf.SessionKeyGenerator,
+		conf.PasswordHasher,
+		graphShield,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "graph init")
@@ -87,35 +134,37 @@ func NewServer(opts ServerOptions) (Server, error) {
 	// Initialize API server instance
 	newSrv := &server{
 		store:                store,
-		opts:                 opts,
+		conf:                 conf,
 		graph:                graph,
-		transports:           opts.Transport,
+		transports:           conf.Transport,
 		shutdownAwaitBlocker: &sync.WaitGroup{},
 	}
 
 	// Initialize transports
-	for _, transport := range opts.Transport {
+	for _, transport := range conf.Transport {
 		if err := transport.Init(
 			newSrv.onGraphQuery,
 			newSrv.onAuth,
 			newSrv.onDebugAuth,
 			newSrv.onDebugSess,
-			opts.ErrorLog,
+			conf.DebugLog,
+			conf.ErrorLog,
 		); err != nil {
 			return nil, err
 		}
 	}
+	conf.DebugLog.Print("all transports initialized")
 
 	// Generate the debug user session key if the debug user is enabled
-	if opts.DebugUser.Status != DebugUserDisabled {
-		newSrv.debugSessionKey = []byte(opts.SessionKeyGenerator.Generate())
+	if conf.DebugUser.Mode != config.DebugUserDisabled {
+		newSrv.debugSessionKey = []byte(conf.SessionKeyGenerator.Generate())
 	}
 
 	return newSrv, nil
 }
 
 func (srv *server) logErrf(format string, v ...interface{}) {
-	srv.opts.ErrorLog.Printf(format, v...)
+	srv.conf.ErrorLog.Printf(format, v...)
 }
 
 // Launch implements the Server interface

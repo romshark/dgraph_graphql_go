@@ -15,7 +15,11 @@ func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	tc.SetKeepAlive(true)
-	tc.SetKeepAlivePeriod(ln.KeepAliveDuration)
+	if err := tc.SetKeepAlive(true); err != nil {
+		return nil, err
+	}
+	if err := tc.SetKeepAlivePeriod(ln.KeepAliveDuration); err != nil {
+		return nil, err
+	}
 	return tc, nil
 }

@@ -16,19 +16,19 @@ func (rsv *Resolver) EditReaction(
 		Editor     string
 		NewMessage string
 	},
-) (*Reaction, error) {
+) *Reaction {
 	if err := auth.Authorize(ctx, auth.IsOwner{
 		Owner: store.ID(params.Editor),
 	}); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	// Validate input
 	if err := rsv.validator.ReactionMessage(params.NewMessage); err != nil {
 		err = strerr.Wrap(strerr.ErrInvalidInput, err)
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	mutatedReaction, _, err := rsv.str.EditReaction(
@@ -39,7 +39,7 @@ func (rsv *Resolver) EditReaction(
 	)
 	if err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	return &Reaction{
@@ -51,5 +51,5 @@ func (rsv *Resolver) EditReaction(
 		message:    mutatedReaction.Message,
 		authorUID:  mutatedReaction.Author.UID,
 		subjectUID: mutatedReaction.Subject.NodeID(),
-	}, nil
+	}
 }

@@ -1,34 +1,34 @@
-package api_test
+package config_test
 
 import (
 	"testing"
 
-	"github.com/romshark/dgraph_graphql_go/api"
+	"github.com/romshark/dgraph_graphql_go/api/config"
 	"github.com/romshark/dgraph_graphql_go/api/transport"
 	thttp "github.com/romshark/dgraph_graphql_go/api/transport/http"
 	"github.com/stretchr/testify/require"
 )
 
-func TestOptionsInvalid(t *testing.T) {
-	assumeErr := func(t *testing.T, opts api.ServerOptions) {
-		require.Error(t, opts.Prepare())
+func TestConfigInvalid(t *testing.T) {
+	assumeErr := func(t *testing.T, conf config.ServerConfig) {
+		require.Error(t, conf.Prepare())
 	}
 
 	t.Run("noTransport", func(t *testing.T) {
-		assumeErr(t, api.ServerOptions{
-			Mode:      api.ModeProduction,
+		assumeErr(t, config.ServerConfig{
+			Mode:      config.ModeProduction,
 			Transport: []transport.Server{},
 		})
 	})
 
 	t.Run("production/debugUserEnabled", func(t *testing.T) {
-		debugUsrOptions := []api.DebugUserStatus{
-			api.DebugUserRW,
-			api.DebugUserReadOnly,
+		debugUserModes := []config.DebugUserMode{
+			config.DebugUserRW,
+			config.DebugUserReadOnly,
 		}
-		for _, debugUsrOption := range debugUsrOptions {
-			t.Run(string(debugUsrOption), func(t *testing.T) {
-				serverHTTP, err := thttp.NewServer(thttp.ServerOptions{
+		for _, debugUserMode := range debugUserModes {
+			t.Run(string(debugUserMode), func(t *testing.T) {
+				serverHTTP, err := thttp.NewServer(thttp.ServerConfig{
 					Host: "localhost:80",
 					TLS: &thttp.ServerTLS{
 						CertificateFilePath: "certfile",
@@ -39,11 +39,11 @@ func TestOptionsInvalid(t *testing.T) {
 				require.NoError(t, err)
 				require.NotNil(t, serverHTTP)
 
-				assumeErr(t, api.ServerOptions{
-					Mode:      api.ModeProduction,
+				assumeErr(t, config.ServerConfig{
+					Mode:      config.ModeProduction,
 					Transport: []transport.Server{serverHTTP},
-					DebugUser: api.DebugUserOptions{
-						Status: debugUsrOption,
+					DebugUser: config.DebugUserConfig{
+						Mode: debugUserMode,
 					},
 				})
 			})
@@ -51,7 +51,7 @@ func TestOptionsInvalid(t *testing.T) {
 	})
 
 	t.Run("production/nonTLSTransport", func(t *testing.T) {
-		serverHTTP, err := thttp.NewServer(thttp.ServerOptions{
+		serverHTTP, err := thttp.NewServer(thttp.ServerConfig{
 			Host:       "localhost:80",
 			TLS:        nil,
 			Playground: true,
@@ -59,8 +59,8 @@ func TestOptionsInvalid(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, serverHTTP)
 
-		assumeErr(t, api.ServerOptions{
-			Mode:      api.ModeProduction,
+		assumeErr(t, config.ServerConfig{
+			Mode:      config.ModeProduction,
 			Transport: []transport.Server{serverHTTP},
 		})
 	})

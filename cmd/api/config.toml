@@ -1,0 +1,43 @@
+# Go + GraphQL + Dgraph demo by github.com/romshark
+#
+# API server configuration
+
+mode = "debug"
+password-hasher = "bcrypt"
+session-key-generator = "default"
+
+[db]
+host = "localhost:10180"
+
+[shield]
+whitelist = true
+persist-to = "./shield.json"
+
+[log]
+debug = "stdout"
+error = "stderr"
+
+[debug]
+mode = "read-write"
+username = "debug"
+password = "debug"
+
+[transport-http]
+host = "localhost:16000"
+keep-alive = "3min"
+playground = true
+
+[transport-http.tls]
+enabled = true
+min-version = "TLS 1.2"
+curve-preferences = [
+	"X25519",
+	"CurveP256"
+]
+cipher-suites = [
+	"ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+	"ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+	"AES_128_GCM_SHA256"
+]
+certificate-file = "./demo.crt"
+key-file = "./demo.key"

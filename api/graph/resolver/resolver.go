@@ -52,7 +52,7 @@ func New(
 }
 
 // Users resolves Query.users
-func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
+func (rsv *Resolver) Users(ctx context.Context) []*User {
 	var result struct {
 		Users []dgraph.User `json:"users"`
 	}
@@ -70,7 +70,7 @@ func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
 		&result,
 	); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	resolvers := make([]*User, len(result.Users))
 	for i, usr := range result.Users {
@@ -83,7 +83,7 @@ func (rsv *Resolver) Users(ctx context.Context) ([]*User, error) {
 			creation:    usr.Creation,
 		}
 	}
-	return resolvers, nil
+	return resolvers
 }
 
 // Posts resolves Query.posts
@@ -97,7 +97,7 @@ func (rsv *Resolver) User(
 	params struct {
 		ID string
 	},
-) (*User, error) {
+) *User {
 	var result struct {
 		Users []dgraph.User `json:"users"`
 	}
@@ -118,10 +118,10 @@ func (rsv *Resolver) User(
 		&result,
 	); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if len(result.Users) < 1 {
-		return nil, nil
+		return nil
 	}
 
 	usr := result.Users[0]
@@ -132,7 +132,7 @@ func (rsv *Resolver) User(
 		displayName: usr.DisplayName,
 		email:       usr.Email,
 		creation:    usr.Creation,
-	}, nil
+	}
 }
 
 // Post resolves Query.post
@@ -141,7 +141,7 @@ func (rsv *Resolver) Post(
 	params struct {
 		ID string
 	},
-) (*Post, error) {
+) *Post {
 	var result struct {
 		Posts []dgraph.Post `json:"posts"`
 	}
@@ -165,10 +165,10 @@ func (rsv *Resolver) Post(
 		&result,
 	); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if len(result.Posts) < 1 {
-		return nil, nil
+		return nil
 	}
 
 	post := result.Posts[0]
@@ -180,7 +180,7 @@ func (rsv *Resolver) Post(
 		contents:  post.Contents,
 		creation:  post.Creation,
 		authorUID: post.Author[0].UID,
-	}, nil
+	}
 }
 
 // Reaction resolves Query.reaction
@@ -189,7 +189,7 @@ func (rsv *Resolver) Reaction(
 	params struct {
 		ID string
 	},
-) (*Reaction, error) {
+) *Reaction {
 	var result struct {
 		Reactions []dgraph.Reaction `json:"reactions"`
 	}
@@ -218,10 +218,10 @@ func (rsv *Resolver) Reaction(
 		&result,
 	); err != nil {
 		rsv.error(ctx, err)
-		return nil, err
+		return nil
 	}
 	if len(result.Reactions) < 1 {
-		return nil, nil
+		return nil
 	}
 
 	reaction := result.Reactions[0]
@@ -234,7 +234,7 @@ func (rsv *Resolver) Reaction(
 		creation:   reaction.Creation,
 		authorUID:  reaction.Author[0].UID,
 		subjectUID: *reaction.Subject[0].UID(),
-	}, nil
+	}
 }
 
 // error writes an error to the resolver context for the API server to read

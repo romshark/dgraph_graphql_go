@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:9f3b30d9f8e0d7040f729b82dcbc8f0dead820a133b3147ce355fc451f32d761"
+  name = "github.com/BurntSushi/toml"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3012a1dbe2e4bd1391d42b32f0577cb7bbc7f005"
+  version = "v0.3.1"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -76,6 +84,14 @@
   pruneopts = "UT"
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
   version = "v0.8.1"
+
+[[projects]]
+  digest = "1:f5b9a0e1d33e4bb32d1dc04da274c6103249f8be3ca18f180f2cebeba7198d4c"
+  name = "github.com/plar/go-adaptive-radix-tree"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "808fdce565698379f1aacbe23fcd8c233852dc72"
+  version = "v1.0.1"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -216,14 +232,19 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/BurntSushi/toml",
     "github.com/dgraph-io/dgo",
     "github.com/dgraph-io/dgo/protos/api",
     "github.com/graph-gophers/graphql-go",
+    "github.com/graph-gophers/graphql-go/errors",
     "github.com/pkg/errors",
+    "github.com/plar/go-adaptive-radix-tree",
     "github.com/satori/go.uuid",
     "github.com/stretchr/testify/require",
     "golang.org/x/crypto/bcrypt",
     "google.golang.org/grpc",
+    "google.golang.org/grpc/codes",
+    "google.golang.org/grpc/status",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

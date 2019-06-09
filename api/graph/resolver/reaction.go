@@ -37,7 +37,7 @@ func (rsv *Reaction) Creation() graphql.Time {
 }
 
 // Subject resolves Reaction.subject
-func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
+func (rsv *Reaction) Subject(ctx context.Context) *ReactionSubject {
 	var query struct {
 		Subject []dgraph.ReactionSubject `json:"subject"`
 	}
@@ -70,7 +70,7 @@ func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 		&query,
 	); err != nil {
 		rsv.root.error(ctx, err)
-		return nil, err
+		return nil
 	}
 
 	subject := query.Subject[0]
@@ -85,7 +85,7 @@ func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 			title:     v.Title,
 			contents:  v.Contents,
 			authorUID: v.Author[0].UID,
-		}}, nil
+		}}
 	case *dgraph.Reaction:
 		return &ReactionSubject{&Reaction{
 			root:       rsv.root,
@@ -96,14 +96,13 @@ func (rsv *Reaction) Subject(ctx context.Context) (*ReactionSubject, error) {
 			creation:   v.Creation,
 			emotion:    v.Emotion,
 			message:    v.Message,
-		}}, nil
+		}}
 	}
-	err := errors.Errorf(
+	rsv.root.error(ctx, errors.Errorf(
 		"unsupported union ReactionSubject type: %s",
 		reflect.TypeOf(subject.V),
-	)
-	rsv.root.error(ctx, err)
-	return nil, err
+	))
+	return nil
 }
 
 // Author resolves Reaction.author

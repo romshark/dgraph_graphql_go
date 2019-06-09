@@ -13,7 +13,9 @@ import (
 // moves it to the request context
 func (t *Server) auth(req *http.Request) *http.Request {
 	// Set default (empty) session
-	session := &auth.RequestSession{}
+	session := &auth.RequestSession{
+		ShieldClientRole: auth.GQLShieldClientGuest,
+	}
 	req = req.WithContext(context.WithValue(
 		req.Context(),
 		auth.CtxSession,
@@ -36,10 +38,12 @@ func (t *Server) auth(req *http.Request) *http.Request {
 		userID, sessionCreationTime := t.onAuth(req.Context(), tokens[1])
 		session.UserID = userID
 		session.Creation = sessionCreationTime
+		session.ShieldClientRole = auth.GQLShieldClientRegular
 	} else if tokens[0] == "Debug" {
 		// Treat the authorization header as debug session key bearer token
 		if t.onDebugAuth(req.Context(), tokens[1]) {
 			session.IsDebug = true
+			session.ShieldClientRole = auth.GQLShieldClientDebug
 		}
 	}
 

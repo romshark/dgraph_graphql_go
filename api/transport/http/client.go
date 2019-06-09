@@ -24,7 +24,7 @@ type Client struct {
 }
 
 // NewClient creates a new API client instance
-func NewClient(host url.URL, opts ClientOptions) (trn.Client, error) {
+func NewClient(host url.URL, conf ClientConfig) (trn.Client, error) {
 	// Initialize the http cookie jar
 	cookieJar, err := cookiejar.New(nil)
 	if err != nil {
@@ -35,7 +35,7 @@ func NewClient(host url.URL, opts ClientOptions) (trn.Client, error) {
 	return &Client{
 		host: host,
 		httpClt: &http.Client{
-			Timeout: opts.Timeout,
+			Timeout: conf.Timeout,
 			Jar:     cookieJar,
 		},
 	}, nil

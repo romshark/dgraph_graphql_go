@@ -41,7 +41,7 @@ func TestCreateUserErr(t *testing.T) {
 		)
 	})
 
-	// Test reserved displayName on creation
+	// Test invalid displayName on creation
 	t.Run("invalidDisplayName", func(t *testing.T) {
 		invalidDisplayNames := map[string]string{
 			"empty":    "",
@@ -64,7 +64,7 @@ func TestCreateUserErr(t *testing.T) {
 		}
 	})
 
-	// Test reserved displayName on creation
+	// Test invalid email on creation
 	t.Run("invalidEmail", func(t *testing.T) {
 		invalidEmails := map[string]string{
 			"empty":       "",

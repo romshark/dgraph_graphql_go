@@ -15,34 +15,35 @@ import (
 // Server represents an HTTP based server transport implementation
 type Server struct {
 	addrReadWait *sync.WaitGroup
-	opts         ServerOptions
+	conf         ServerConfig
 	httpSrv      *http.Server
 	addr         net.Addr
 	onGraphQuery trn.OnGraphQuery
 	onAuth       trn.OnAuth
 	onDebugAuth  trn.OnDebugAuth
 	onDebugSess  trn.OnDebugSess
+	debugLog     *log.Logger
 	errorLog     *log.Logger
 }
 
 // NewServer creates a new unencrypted JSON based HTTP transport.
 // Use NewSecure to enable encryption instead
-func NewServer(opts ServerOptions) (trn.Server, error) {
-	if err := opts.Prepare(); err != nil {
+func NewServer(conf ServerConfig) (trn.Server, error) {
+	if err := conf.Prepare(); err != nil {
 		return nil, err
 	}
 
 	t := &Server{
 		addrReadWait: &sync.WaitGroup{},
-		opts:         opts,
+		conf:         conf,
 	}
 	t.httpSrv = &http.Server{
-		Addr:    opts.Host,
+		Addr:    conf.Host,
 		Handler: t,
 	}
 
-	if opts.TLS != nil {
-		t.httpSrv.TLSConfig = opts.TLS.Config
+	if conf.TLS != nil {
+		t.httpSrv.TLSConfig = conf.TLS.Config
 	}
 
 	t.addrReadWait.Add(1)
@@ -55,6 +56,7 @@ func (t *Server) Init(
 	onAuth trn.OnAuth,
 	onDebugAuth trn.OnDebugAuth,
 	onDebugSess trn.OnDebugSess,
+	debugLog *log.Logger,
 	errorLog *log.Logger,
 ) error {
 	if onGraphQuery == nil {
@@ -73,6 +75,7 @@ func (t *Server) Init(
 	t.onAuth = onAuth
 	t.onDebugAuth = onDebugAuth
 	t.onDebugSess = onDebugSess
+	t.debugLog = debugLog
 	t.errorLog = errorLog
 	return nil
 }
@@ -94,18 +97,22 @@ func (t *Server) Run() error {
 
 	tcpListener := tcpKeepAliveListener{
 		TCPListener:       listener.(*net.TCPListener),
-		KeepAliveDuration: t.opts.KeepAliveDuration,
+		KeepAliveDuration: t.conf.KeepAliveDuration,
 	}
 
-	if t.opts.TLS != nil {
+	if t.conf.TLS != nil {
+		t.debugLog.Print("listening https://" + t.addr.String())
+
 		if err := t.httpSrv.ServeTLS(
 			tcpListener,
-			t.opts.TLS.CertificateFilePath,
-			t.opts.TLS.PrivateKeyFilePath,
+			t.conf.TLS.CertificateFilePath,
+			t.conf.TLS.PrivateKeyFilePath,
 		); err != http.ErrServerClosed {
 			return err
 		}
 	} else {
+		t.debugLog.Print("listening http://" + t.addr.String())
+
 		if err := t.httpSrv.Serve(tcpListener); err != http.ErrServerClosed {
 			return err
 		}
@@ -169,12 +176,12 @@ func (t *Server) Addr() url.URL {
 	}
 }
 
-// Options returns the active configuration
-func (t *Server) Options() ServerOptions {
-	return ServerOptions{
-		Host:              t.opts.Host,
-		KeepAliveDuration: t.opts.KeepAliveDuration,
-		TLS:               t.opts.TLS.Clone(),
-		Playground:        t.opts.Playground,
+// Config returns the active configuration
+func (t *Server) Config() ServerConfig {
+	return ServerConfig{
+		Host:              t.conf.Host,
+		KeepAliveDuration: t.conf.KeepAliveDuration,
+		TLS:               t.conf.TLS.Clone(),
+		Playground:        t.conf.Playground,
 	}
 }

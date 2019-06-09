@@ -17,6 +17,7 @@ type impl struct {
 	db              *dgo.Dgraph
 	comparePassword func(hash, password string) bool
 	onClose         func()
+	debugLog        *log.Logger
 	errorLog        *log.Logger
 }
 
@@ -24,12 +25,14 @@ type impl struct {
 func NewStore(
 	host string,
 	comparePassword func(hash, password string) bool,
+	debugLog *log.Logger,
 	errorLog *log.Logger,
 ) store.Store {
 	return &impl{
 		host:            host,
 		db:              nil,
 		comparePassword: comparePassword,
+		debugLog:        debugLog,
 		errorLog:        errorLog,
 	}
 }
@@ -44,6 +47,7 @@ func (str *impl) Prepare() error {
 	if err != nil {
 		return errors.Wrap(err, "gRPC dial")
 	}
+	str.debugLog.Printf("database (%s) connected", str.host)
 
 	str.db = dgo.NewDgraphClient(api.NewDgraphClient(conn))
 	str.onClose = func() {
@@ -54,7 +58,12 @@ func (str *impl) Prepare() error {
 		str.onClose = nil
 	}
 
-	return str.setupSchema(context.Background())
+	err = str.setupSchema(context.Background())
+	if err != nil {
+		str.debugLog.Print("database schema setup")
+	}
+
+	return err
 }
 
 // IsActive returns true if the store is operational, otherwise returns false
