@@ -179,3 +179,15 @@ func TestEscaped(t *testing.T) {
 		string(out),
 	)
 }
+
+func TestEscapedQuotationMark(t *testing.T) {
+	out, err := prepareQuery(
+		[]byte("mutation {\n  createCustomer(email: \\\"roman.sharkov@qbeon.com\\\", firstName: \\\"Roman\\\", lastName: \\\"Sharkov\\\", password: \\\"123\\\") {\n    id\n    registration\n    firstName\n    lastName\n    email\n    sessions {\n      creation\n      key\n    }\n  }\n}\n"),
+	)
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		string([]byte("mutation { createCustomer(email: \"roman.sharkov@qbeon.com\", firstName: \"Roman\", lastName: \"Sharkov\", password: \"123\") { id registration firstName lastName email sessions { creation key } } }")),
+		string(out),
+	)
+}

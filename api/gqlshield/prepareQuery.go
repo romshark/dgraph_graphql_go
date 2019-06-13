@@ -1,5 +1,7 @@
 package gqlshield
 
+import "strings"
+
 func prepareQuery(query []byte) ([]byte, error) {
 	if len(query) < 1 {
 		return nil, Error{
@@ -7,6 +9,9 @@ func prepareQuery(query []byte) ([]byte, error) {
 			Message: "invalid (empty) query",
 		}
 	}
+
+	// Hot-fix escaped quatation marks
+	query = []byte(strings.Replace(string(query), `\"`, `"`, -1))
 
 	start := int(-1)
 	shift := int(0)
@@ -41,7 +46,7 @@ LEADING_LOOP:
 
 	for ; i < len(query); i++ {
 		char := query[i]
-		if char == '\\' && i+1 < len(query) {
+		if !inString && char == '\\' && i+1 < len(query) {
 			switch query[i+1] {
 			case 't':
 				// escaped tab
