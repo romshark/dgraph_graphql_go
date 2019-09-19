@@ -28,21 +28,10 @@
 			"parameters": null,
 			"whitelisted-for": [1,2,3]
 		},
-		"0f23751434144665b246d8c60901d4d3": {
-			"query": "query ($uid: Identifier!) { user(id: $uid) { id displayName posts { id title } } }",
-			"creation": "2019-06-03T17:00:00+00:00",
-			"name": "Users profile with posts",
-			"parameters": {
-				"uid": {
-					"max-value-length": 32
-				}
-			},
-			"whitelisted-for": [1,2,3]
-		},
 		"fbccfa2c8be64acabd6227d2875dba7c": {
 			"query": "mutation ($email: String!, $displayName: String!, $password: String!) { createUser(email: $email, displayName: $displayName, password: $password) { id displayName } }",
 			"creation": "2019-06-03T17:00:00+00:00",
-			"name": "Users creation mutation",
+			"name": "Create user",
 			"parameters": {
 				"email": {
 					"max-value-length": 256
@@ -55,6 +44,125 @@
 				}
 			},
 			"whitelisted-for": [1,2,3]
+		},
+		"aeb2f660d8a244428d9168d625859306": {
+			"query": "mutation ( $authorId: Identifier!, $subjectId: Identifier!, $emotion: Emotion!, $message: String! ) { createReaction( author: $authorId, subject: $subjectId, emotion: $emotion, message: $message ) { id emotion message creation } }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Create reaction",
+			"parameters": {
+				"authorId": {
+					"max-value-length": 256
+				},
+				"subjectId": {
+					"max-value-length": 256
+				},
+				"emotion": {
+					"max-value-length": 10
+				},
+				"message": {
+					"max-value-length": 256
+				}
+			},
+			"whitelisted-for": [2,3]
+		},
+		"5b47c65f104a4157a6ad0316b677f23f": {
+			"query": "query ($id: Identifier!) { post(id: $id) { id author { id displayName } creation title contents reactions { id author { id displayName } emotion message creation reactions { id author { id displayName } emotion message creation } } } }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Post by id",
+			"parameters": {
+				"id": {
+					"max-value-length": 32
+				}
+			},
+			"whitelisted-for": [1,2,3]
+		},
+		"2b7f8f6322fd493db6018568363180f3": {
+			"query": "{ posts { id author { id displayName } creation title contents reactions { id author { id displayName } emotion message creation reactions { id author { id displayName } emotion message creation } } } }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Posts list",
+			"parameters": null,
+			"whitelisted-for": [1,2,3]
+		},
+		"0c6696a182ae4a1aaa49ba754b366321": {
+			"query": "mutation ($author: Identifier!, $title: String!, $contents: String!) { createPost(author: $author, title: $title, contents: $contents) { id creation title contents author { id displayName } } }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Create post",
+			"parameters": {
+				"author": {
+					"max-value-length": 32
+				},
+				"title": {
+					"max-value-length": 256
+				},
+				"contents": {
+					"max-value-length": 256
+				}
+			},
+			"whitelisted-for": [2,3]
+		},
+		"4ac1d6208222412a9b662feb28c64fce": {
+			"query": "query ($id: Identifier!) { user(id: $id) { id displayName creation posts { id title creation } publishedReactions { id emotion message creation subject { __typename ... on Post { id title } ... on Reaction { id emotion message } } } } }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "User by id",
+			"parameters": {
+				"id": {
+					"max-value-length": 32
+				}
+			},
+			"whitelisted-for": [1,2,3]
+		},
+		"23d0d8c42562454b9614414244b0400a": {
+			"query": "query ($id: Identifier!) { user(id: $id) { id email displayName creation sessions { key creation } posts { id title creation } publishedReactions { id emotion message creation subject { __typename ... on Post { id title } ... on Reaction { id emotion message } } } } }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Session profile",
+			"parameters": {
+				"id": {
+					"max-value-length": 32
+				}
+			},
+			"whitelisted-for": [2,3]
+		},
+		"a5b7531dd08d4a9eaa0f56efbc610547": {
+			"query": "mutation ($key: String!) { closeSession(key: $key) }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Close session",
+			"parameters": {
+				"key": {
+					"max-value-length": 64
+				}
+			},
+			"whitelisted-for": [2,3]
+		},
+		"9d12b5fa7d00464cba0a848370995a86": {
+			"query": "mutation ($id: Identifier!) { closeAllSessions(user: $id) }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Close all sessions",
+			"parameters": {
+				"id": {
+					"max-value-length": 32
+				}
+			},
+			"whitelisted-for": [2,3]
+		},
+		"d76767c6682a4d4baf1e92d2e6cef7e8": {
+			"query": "mutation ( $user: Identifier!, $editor: Identifier!, $newEmail: String, $newPass: String ) { editUser( user: $user, editor: $editor, newEmail: $newEmail, newPassword: $newPass ) { displayName email } }",
+			"creation": "2019-06-03T17:00:00+00:00",
+			"name": "Edit profile",
+			"parameters": {
+				"user": {
+					"max-value-length": 32
+				},
+				"editor": {
+					"max-value-length": 32
+				},
+				"newEmail": {
+					"max-value-length": 256
+				},
+				"newPass": {
+					"max-value-length": 256
+				}
+			},
+			"whitelisted-for": [2,3]
 		}
 	}
 }
