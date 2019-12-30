@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/romshark/dgraph_graphql_go/store"
 	strerr "github.com/romshark/dgraph_graphql_go/store/errors"
 )
