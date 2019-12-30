@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgraph-io/dgo"
-	dbapi "github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2"
+	dbapi "github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/romshark/dgraph_graphql_go/api"
 	"github.com/romshark/dgraph_graphql_go/api/config"
 	trn "github.com/romshark/dgraph_graphql_go/api/transport"

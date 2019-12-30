@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/dgraph-io/dgo"
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/pkg/errors"
 	"github.com/romshark/dgraph_graphql_go/store"
 	"google.golang.org/grpc"

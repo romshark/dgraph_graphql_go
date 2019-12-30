@@ -3,7 +3,7 @@ package dgraph
 import (
 	"context"
 
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 )
 
 func (str *impl) setupSchema(ctx context.Context) error {
